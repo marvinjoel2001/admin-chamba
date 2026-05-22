@@ -1,0 +1,37 @@
+﻿import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Toaster } from "sonner";
+import { AppLayout } from "@/components/layout/app-layout";
+import DashboardPage from "@/pages/dashboard-page";
+import MapPage from "@/pages/map-page";
+import WorkersPage from "@/pages/workers-page";
+import ClientsPage from "@/pages/clients-page";
+import RequestsPage from "@/pages/requests-page";
+import ReportsPage from "@/pages/reports-page";
+import WalletPage from "@/pages/wallet-page";
+import SettingsPage from "@/pages/settings-page";
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <AppLayout />,
+    children: [
+      { index: true, element: <DashboardPage /> },
+      { path: "map", element: <MapPage /> },
+      { path: "workers", element: <WorkersPage /> },
+      { path: "clients", element: <ClientsPage /> },
+      { path: "requests", element: <RequestsPage /> },
+      { path: "reports", element: <ReportsPage /> },
+      { path: "wallet", element: <WalletPage /> },
+      { path: "settings", element: <SettingsPage /> },
+    ],
+  },
+]);
+
+export default function App() {
+  return (
+    <>
+      <RouterProvider router={router} />
+      <Toaster theme="dark" />
+    </>
+  );
+}
