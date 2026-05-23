@@ -1,4 +1,4 @@
-﻿export type AdminUser = {
+export type AdminUser = {
   id: string;
   type: "client" | "worker";
   email: string;
@@ -6,10 +6,20 @@
   firstName: string;
   lastName?: string;
   verificationStatus?: string;
+  idPhotoUrl?: string;
+  facePhotoUrl?: string;
+  idPhotoVerified?: boolean | null;
+  facePhotoVerified?: boolean | null;
+  verificationReviewedAt?: string | null;
   isAvailable?: boolean;
   completedJobs?: number;
   averageRating?: number;
   createdAt?: string;
+};
+
+export type WorkerVerificationReviewPayload = {
+  idPhotoApproved?: boolean;
+  facePhotoApproved?: boolean;
 };
 
 export type MapWorker = {
@@ -63,4 +73,8 @@ export type WalletResponse = {
   period: "day" | "week" | "month";
   totals: { totalEarnings: number; totalJobs: number };
   workers: WalletWorker[];
+};
+
+export type WorkerNotificationSettings = {
+  radiusKm: number;
 };
