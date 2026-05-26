@@ -136,12 +136,12 @@ export default function MapPage() {
   const [requests, setRequests] = useState<MapRequest[]>([]);
   const lastSyncRef = useRef<string | undefined>(undefined);
 
-  const workersMapRef = useRef<Map<string, MapWorker>>(new Map());
-  const clientsMapRef = useRef<Map<string, MapClient>>(new Map());
-  const requestsMapRef = useRef<Map<string, MapRequest>>(new Map());
+  const workersMapRef = useRef<globalThis.Map<string, MapWorker>>(new globalThis.Map());
+  const clientsMapRef = useRef<globalThis.Map<string, MapClient>>(new globalThis.Map());
+  const requestsMapRef = useRef<globalThis.Map<string, MapRequest>>(new globalThis.Map());
   const workerRealtimeQueueRef = useRef<
-    Map<string, { latitude: number; longitude: number; timestamp: string }>
-  >(new Map());
+    globalThis.Map<string, { latitude: number; longitude: number; timestamp: string }>
+  >(new globalThis.Map());
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const applySnapshot = (snapshot: { workers: MapWorker[]; clients: MapClient[]; requests: MapRequest[]; serverTime: string }) => {
