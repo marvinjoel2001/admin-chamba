@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Map, {
   Layer,
   type LayerProps,
@@ -203,7 +203,7 @@ export default function MapPage() {
   }, []);
 
   useEffect(() => {
-    const base = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "");
+    const base = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "").replace(/\/api$/, "");
     const socket = io(`${base}/realtime`, { transports: ["websocket"] });
 
     socket.on("connect_error", () => {
