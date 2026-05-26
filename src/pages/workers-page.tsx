@@ -11,7 +11,6 @@ import {
   updateUser,
 } from "@/lib/admin-api";
 import type { AdminUser } from "@/lib/types";
-import { workers as workersMock } from "@/data/mock";
 
 function verificationBadge(status?: string) {
   if (status === "verified") {
@@ -34,6 +33,7 @@ export default function WorkersPage() {
   const [inbox, setInbox] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewingKey, setReviewingKey] = useState<string | null>(null);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     let mounted = true;
@@ -48,19 +48,9 @@ export default function WorkersPage() {
         setInbox(pendingInbox);
       } catch {
         if (!mounted) return;
-        setItems(
-          workersMock.map((w, i) => ({
-            id: `mock-${i}`,
-            type: "worker",
-            email: `${w.name.toLowerCase().replace(/ /g, ".")}@mock.com`,
-            firstName: w.name.split(" ")[0],
-            lastName: w.name.split(" ").slice(1).join(" "),
-            isAvailable: w.status !== "suspended",
-            completedJobs: w.jobs,
-          }) as AdminUser),
-        );
+        setItems([]);
         setInbox([]);
-        toast.warning("Backend no disponible, mostrando datos mock");
+        toast.error("Error al conectar con el servidor del backend");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -228,6 +218,9 @@ export default function WorkersPage() {
           <div className="grid gap-4">
             {inbox.map((worker) => {
               const workerName = `${worker.firstName} ${worker.lastName ?? ""}`.trim();
+              const idPhotoKey = `${worker.id}-id`;
+              const facePhotoKey = `${worker.id}-face`;
+
               return (
                 <article key={worker.id} className="rounded-xl border border-white/10 bg-black/20 p-4">
                   <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -242,8 +235,18 @@ export default function WorkersPage() {
                     <div className="rounded-lg border border-white/10 p-3">
                       <p className="mb-2 text-sm font-medium">Carnet</p>
                       <div className="mb-3 h-48 overflow-hidden rounded-md bg-black/30">
-                        {worker.idPhotoUrl ? (
-                          <img src={worker.idPhotoUrl} alt={`Carnet de ${workerName}`} className="h-full w-full object-contain" />
+                        {worker.idPhotoUrl && !imageErrors[idPhotoKey] ? (
+                          <img
+                            src={worker.idPhotoUrl}
+                            alt={`Carnet de ${workerName}`}
+                            className="h-full w-full object-contain"
+                            onError={() => setImageErrors((prev) => ({ ...prev, [idPhotoKey]: true }))}
+                          />
+                        ) : worker.idPhotoUrl ? (
+                          <div className="flex h-full flex-col items-center justify-center p-3 text-center text-xs text-rose-300 bg-rose-950/20">
+                            <span>⚠️ Error de carga (Cloudinary)</span>
+                            <span className="text-[10px] text-on-surface-variant mt-1 break-all">Enlace roto o expirado</span>
+                          </div>
                         ) : (
                           <div className="flex h-full items-center justify-center text-xs text-on-surface-variant">Sin foto de carnet</div>
                         )}
@@ -251,14 +254,14 @@ export default function WorkersPage() {
                       <div className="mb-2">{photoDecisionBadge(worker.idPhotoVerified)}</div>
                       <div className="flex gap-2">
                         <button
-                          disabled={!worker.idPhotoUrl || reviewingKey !== null}
+                          disabled={!worker.idPhotoUrl || reviewingKey !== null || imageErrors[idPhotoKey]}
                           onClick={() => onReviewPhoto(worker, "id", true)}
                           className="rounded bg-sky-500/25 px-3 py-1 text-xs text-sky-200 disabled:opacity-50"
                         >
                           Aprobar
                         </button>
                         <button
-                          disabled={!worker.idPhotoUrl || reviewingKey !== null}
+                          disabled={!worker.idPhotoUrl || reviewingKey !== null || imageErrors[idPhotoKey]}
                           onClick={() => onReviewPhoto(worker, "id", false)}
                           className="rounded bg-rose-500/25 px-3 py-1 text-xs text-rose-200 disabled:opacity-50"
                         >
@@ -270,8 +273,18 @@ export default function WorkersPage() {
                     <div className="rounded-lg border border-white/10 p-3">
                       <p className="mb-2 text-sm font-medium">Rostro</p>
                       <div className="mb-3 h-48 overflow-hidden rounded-md bg-black/30">
-                        {worker.facePhotoUrl ? (
-                          <img src={worker.facePhotoUrl} alt={`Rostro de ${workerName}`} className="h-full w-full object-contain" />
+                        {worker.facePhotoUrl && !imageErrors[facePhotoKey] ? (
+                          <img
+                            src={worker.facePhotoUrl}
+                            alt={`Rostro de ${workerName}`}
+                            className="h-full w-full object-contain"
+                            onError={() => setImageErrors((prev) => ({ ...prev, [facePhotoKey]: true }))}
+                          />
+                        ) : worker.facePhotoUrl ? (
+                          <div className="flex h-full flex-col items-center justify-center p-3 text-center text-xs text-rose-300 bg-rose-950/20">
+                            <span>⚠️ Error de carga (Cloudinary)</span>
+                            <span className="text-[10px] text-on-surface-variant mt-1 break-all">Enlace roto o expirado</span>
+                          </div>
                         ) : (
                           <div className="flex h-full items-center justify-center text-xs text-on-surface-variant">Sin foto de rostro</div>
                         )}
@@ -279,14 +292,14 @@ export default function WorkersPage() {
                       <div className="mb-2">{photoDecisionBadge(worker.facePhotoVerified)}</div>
                       <div className="flex gap-2">
                         <button
-                          disabled={!worker.facePhotoUrl || reviewingKey !== null}
+                          disabled={!worker.facePhotoUrl || reviewingKey !== null || imageErrors[facePhotoKey]}
                           onClick={() => onReviewPhoto(worker, "face", true)}
                           className="rounded bg-sky-500/25 px-3 py-1 text-xs text-sky-200 disabled:opacity-50"
                         >
                           Aprobar
                         </button>
                         <button
-                          disabled={!worker.facePhotoUrl || reviewingKey !== null}
+                          disabled={!worker.facePhotoUrl || reviewingKey !== null || imageErrors[facePhotoKey]}
                           onClick={() => onReviewPhoto(worker, "face", false)}
                           className="rounded bg-rose-500/25 px-3 py-1 text-xs text-rose-200 disabled:opacity-50"
                         >

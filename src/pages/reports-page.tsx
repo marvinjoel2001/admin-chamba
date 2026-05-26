@@ -1,31 +1,76 @@
-﻿import { PieChart, Pie, Tooltip, ResponsiveContainer, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
-import { jobsByCategory, revenueTrend } from "@/data/mock";
-
-const colors = ["#d2bbff", "#ffe083", "#4a4455", "#7c3aed"];
+import { useEffect, useState } from "react";
+import { fetchUsers, fetchWallet } from "@/lib/admin-api";
+import { toast } from "sonner";
 
 export default function ReportsPage() {
+  const [metrics, setMetrics] = useState({
+    totalRevenue: "Bs 0.00",
+    newClients: "0",
+    completionRate: "0%",
+    completedJobs: "0",
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const [users, wallet] = await Promise.all([
+          fetchUsers().catch(() => []),
+          fetchWallet("month").catch(() => ({ totals: { totalEarnings: 0, totalJobs: 0 } })),
+        ]);
+
+        if (!mounted) return;
+
+        const clientsCount = users.filter((u) => u.type === "client").length;
+        const totalEarnings = wallet.totals?.totalEarnings || 0;
+        const totalJobs = wallet.totals?.totalJobs || 0;
+
+        setMetrics({
+          totalRevenue: `Bs ${totalEarnings.toFixed(2)}`,
+          newClients: clientsCount.toString(),
+          completionRate: totalJobs > 0 ? "100%" : "0%",
+          completedJobs: totalJobs.toString(),
+        });
+      } catch {
+        toast.error("Error al cargar analíticas");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   return (
     <section className="flex flex-col gap-8">
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="text-5xl font-bold tracking-tight">Analytics Overview</h2>
-          <p className="mt-2 text-on-surface-variant">Monitor service performance and business health metrics.</p>
+          <h2 className="text-5xl font-bold tracking-tight">Resumen de Analíticas</h2>
+          <p className="mt-2 text-on-surface-variant">Monitorea el rendimiento del servicio y las métricas del negocio.</p>
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {["Total Revenue", "New Clients", "Completion Rate", "Canceled Jobs"].map((k) => (
-          <div key={k} className="glass-panel rounded-xl p-6"><p className="text-xs uppercase tracking-wider text-on-surface-variant">{k}</p><h3 className="mt-1 text-3xl font-semibold">{k === "Total Revenue" ? "$124,500" : k === "New Clients" ? "342" : k === "Completion Rate" ? "94.8%" : "18"}</h3></div>
+        {[
+          { key: "Ganancias Totales", value: metrics.totalRevenue },
+          { key: "Clientes Registrados", value: metrics.newClients },
+          { key: "Tasa de Finalización", value: metrics.completionRate },
+          { key: "Trabajos Completados", value: metrics.completedJobs },
+        ].map((item) => (
+          <div key={item.key} className="glass-panel rounded-xl p-6">
+            <p className="text-xs uppercase tracking-wider text-on-surface-variant">{item.key}</p>
+            <h3 className="mt-1 text-3xl font-semibold">
+              {loading ? "..." : item.value}
+            </h3>
+          </div>
         ))}
       </div>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <div className="glass-panel rounded-xl p-6 lg:col-span-2">
-          <h3 className="mb-4 text-2xl">Revenue Over Time</h3>
-          <div className="h-80"><ResponsiveContainer><LineChart data={revenueTrend}><CartesianGrid stroke="rgba(255,255,255,.08)" /><XAxis dataKey="name" /><YAxis /><Tooltip /><Line type="monotone" dataKey="revenue" stroke="#d2bbff" strokeWidth={3} /></LineChart></ResponsiveContainer></div>
-        </div>
-        <div className="glass-panel rounded-xl p-6">
-          <h3 className="mb-4 text-xl">Jobs by Category</h3>
-          <div className="h-80"><ResponsiveContainer><PieChart><Pie data={jobsByCategory} dataKey="value" innerRadius={65} outerRadius={95}>{jobsByCategory.map((_, i) => <Cell key={i} fill={colors[i]} />)}</Pie><Tooltip /></PieChart></ResponsiveContainer></div>
-        </div>
+      <div className="glass-panel rounded-xl p-6 text-center">
+        <h3 className="mb-2 text-xl font-semibold">Gráficos de Tendencias</h3>
+        <p className="text-on-surface-variant">
+          Los gráficos detallados de ingresos y categorías se activarán una vez que el sistema recopile un volumen representativo de operaciones mensuales.
+        </p>
       </div>
     </section>
   );

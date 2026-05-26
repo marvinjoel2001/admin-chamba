@@ -1,9 +1,8 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { fetchUsers, updateUser } from "@/lib/admin-api";
 import type { AdminUser } from "@/lib/types";
-import { clients as clientsMock } from "@/data/mock";
 import { toast } from "sonner";
 
 export default function ClientsPage() {
@@ -18,8 +17,8 @@ export default function ClientsPage() {
         setItems(users.filter((u) => u.type === "client"));
       } catch {
         if (!mounted) return;
-        setItems(clientsMock.map((c, i) => ({ id: `mock-client-${i}`, type: "client", email: c.email, firstName: c.name, isAvailable: c.status === "active" } as AdminUser)));
-        toast.warning("Backend no disponible, mostrando clientes mock");
+        setItems([]);
+        toast.error("Error al conectar con el servidor del backend");
       }
     })();
     return () => { mounted = false; };

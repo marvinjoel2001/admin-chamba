@@ -1,22 +1,54 @@
-﻿import { requests } from "@/data/mock";
+import { useEffect, useState, useMemo } from "react";
 import { DataTable } from "@/components/ui/data-table";
-import { useMemo } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { fetchMapSnapshot } from "@/lib/admin-api";
+import type { MapRequest } from "@/lib/types";
+import { toast } from "sonner";
 
 export default function RequestsPage() {
-  const columns = useMemo<ColumnDef<(typeof requests)[number]>[]>(() => [
+  const [items, setItems] = useState<MapRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const snapshot = await fetchMapSnapshot();
+        if (!mounted) return;
+        setItems(snapshot.requests || []);
+      } catch {
+        if (!mounted) return;
+        setItems([]);
+        toast.error("Error al conectar con el servidor del backend");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const columns = useMemo<ColumnDef<MapRequest>[]>(() => [
     { accessorKey: "id", header: "Request ID" },
     { accessorKey: "title", header: "Title" },
-    { accessorKey: "worker", header: "Worker" },
-    { accessorKey: "client", header: "Client" },
+    { accessorKey: "clientName", header: "Client" },
     { accessorKey: "status", header: "Status" },
-    { accessorKey: "budget", header: "Budget" }
+    {
+      accessorKey: "budget",
+      header: "Budget",
+      cell: ({ row }) => `Bs ${Number(row.original.budget).toFixed(2)}`
+    }
   ], []);
 
   return (
     <section className="glass-panel rounded-xl p-6">
       <h2 className="mb-4 text-3xl font-bold">Requests</h2>
-      <DataTable data={requests} columns={columns} />
+      {loading ? (
+        <div className="p-4 text-sm text-on-surface-variant">Cargando solicitudes...</div>
+      ) : (
+        <DataTable data={items} columns={columns} />
+      )}
     </section>
   );
 }
