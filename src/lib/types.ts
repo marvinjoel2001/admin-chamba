@@ -78,3 +78,33 @@ export type WalletResponse = {
 export type WorkerNotificationSettings = {
   radiusKm: number;
 };
+
+export type ApiLogItem = {
+  id: number;
+  method: string;
+  path: string;
+  status_code: number;
+  duration_ms: number;
+  ip?: string | null;
+  user_agent?: string | null;
+  query_json?: Record<string, unknown>;
+  request_body_json?: Record<string, unknown>;
+  response_preview?: string | null;
+  error_message?: string | null;
+  created_at: string;
+};
+
+export type ApiLogsResponse = {
+  total: number;
+  items: ApiLogItem[];
+  metrics15m: {
+    total: number;
+    total4xx: number;
+    total5xx: number;
+    avgMs: number;
+  };
+  paging: {
+    limit: number;
+    offset: number;
+  };
+};

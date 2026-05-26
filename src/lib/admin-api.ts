@@ -5,6 +5,7 @@ import type {
   WalletResponse,
   WorkerVerificationReviewPayload,
   WorkerNotificationSettings,
+  ApiLogsResponse,
 } from "@/lib/types";
 
 export async function fetchUsers(): Promise<AdminUser[]> {
@@ -52,6 +53,20 @@ export async function fetchWorkerNotificationSettings() {
 export async function updateWorkerNotificationSettings(radiusKm: number) {
   const { data } = await api.post<WorkerNotificationSettings>("/mobile/admin/worker-notification-settings", {
     radiusKm,
+  });
+  return data;
+}
+
+export async function fetchApiLogs(params?: {
+  limit?: number;
+  offset?: number;
+  method?: string;
+  statusMin?: number;
+  statusMax?: number;
+  search?: string;
+}) {
+  const { data } = await api.get<ApiLogsResponse>("/mobile/admin/logs", {
+    params,
   });
   return data;
 }

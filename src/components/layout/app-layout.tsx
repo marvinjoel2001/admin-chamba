@@ -12,6 +12,7 @@ import {
   Droplets,
   WalletCards,
   RadioTower,
+  Activity,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAdminStore } from "@/store/admin-store";
@@ -25,6 +26,7 @@ const nav = [
   ["/reports", "Reports", BarChart3],
   ["/wallet", "Wallet", WalletCards],
   ["/worker-settings", "Worker Config", RadioTower],
+  ["/logs", "API Logs", Activity],
   ["/settings", "Settings", Settings],
 ] as const;
 

@@ -10,6 +10,7 @@ import ReportsPage from "@/pages/reports-page";
 import WalletPage from "@/pages/wallet-page";
 import SettingsPage from "@/pages/settings-page";
 import WorkerSettingsPage from "@/pages/worker-settings-page";
+import LogsPage from "@/pages/logs-page";
 
 const router = createBrowserRouter([
   {
@@ -24,6 +25,7 @@ const router = createBrowserRouter([
       { path: "reports", element: <ReportsPage /> },
       { path: "wallet", element: <WalletPage /> },
       { path: "worker-settings", element: <WorkerSettingsPage /> },
+      { path: "logs", element: <LogsPage /> },
       { path: "settings", element: <SettingsPage /> },
     ],
   },
