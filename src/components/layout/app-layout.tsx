@@ -86,7 +86,7 @@ export function AppLayout() {
           <div className="h-8 w-8 rounded-full border border-white/10 bg-surface-variant" />
         </div>
       </header>
-      <main className="w-full max-w-[1600px] pb-12 pt-[calc(64px+32px)] md:ml-[280px] md:px-8 lg:px-12">
+      <main className="w-full pb-12 pt-[calc(64px+32px)] md:ml-[280px] md:px-8 lg:px-12">
         <Outlet />
       </main>
     </div>

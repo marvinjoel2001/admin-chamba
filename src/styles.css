@@ -65,3 +65,17 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* ─── Mapbox popup overrides ─── */
+.map-popup-custom .mapboxgl-popup-content {
+  background: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+.map-popup-custom .mapboxgl-popup-tip {
+  border-top-color: #1e1e2e !important;
+}
+.map-popup-custom .mapboxgl-popup-close-button {
+  display: none;
+}

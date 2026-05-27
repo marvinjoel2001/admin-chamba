@@ -1,17 +1,26 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Map, {
   Layer,
   type LayerProps,
+  Popup,
   type MapRef,
   Source,
+  type MapLayerMouseEvent,
 } from "react-map-gl";
 import { io } from "socket.io-client";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchMapSnapshot } from "@/lib/admin-api";
 import type { MapClient, MapRequest, MapWorker } from "@/lib/types";
 import { toast } from "sonner";
+import { ChevronDown, ChevronUp, Users, Radio, MapPin, X } from "lucide-react";
 
 type PanelTab = "workers" | "requests";
+type WorkerFilter = "all" | "free" | "busy";
+
+type PopupInfo =
+  | { kind: "worker"; data: MapWorker; lng: number; lat: number }
+  | { kind: "client"; data: MapClient; lng: number; lat: number }
+  | { kind: "request"; data: MapRequest; lng: number; lat: number };
 
 type GeoJsonPoint = {
   type: "FeatureCollection";
@@ -21,6 +30,8 @@ type GeoJsonPoint = {
     properties: Record<string, unknown>;
   }>;
 };
+
+/* ─── Layer definitions (static, never re-created) ─── */
 
 const workerClusterLayer: LayerProps = {
   id: "worker-clusters",
@@ -56,7 +67,14 @@ const workerIconLayer: LayerProps = {
   source: "workers",
   filter: ["!", ["has", "point_count"]],
   layout: {
-    "icon-image": ["case", ["==", ["get", "isAvailable"], true], "worker-helmet", "worker-helmet-off"],
+    "icon-image": [
+      "case",
+      ["==", ["get", "hasBusyRequest"], true],
+      "worker-busy",
+      ["==", ["get", "isAvailable"], true],
+      "worker-free",
+      "worker-offline",
+    ],
     "icon-size": 0.9,
     "icon-allow-overlap": true,
   },
@@ -67,8 +85,8 @@ const clientIconLayer: LayerProps = {
   type: "symbol",
   source: "clients",
   layout: {
-    "icon-image": "client-dot",
-    "icon-size": 0.72,
+    "icon-image": "client-person",
+    "icon-size": 0.85,
     "icon-allow-overlap": true,
   },
 };
@@ -116,24 +134,39 @@ const requestClusterCountLayer: LayerProps = {
 const statusLabel: Record<string, string> = {
   searching: "Buscando",
   negotiating: "Negociando",
-  assigned: "Asignada",
+  assigned: "Asignado",
   in_progress: "En progreso",
 };
 
 const svgToDataUrl = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
-const workerHelmetSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path fill='#d2bbff' d='M32 8c-12.2 0-22 9.8-22 22v6h8v10h28V36h8v-6c0-12.2-9.8-22-22-22zm0 8c7.7 0 14 6.3 14 14v2H18v-2c0-7.7 6.3-14 14-14z'/><circle cx='24' cy='52' r='4' fill='#d2bbff'/><circle cx='40' cy='52' r='4' fill='#d2bbff'/></svg>`;
-const workerHelmetOffSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path fill='#6b7280' d='M32 8c-12.2 0-22 9.8-22 22v6h8v10h28V36h8v-6c0-12.2-9.8-22-22-22zm0 8c7.7 0 14 6.3 14 14v2H18v-2c0-7.7 6.3-14 14-14z'/><circle cx='24' cy='52' r='4' fill='#6b7280'/><circle cx='40' cy='52' r='4' fill='#6b7280'/></svg>`;
-const clientSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='20' fill='#38bdf8'/><circle cx='24' cy='18' r='7' fill='#0f172a'/><path d='M10 38c2.6-7.2 8.1-11 14-11s11.4 3.8 14 11' fill='#0f172a'/></svg>`;
-const requestPinSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><path fill='#ffe083' d='M24 4c-8.3 0-15 6.7-15 15 0 10.5 15 25 15 25s15-14.5 15-25c0-8.3-6.7-15-15-15zm0 20a5 5 0 1 1 0-10 5 5 0 0 1 0 10z'/></svg>`;
+/* ─── SVG Icons ─── */
+// Worker free (green helmet)
+const workerFreeSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#166534'/><path fill='#4ade80' d='M24 10c-7.2 0-13 5.8-13 13v3h4v6h18v-6h4v-3c0-7.2-5.8-13-13-13zm0 5c4.4 0 8 3.6 8 8v1H16v-1c0-4.4 3.6-8 8-8z'/><circle cx='20' cy='38' r='2.5' fill='#4ade80'/><circle cx='28' cy='38' r='2.5' fill='#4ade80'/></svg>`;
+// Worker busy (orange helmet)
+const workerBusySvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#7c2d12'/><path fill='#fb923c' d='M24 10c-7.2 0-13 5.8-13 13v3h4v6h18v-6h4v-3c0-7.2-5.8-13-13-13zm0 5c4.4 0 8 3.6 8 8v1H16v-1c0-4.4 3.6-8 8-8z'/><circle cx='20' cy='38' r='2.5' fill='#fb923c'/><circle cx='28' cy='38' r='2.5' fill='#fb923c'/></svg>`;
+// Worker offline (gray helmet)
+const workerOfflineSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#374151'/><path fill='#9ca3af' d='M24 10c-7.2 0-13 5.8-13 13v3h4v6h18v-6h4v-3c0-7.2-5.8-13-13-13zm0 5c4.4 0 8 3.6 8 8v1H16v-1c0-4.4 3.6-8 8-8z'/><circle cx='20' cy='38' r='2.5' fill='#9ca3af'/><circle cx='28' cy='38' r='2.5' fill='#9ca3af'/></svg>`;
+// Client (person silhouette in blue pin)
+const clientPersonSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 58'><path fill='#0ea5e9' d='M24 0C10.7 0 0 10.7 0 24c0 16 24 34 24 34s24-18 24-34C48 10.7 37.3 0 24 0z'/><circle cx='24' cy='18' r='7' fill='#fff'/><path fill='#fff' d='M12 36c2-7 7-11 12-11s10 4 12 11'/></svg>`;
+// Request pin (yellow/amber)
+const requestPinSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 58'><path fill='#f59e0b' d='M24 0C10.7 0 0 10.7 0 24c0 16 24 34 24 34s24-18 24-34C48 10.7 37.3 0 24 0z'/><circle cx='24' cy='22' r='8' fill='#fff'/><circle cx='24' cy='22' r='4' fill='#f59e0b'/></svg>`;
+
+/* ─── Flush interval (ms) – higher = fewer re-renders during rapid moves ─── */
+const FLUSH_INTERVAL_MS = 300;
+
+const INTERACTIVE_LAYERS = ["workers-unclustered", "clients-points", "requests-points"];
 
 export default function MapPage() {
   const token = import.meta.env.VITE_MAPBOX_TOKEN || "";
   const mapRef = useRef<MapRef | null>(null);
   const [tab, setTab] = useState<PanelTab>("requests");
+  const [panelOpen, setPanelOpen] = useState(true);
   const [workers, setWorkers] = useState<MapWorker[]>([]);
   const [clients, setClients] = useState<MapClient[]>([]);
   const [requests, setRequests] = useState<MapRequest[]>([]);
+  const [workerFilter, setWorkerFilter] = useState<WorkerFilter>("all");
+  const [popup, setPopup] = useState<PopupInfo | null>(null);
   const lastSyncRef = useRef<string | undefined>(undefined);
 
   const workersMapRef = useRef<globalThis.Map<string, MapWorker>>(new globalThis.Map());
@@ -143,8 +176,9 @@ export default function MapPage() {
     globalThis.Map<string, { latitude: number; longitude: number; timestamp: string }>
   >(new globalThis.Map());
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const rafRef = useRef<number | null>(null);
 
-  const applySnapshot = (snapshot: { workers: MapWorker[]; clients: MapClient[]; requests: MapRequest[]; serverTime: string }) => {
+  const applySnapshot = useCallback((snapshot: { workers: MapWorker[]; clients: MapClient[]; requests: MapRequest[]; serverTime: string }) => {
     snapshot.workers.forEach((item) => workersMapRef.current.set(item.id, item));
     snapshot.clients.forEach((item) => clientsMapRef.current.set(item.id, item));
     snapshot.requests.forEach((item) => requestsMapRef.current.set(item.id, item));
@@ -152,9 +186,9 @@ export default function MapPage() {
     setClients(Array.from(clientsMapRef.current.values()));
     setRequests(Array.from(requestsMapRef.current.values()).sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt)));
     lastSyncRef.current = snapshot.serverTime;
-  };
+  }, []);
 
-  const flushWorkerQueue = () => {
+  const flushWorkerQueue = useCallback(() => {
     if (workerRealtimeQueueRef.current.size === 0) return;
     workerRealtimeQueueRef.current.forEach((payload, workerId) => {
       const current = workersMapRef.current.get(workerId);
@@ -167,16 +201,20 @@ export default function MapPage() {
       });
     });
     workerRealtimeQueueRef.current.clear();
-    setWorkers(Array.from(workersMapRef.current.values()));
-  };
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      setWorkers(Array.from(workersMapRef.current.values()));
+      rafRef.current = null;
+    });
+  }, []);
 
-  const scheduleWorkerFlush = () => {
+  const scheduleWorkerFlush = useCallback(() => {
     if (flushTimerRef.current) return;
     flushTimerRef.current = setTimeout(() => {
       flushWorkerQueue();
       flushTimerRef.current = null;
-    }, 200);
-  };
+    }, FLUSH_INTERVAL_MS);
+  }, [flushWorkerQueue]);
 
   useEffect(() => {
     let mounted = true;
@@ -200,7 +238,7 @@ export default function MapPage() {
       mounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [applySnapshot]);
 
   useEffect(() => {
     const base = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "").replace(/\/api$/, "");
@@ -253,17 +291,33 @@ export default function MapPage() {
         clearTimeout(flushTimerRef.current);
         flushTimerRef.current = null;
       }
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
     };
-  }, []);
+  }, [scheduleWorkerFlush]);
+
+  /* ─── Filtered workers based on toggle ─── */
+  const filteredWorkers = useMemo(() => {
+    if (workerFilter === "free") return workers.filter((w) => w.isAvailable && !w.activeRequest);
+    if (workerFilter === "busy") return workers.filter((w) => !!w.activeRequest);
+    return workers;
+  }, [workers, workerFilter]);
 
   const workersGeo = useMemo<GeoJsonPoint>(() => ({
     type: "FeatureCollection",
-    features: workers.map((w) => ({
+    features: filteredWorkers.map((w) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [w.longitude, w.latitude] as [number, number] },
-      properties: { id: w.id, name: `${w.firstName} ${w.lastName}`.trim(), isAvailable: w.isAvailable },
+      properties: {
+        id: w.id,
+        name: `${w.firstName} ${w.lastName}`.trim(),
+        isAvailable: w.isAvailable,
+        hasBusyRequest: !!w.activeRequest,
+      },
     })),
-  }), [workers]);
+  }), [filteredWorkers]);
 
   const clientsGeo = useMemo<GeoJsonPoint>(() => ({
     type: "FeatureCollection",
@@ -284,8 +338,9 @@ export default function MapPage() {
   }), [requests]);
 
   const activeWorkers = useMemo(() => workers.filter((w) => w.isAvailable).length, [workers]);
+  const busyWorkers = useMemo(() => workers.filter((w) => !!w.activeRequest).length, [workers]);
 
-  const onMapLoad = () => {
+  const onMapLoad = useCallback(() => {
     const map = mapRef.current?.getMap();
     if (!map) return;
 
@@ -297,68 +352,182 @@ export default function MapPage() {
       });
     };
 
-    register("worker-helmet", workerHelmetSvg);
-    register("worker-helmet-off", workerHelmetOffSvg);
-    register("client-dot", clientSvg);
+    register("worker-free", workerFreeSvg);
+    register("worker-busy", workerBusySvg);
+    register("worker-offline", workerOfflineSvg);
+    register("client-person", clientPersonSvg);
     register("request-pin", requestPinSvg);
-  };
+  }, []);
+
+  /* ─── Click handler for markers ─── */
+  const onMapClick = useCallback(
+    (e: MapLayerMouseEvent) => {
+      const feature = e.features?.[0];
+      if (!feature || !feature.properties) { setPopup(null); return; }
+
+      const coords = (feature.geometry as { coordinates: [number, number] }).coordinates;
+      const [lng, lat] = coords;
+      const props = feature.properties;
+      const layerId = feature.layer?.id;
+
+      if (layerId === "workers-unclustered") {
+        const w = workersMapRef.current.get(props.id as string);
+        if (w) setPopup({ kind: "worker", data: w, lng, lat });
+      } else if (layerId === "clients-points") {
+        const c = clientsMapRef.current.get(props.id as string);
+        if (c) setPopup({ kind: "client", data: c, lng, lat });
+      } else if (layerId === "requests-points") {
+        const r = requestsMapRef.current.get(props.id as string);
+        if (r) setPopup({ kind: "request", data: r, lng, lat });
+      } else {
+        setPopup(null);
+      }
+    },
+    [],
+  );
+
+  const onMapMouseEnter = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (map) map.getCanvas().style.cursor = "pointer";
+  }, []);
+
+  const onMapMouseLeave = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (map) map.getCanvas().style.cursor = "";
+  }, []);
 
   return (
-    <section className="relative h-[82vh] overflow-hidden rounded-2xl border border-white/10">
-      <div className="absolute left-6 top-6 z-10 w-[320px] rounded-2xl border border-white/10 bg-surface-container-high/70 p-5 backdrop-blur-[24px]">
-        <p className="text-sm text-on-surface-variant">Trabajadores activos</p>
-        <p className="text-5xl font-bold">{activeWorkers}</p>
-        <p className="mt-2 text-xs text-on-surface-variant">Total workers en mapa: {workers.length}</p>
-        <p className="text-xs text-on-surface-variant">Clientes en mapa: {clients.length} · Solicitudes: {requests.length}</p>
-      </div>
-
-      <div className="absolute right-6 top-6 z-10 w-[390px] rounded-2xl border border-primary/20 bg-surface-container-high/80 p-4 backdrop-blur-[34px]">
-        <div className="mb-3 flex items-center gap-2 text-sm">
-          <button className={`rounded-full px-3 py-1 ${tab === "requests" ? "bg-primary/20 text-primary" : "text-on-surface-variant"}`} onClick={() => setTab("requests")}>Solicitudes</button>
-          <button className={`rounded-full px-3 py-1 ${tab === "workers" ? "bg-primary/20 text-primary" : "text-on-surface-variant"}`} onClick={() => setTab("workers")}>Trabajadores</button>
+    <section className="relative -mx-8 -mt-8 lg:-mx-12 lg:-mt-8 h-[calc(100vh-64px)] overflow-hidden">
+      {/* ─── Stats overlay (top-left) ─── */}
+      <div className="absolute left-4 top-4 z-10 flex items-center gap-3 rounded-2xl border border-white/10 bg-surface-container-high/60 px-5 py-3 backdrop-blur-[20px]">
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-500/20">
+            <Users size={16} className="text-green-400" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold leading-none">{activeWorkers}</p>
+            <p className="text-[10px] text-on-surface-variant">Libres</p>
+          </div>
         </div>
-
-        <div className="max-h-[420px] overflow-auto">
-          {tab === "requests" && (
-            <div className="space-y-2">
-              {requests.map((r) => (
-                <div key={r.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium">{r.title}</p>
-                    <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase text-on-surface-variant">{statusLabel[r.status] ?? r.status}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-on-surface-variant">{r.clientName} · Bs {r.budget}</p>
-                  <p className="truncate text-xs text-on-surface-variant">{r.address}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {tab === "workers" && (
-            <div className="space-y-2">
-              {workers.map((w) => (
-                <div key={w.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium">{w.firstName} {w.lastName}</p>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] ${w.isAvailable ? "bg-primary/20 text-primary" : "bg-gray-400/20 text-gray-300"}`}>{w.isAvailable ? "Activo" : "Inactivo"}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-on-surface-variant">Jobs: {w.completedJobs} · Rating: {w.averageRating.toFixed(1)}</p>
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="h-8 w-px bg-white/10" />
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500/20">
+            <Radio size={16} className="text-orange-400" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold leading-none">{busyWorkers}</p>
+            <p className="text-[10px] text-on-surface-variant">Ocupados</p>
+          </div>
+        </div>
+        <div className="h-8 w-px bg-white/10" />
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/20">
+            <MapPin size={16} className="text-amber-400" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold leading-none">{requests.length}</p>
+            <p className="text-[10px] text-on-surface-variant">Solicitudes</p>
+          </div>
         </div>
       </div>
 
-      <div className="h-full w-full bg-black/20">
+      {/* ─── Side panel overlay (right) ─── */}
+      <div className={`absolute right-4 top-4 z-10 flex w-[340px] flex-col rounded-2xl border border-primary/20 bg-surface-container-high/70 backdrop-blur-[28px] transition-all duration-300 ${panelOpen ? "max-h-[calc(100%-2rem)]" : "max-h-[52px]"}`}>
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2 text-sm">
+            <button className={`rounded-full px-3 py-1 transition-colors ${tab === "requests" ? "bg-primary/20 text-primary" : "text-on-surface-variant hover:text-on-surface"}`} onClick={() => setTab("requests")}>Solicitudes</button>
+            <button className={`rounded-full px-3 py-1 transition-colors ${tab === "workers" ? "bg-primary/20 text-primary" : "text-on-surface-variant hover:text-on-surface"}`} onClick={() => setTab("workers")}>Workers</button>
+          </div>
+          <button onClick={() => setPanelOpen((v) => !v)} className="text-on-surface-variant hover:text-on-surface">
+            {panelOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+        </div>
+
+        {panelOpen && (
+          <div className="flex-1 overflow-auto px-4 pb-4">
+            {tab === "requests" && (
+              <div className="space-y-2">
+                {requests.slice(0, 50).map((r) => (
+                  <div key={r.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-sm font-medium">{r.title}</p>
+                      <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase text-on-surface-variant">{statusLabel[r.status] ?? r.status}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-on-surface-variant">{r.clientName} · Bs {r.budget}</p>
+                    <p className="truncate text-xs text-on-surface-variant">{r.address}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {tab === "workers" && (
+              <div className="space-y-2">
+                {workers.slice(0, 50).map((w) => {
+                  const isBusy = !!w.activeRequest;
+                  return (
+                    <div key={w.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium">{w.firstName} {w.lastName}</p>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${isBusy ? "bg-orange-500/20 text-orange-300" : w.isAvailable ? "bg-green-500/20 text-green-300" : "bg-gray-400/20 text-gray-300"}`}>
+                          {isBusy ? "Ocupado" : w.isAvailable ? "Libre" : "Offline"}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-on-surface-variant">Jobs: {w.completedJobs} · Rating: {w.averageRating.toFixed(1)}</p>
+                      {w.activeRequest && (
+                        <div className="mt-2 rounded-lg border border-orange-500/20 bg-orange-500/5 p-2">
+                          <p className="text-[11px] font-medium text-orange-300">{w.activeRequest.title}</p>
+                          <p className="text-[10px] text-on-surface-variant">
+                            {w.activeRequest.workerArrived ? "Ya llegó al lugar" : "En camino"} · {statusLabel[w.activeRequest.status] ?? w.activeRequest.status}
+                          </p>
+                          <p className="text-[10px] text-on-surface-variant">Cliente: {w.activeRequest.clientName}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ─── Filter toggles (bottom-center) ─── */}
+      <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/10 bg-surface-container-high/70 p-1.5 backdrop-blur-[20px]">
+        {(["all", "free", "busy"] as const).map((f) => {
+          const labels: Record<WorkerFilter, string> = { all: "Todos", free: "Libres", busy: "Ocupados" };
+          const colors: Record<WorkerFilter, string> = {
+            all: workerFilter === "all" ? "bg-primary/20 text-primary" : "",
+            free: workerFilter === "free" ? "bg-green-500/20 text-green-300" : "",
+            busy: workerFilter === "busy" ? "bg-orange-500/20 text-orange-300" : "",
+          };
+          return (
+            <button
+              key={f}
+              onClick={() => setWorkerFilter(f)}
+              className={`rounded-xl px-4 py-2 text-xs font-medium transition-colors ${colors[f] || "text-on-surface-variant hover:text-on-surface hover:bg-white/5"}`}
+            >
+              {labels[f]}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ─── Full-size Map ─── */}
+      <div className="absolute inset-0">
         {token ? (
           <Map
             ref={mapRef}
             onLoad={onMapLoad}
+            onClick={onMapClick}
+            onMouseEnter={onMapMouseEnter}
+            onMouseLeave={onMapMouseLeave}
+            interactiveLayerIds={INTERACTIVE_LAYERS}
             mapboxAccessToken={token}
             initialViewState={{ longitude: -68.15, latitude: -16.5, zoom: 11 }}
             mapStyle="mapbox://styles/mapbox/dark-v11"
+            style={{ width: "100%", height: "100%" }}
             reuseMaps
+            fadeDuration={0}
           >
             <Source id="workers" type="geojson" data={workersGeo} cluster clusterRadius={50} clusterMaxZoom={12}>
               <Layer {...workerClusterLayer} />
@@ -375,9 +544,104 @@ export default function MapPage() {
               <Layer {...requestClusterCountLayer} />
               <Layer {...requestIconLayer} />
             </Source>
+
+            {/* ─── Popup on click ─── */}
+            {popup && (
+              <Popup
+                longitude={popup.lng}
+                latitude={popup.lat}
+                anchor="bottom"
+                onClose={() => setPopup(null)}
+                closeButton={false}
+                className="map-popup-custom"
+                maxWidth="320px"
+              >
+                <div className="relative rounded-xl bg-[#1e1e2e] p-4 text-white shadow-2xl min-w-[260px]">
+                  <button onClick={() => setPopup(null)} className="absolute right-2 top-2 text-gray-400 hover:text-white"><X size={14} /></button>
+
+                  {popup.kind === "worker" && (() => {
+                    const w = popup.data;
+                    const isBusy = !!w.activeRequest;
+                    return (
+                      <>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isBusy ? "bg-orange-500/20" : w.isAvailable ? "bg-green-500/20" : "bg-gray-500/20"}`}>
+                            <span className="text-lg">{isBusy ? "🔨" : "⛑️"}</span>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">{w.firstName} {w.lastName}</p>
+                            <span className={`text-[10px] font-medium ${isBusy ? "text-orange-400" : w.isAvailable ? "text-green-400" : "text-gray-400"}`}>
+                              {isBusy ? "Ocupado" : w.isAvailable ? "Libre" : "Offline"}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-gray-300 mb-2">
+                          <span>Rating: <b className="text-white">{w.averageRating.toFixed(1)} ⭐</b></span>
+                          <span>Jobs: <b className="text-white">{w.completedJobs}</b></span>
+                        </div>
+                        {w.activeRequest && (
+                          <div className="mt-2 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3">
+                            <p className="text-[11px] font-semibold text-orange-300 mb-1">Solicitud activa</p>
+                            <p className="text-xs text-gray-200 font-medium">{w.activeRequest.title}</p>
+                            <p className="text-[11px] text-gray-400 mt-1">
+                              {w.activeRequest.workerArrived ? "✅ Ya llegó al lugar" : "🚗 En camino al trabajo"}
+                            </p>
+                            <p className="text-[11px] text-gray-400">Estado: {statusLabel[w.activeRequest.status] ?? w.activeRequest.status}</p>
+                            <p className="text-[11px] text-gray-400">📍 {w.activeRequest.address}</p>
+                            <div className="mt-2 border-t border-white/10 pt-2">
+                              <p className="text-[11px] text-gray-300">👤 Contratado por: <b className="text-sky-300">{w.activeRequest.clientName}</b></p>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+
+                  {popup.kind === "client" && (() => {
+                    const c = popup.data;
+                    return (
+                      <>
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500/20">
+                            <span className="text-lg">👤</span>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">{c.firstName} {c.lastName}</p>
+                            <span className="text-[10px] text-sky-400">Cliente</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-400">Última actividad: {new Date(c.updatedAt).toLocaleString()}</p>
+                      </>
+                    );
+                  })()}
+
+                  {popup.kind === "request" && (() => {
+                    const r = popup.data;
+                    return (
+                      <>
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
+                            <span className="text-lg">📋</span>
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm">{r.title}</p>
+                            <span className="text-[10px] text-amber-400">{statusLabel[r.status] ?? r.status}</span>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-300 space-y-1">
+                          <p>👤 {r.clientName}</p>
+                          <p>💰 Bs {r.budget}</p>
+                          <p>📍 {r.address}</p>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </Popup>
+            )}
           </Map>
         ) : (
-          <div className="flex h-full items-center justify-center text-on-surface-variant">Configura `VITE_MAPBOX_TOKEN` para el mapa realista</div>
+          <div className="flex h-full items-center justify-center bg-black/40 text-on-surface-variant">Configura VITE_MAPBOX_TOKEN para el mapa</div>
         )}
       </div>
     </section>

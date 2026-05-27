@@ -22,6 +22,15 @@ export type WorkerVerificationReviewPayload = {
   facePhotoApproved?: boolean;
 };
 
+export type WorkerActiveRequest = {
+  id: string;
+  title: string;
+  status: string;
+  address: string;
+  workerArrived: boolean;
+  clientName: string;
+};
+
 export type MapWorker = {
   id: string;
   firstName: string;
@@ -32,6 +41,7 @@ export type MapWorker = {
   latitude: number;
   longitude: number;
   updatedAt: string;
+  activeRequest: WorkerActiveRequest | null;
 };
 
 export type MapClient = {
