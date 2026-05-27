@@ -9,6 +9,7 @@ import {
   fetchWorkerVerificationInbox,
   reviewWorkerVerification,
   updateUser,
+  deleteUser,
 } from "@/lib/admin-api";
 import type { AdminUser } from "@/lib/types";
 
@@ -71,14 +72,20 @@ export default function WorkersPage() {
     });
   };
 
-  const onEdit = async (row: AdminUser) => {
+  const [editWorker, setEditWorker] = useState<AdminUser | null>(null);
+  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", phone: "" });
+
+  const openEdit = (row: AdminUser) => {
+    setEditWorker(row);
+    setEditForm({ firstName: row.firstName, lastName: row.lastName ?? "", phone: row.phone ?? "" });
+  };
+
+  const onEdit = async () => {
+    if (!editWorker) return;
     try {
-      const updated = await updateUser(row.id, {
-        firstName: row.firstName,
-        lastName: row.lastName,
-        phone: row.phone,
-      });
+      const updated = await updateUser(editWorker.id, editForm);
       syncUpdatedWorker(updated);
+      setEditWorker(null);
       toast.success("Trabajador actualizado");
     } catch {
       toast.error("No se pudo actualizar en backend");
@@ -86,13 +93,13 @@ export default function WorkersPage() {
   };
 
   const onDelete = async (row: AdminUser) => {
+    if (!confirm('Desactivar trabajador ' + row.firstName + '?')) return;
     try {
-      const updated = await updateUser(row.id, { isAvailable: false });
-      syncUpdatedWorker(updated);
+      await deleteUser(row.id);
+      setItems((prev) => prev.filter((p) => p.id !== row.id));
       toast.success("Trabajador desactivado");
     } catch {
-      setItems((prev) => prev.filter((p) => p.id !== row.id));
-      toast.warning("No existe DELETE /users. Se aplico eliminacion local");
+      toast.error("No se pudo desactivar en backend");
     }
   };
 
@@ -146,7 +153,7 @@ export default function WorkersPage() {
         cell: ({ row }) => (
           <div className="flex gap-2">
             <button
-              onClick={() => onEdit(row.original)}
+              onClick={() => openEdit(row.original)}
               className="rounded bg-white/10 px-2 py-1 text-xs"
             >
               Editar
@@ -314,6 +321,31 @@ export default function WorkersPage() {
           </div>
         )}
       </div>
+      {editWorker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0d1117] p-6">
+            <h3 className="mb-4 text-lg font-bold">Editar Trabajador</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs text-on-surface-variant">Nombre</label>
+                <input value={editForm.firstName} onChange={(e) => setEditForm({...editForm, firstName: e.target.value})} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-on-surface-variant">Apellido</label>
+                <input value={editForm.lastName} onChange={(e) => setEditForm({...editForm, lastName: e.target.value})} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-on-surface-variant">Teléfono</label>
+                <input value={editForm.phone} onChange={(e) => setEditForm({...editForm, phone: e.target.value})} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" />
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end gap-3">
+              <button onClick={() => setEditWorker(null)} className="rounded-lg px-4 py-2 text-sm text-on-surface-variant hover:bg-white/10">Cancelar</button>
+              <button onClick={onEdit} className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/80">Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

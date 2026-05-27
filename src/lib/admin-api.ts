@@ -11,6 +11,10 @@ import type {
   ApiLogsResponse,
 } from "@/lib/types";
 
+export async function deleteUser(id: string) {
+  await api.delete(`/users/${id}`);
+}
+
 export async function fetchUsers(): Promise<AdminUser[]> {
   const { data } = await api.get<AdminUser[]>("/users");
   return data;

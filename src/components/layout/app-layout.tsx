@@ -44,7 +44,7 @@ export function AppLayout() {
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-sidebar-width flex-col border-r border-white/10 bg-surface/60 py-container-margin backdrop-blur-[20px] md:flex">
         <div className="mb-section-gap px-gutter">
           <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-primary">
-            <Droplets size={22} />ServiceFlow
+            <Droplets size={22} />Chamba Admin
           </Link>
           <p className="mt-1 text-sm text-on-surface-variant">Admin Console</p>
         </div>
