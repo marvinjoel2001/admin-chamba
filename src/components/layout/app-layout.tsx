@@ -1,4 +1,4 @@
-﻿import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import {
   Bell,
   LayoutDashboard,
@@ -13,6 +13,8 @@ import {
   WalletCards,
   RadioTower,
   Activity,
+  ShieldAlert,
+  FolderOpen,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAdminStore } from "@/store/admin-store";
@@ -26,6 +28,8 @@ const nav = [
   ["/reports", "Reports", BarChart3],
   ["/wallet", "Wallet", WalletCards],
   ["/worker-settings", "Worker Config", RadioTower],
+  ["/disputes", "Disputas", ShieldAlert],
+  ["/categories", "Categorías", FolderOpen],
   ["/logs", "API Logs", Activity],
   ["/settings", "Settings", Settings],
 ] as const;

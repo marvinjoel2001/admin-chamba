@@ -118,3 +118,49 @@ export type ApiLogsResponse = {
     offset: number;
   };
 };
+
+// ─── Disputes ───
+
+export type Dispute = {
+  id: string;
+  requestId: string;
+  requestTitle: string;
+  requestStatus: string;
+  reportedBy: string;
+  reporterName: string;
+  reporterType: string;
+  reportedUser: string | null;
+  reportedName: string;
+  reportedType: string | null;
+  reason: string;
+  description: string;
+  status: string;
+  resolution: string | null;
+  resolvedBy: string | null;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type DisputeMessage = {
+  id: string;
+  disputeId: string;
+  senderType: string;
+  senderId: string | null;
+  senderName: string;
+  content: string;
+  createdAt: string;
+};
+
+// ─── Categories ───
+
+export type Category = {
+  id: string;
+  name: string;
+  description: string;
+  icon: string | null;
+  parentId: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};

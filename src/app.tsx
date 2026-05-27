@@ -1,4 +1,4 @@
-﻿import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Toaster } from "sonner";
 import { AppLayout } from "@/components/layout/app-layout";
 import DashboardPage from "@/pages/dashboard-page";
@@ -11,6 +11,8 @@ import WalletPage from "@/pages/wallet-page";
 import SettingsPage from "@/pages/settings-page";
 import WorkerSettingsPage from "@/pages/worker-settings-page";
 import LogsPage from "@/pages/logs-page";
+import DisputesPage from "@/pages/disputes-page";
+import CategoriesPage from "@/pages/categories-page";
 
 const router = createBrowserRouter([
   {
@@ -26,6 +28,8 @@ const router = createBrowserRouter([
       { path: "wallet", element: <WalletPage /> },
       { path: "worker-settings", element: <WorkerSettingsPage /> },
       { path: "logs", element: <LogsPage /> },
+      { path: "disputes", element: <DisputesPage /> },
+      { path: "categories", element: <CategoriesPage /> },
       { path: "settings", element: <SettingsPage /> },
     ],
   },
