@@ -365,7 +365,7 @@ export default function MapPage() {
       const feature = e.features?.[0];
       if (!feature || !feature.properties) { setPopup(null); return; }
 
-      const coords = (feature.geometry as { coordinates: [number, number] }).coordinates;
+      const coords = (feature.geometry as unknown as { coordinates: [number, number] }).coordinates;
       const [lng, lat] = coords;
       const props = feature.properties;
       const layerId = feature.layer?.id;
