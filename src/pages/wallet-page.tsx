@@ -42,9 +42,9 @@ export default function WalletPage() {
 
   return (
     <section className="flex flex-col gap-8">
-      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Billetera de Trabajadores</h2>
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Billetera de Trabajadores</h2>
           <p className="mt-1 text-on-surface-variant">Visibilidad de ganancias por periodo.</p>
         </div>
         <div className="flex gap-2">
@@ -54,9 +54,9 @@ export default function WalletPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="glass-panel rounded-xl p-6"><p className="text-xs uppercase tracking-wider text-on-surface-variant">Ganancia total</p><p className="mt-1 text-3xl font-semibold">Bs {totals.totalEarnings.toFixed(2)}</p></div>
-        <div className="glass-panel rounded-xl p-6"><p className="text-xs uppercase tracking-wider text-on-surface-variant">Trabajos completados</p><p className="mt-1 text-3xl font-semibold">{totals.totalJobs}</p></div>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+        <div className="glass-panel rounded-xl p-6"><p className="text-xs uppercase tracking-wider text-on-surface-variant">Ganancia total</p><p className="mt-1 text-2xl font-semibold sm:text-3xl">Bs {totals.totalEarnings.toFixed(2)}</p></div>
+        <div className="glass-panel rounded-xl p-6"><p className="text-xs uppercase tracking-wider text-on-surface-variant">Trabajos completados</p><p className="mt-1 text-2xl font-semibold sm:text-3xl">{totals.totalJobs}</p></div>
       </div>
 
       <div className="glass-panel overflow-hidden rounded-xl">

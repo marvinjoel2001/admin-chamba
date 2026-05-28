@@ -48,19 +48,19 @@ export default function DisputesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Disputas y Reclamos</h1>
+          <h1 className="text-xl font-bold sm:text-2xl">Disputas y Reclamos</h1>
           <p className="text-sm text-on-surface-variant">
             {openCount} abiertos · {resolvedCount} resueltos
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {(["all", "open", "resolved"] as StatusFilter[]).map((s) => (
             <button
               key={s}
               onClick={() => setFilter(s)}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+              className={`rounded-lg px-3 py-2 text-xs font-medium transition sm:px-4 sm:text-sm ${
                 filter === s
                   ? "bg-primary text-white"
                   : "bg-white/5 text-on-surface-variant hover:bg-white/10"
@@ -92,7 +92,7 @@ export default function DisputesPage() {
                   : "border-white/10 bg-white/5"
               }`}
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-start">
                 <div className="flex items-center gap-3">
                   {d.status === "open" ? (
                     <AlertTriangle className="h-5 w-5 text-amber-400" />

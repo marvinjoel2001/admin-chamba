@@ -129,19 +129,20 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Categorías y Comisiones</h1>
+          <h1 className="text-xl font-bold sm:text-2xl">Categorías y Comisiones</h1>
           <p className="text-sm text-on-surface-variant">
             Gestiona los servicios disponibles y la comisión de la plataforma.
           </p>
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary/80"
+          className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/80 sm:px-5 sm:py-2.5"
         >
           <Plus className="h-4 w-4" />
-          Nueva categoría
+          <span className="hidden sm:inline">Nueva categoría</span>
+          <span className="sm:hidden">Nueva</span>
         </button>
       </div>
 

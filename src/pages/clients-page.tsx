@@ -72,9 +72,11 @@ export default function ClientsPage() {
 
   return (
     <section className="flex flex-col gap-8">
-      <div>
-        <h2 className="text-3xl font-semibold tracking-tight">Directorio de Clientes</h2>
-        <p className="mt-2 text-on-surface-variant">Administra las cuentas de clientes.</p>
+      <div className="flex flex-col gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Directorio de Clientes</h2>
+          <p className="mt-2 text-on-surface-variant">Administra las cuentas de clientes.</p>
+        </div>
       </div>
       <div className="glass-panel overflow-hidden rounded-xl">
         <div className="border-b border-white/5 p-4">

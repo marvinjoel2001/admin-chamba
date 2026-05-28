@@ -64,7 +64,7 @@ export default function WorkerSettingsPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
         <div className="glass-panel rounded-2xl p-5">
           <p className="text-sm text-on-surface-variant">Radio de notificacion</p>
           <div className="mt-2 text-4xl font-semibold text-primary">{radiusKm.toFixed(1)} km</div>

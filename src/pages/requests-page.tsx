@@ -42,8 +42,11 @@ export default function RequestsPage() {
   ], []);
 
   return (
-    <section className="glass-panel rounded-xl p-6">
-      <h2 className="mb-4 text-3xl font-bold">Requests</h2>
+    <section className="glass-panel rounded-xl p-4 sm:p-6">
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold sm:text-3xl">Requests</h2>
+        <p className="mt-1 text-sm text-on-surface-variant">Gestiona las solicitudes de servicio.</p>
+      </div>
       {loading ? (
         <div className="p-4 text-sm text-on-surface-variant">Cargando solicitudes...</div>
       ) : (

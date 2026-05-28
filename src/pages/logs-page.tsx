@@ -75,7 +75,7 @@ export default function LogsPage() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <div className="glass-panel rounded-xl p-4"><p className="text-xs text-on-surface-variant">Logs (15m)</p><p className="text-3xl font-semibold">{metrics.total}</p></div>
         <div className="glass-panel rounded-xl p-4"><p className="text-xs text-on-surface-variant">Errores 4xx</p><p className="text-3xl font-semibold text-amber-300">{metrics.total4xx}</p></div>
         <div className="glass-panel rounded-xl p-4"><p className="text-xs text-on-surface-variant">Errores 5xx</p><p className="text-3xl font-semibold text-rose-300">{metrics.total5xx}</p></div>
@@ -83,7 +83,7 @@ export default function LogsPage() {
       </div>
 
       <div className="glass-panel rounded-xl p-4">
-        <div className="grid gap-3 md:grid-cols-6">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
           <select className="glass-input rounded-lg px-3 py-2" value={method} onChange={(e) => setMethod(e.target.value)}>
             {METHODS.map((m) => (
               <option key={m} value={m}>{m || "Todos los metodos"}</option>
