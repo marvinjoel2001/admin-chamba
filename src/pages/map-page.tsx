@@ -12,7 +12,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchMapSnapshot } from "@/lib/admin-api";
 import type { MapClient, MapRequest, MapWorker } from "@/lib/types";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Users, Radio, MapPin, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Users, Radio, MapPin, X, Crosshair } from "lucide-react";
 
 type PanelTab = "workers" | "requests";
 type WorkerFilter = "all" | "free" | "busy";
@@ -285,6 +285,19 @@ export default function MapPage() {
       setRequests(Array.from(requestsMapRef.current.values()).sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt)));
     });
 
+    // Listener para actualizaciones de ubicación de clientes en tiempo real
+    socket.on("client.location.updated", (payload: { clientId: string; latitude: number; longitude: number; timestamp: string }) => {
+      const current = clientsMapRef.current.get(payload.clientId);
+      if (!current) return;
+      clientsMapRef.current.set(payload.clientId, {
+        ...current,
+        latitude: payload.latitude,
+        longitude: payload.longitude,
+        updatedAt: payload.timestamp,
+      });
+      setClients(Array.from(clientsMapRef.current.values()));
+    });
+
     return () => {
       socket.disconnect();
       if (flushTimerRef.current) {
@@ -396,6 +409,23 @@ export default function MapPage() {
     if (map) map.getCanvas().style.cursor = "";
   }, []);
 
+  /* ─── Fly to coordinates (centra el mapa en una ubicación) ─── */
+  const flyToLocation = useCallback((longitude: number, latitude: number, zoom = 15) => {
+    const map = mapRef.current?.getMap();
+    if (!map) {
+      toast.error("Mapa no disponible");
+      return;
+    }
+    map.flyTo({
+      center: [longitude, latitude],
+      zoom,
+      essential: true,
+      duration: 1500,
+    });
+    // Opcionalmente abrir popup en la ubicación
+    setPopup(null);
+  }, []);
+
   return (
     <section className="relative -mx-8 -mt-8 lg:-mx-12 lg:-mt-8 h-[calc(100vh-64px)] overflow-hidden">
       {/* ─── Stats overlay (top-left) ─── */}
@@ -448,13 +478,25 @@ export default function MapPage() {
             {tab === "requests" && (
               <div className="space-y-2">
                 {requests.slice(0, 50).map((r) => (
-                  <div key={r.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
+                  <div key={r.id} className="group rounded-xl border border-white/10 bg-black/20 p-3 hover:bg-black/30 transition-colors">
                     <div className="flex items-center justify-between gap-2">
                       <p className="truncate text-sm font-medium">{r.title}</p>
-                      <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase text-on-surface-variant">{statusLabel[r.status] ?? r.status}</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => flyToLocation(r.longitude, r.latitude, 16)}
+                          className="rounded-full p-1 hover:bg-primary/20 text-on-surface-variant hover:text-primary transition-colors"
+                          title="Centrar en mapa"
+                        >
+                          <Crosshair size={14} />
+                        </button>
+                        <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase text-on-surface-variant">{statusLabel[r.status] ?? r.status}</span>
+                      </div>
                     </div>
                     <p className="mt-1 text-xs text-on-surface-variant">{r.clientName} · Bs {r.budget}</p>
                     <p className="truncate text-xs text-on-surface-variant">{r.address}</p>
+                    <p className="mt-1 text-[10px] text-gray-500">
+                      📍 {r.latitude.toFixed(4)}, {r.longitude.toFixed(4)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -524,12 +566,13 @@ export default function MapPage() {
             interactiveLayerIds={INTERACTIVE_LAYERS}
             mapboxAccessToken={token}
             initialViewState={{ longitude: -68.15, latitude: -16.5, zoom: 11 }}
+            maxZoom={18}
             mapStyle="mapbox://styles/mapbox/dark-v11"
             style={{ width: "100%", height: "100%" }}
             reuseMaps
             fadeDuration={0}
           >
-            <Source id="workers" type="geojson" data={workersGeo} cluster clusterRadius={50} clusterMaxZoom={12}>
+            <Source id="workers" type="geojson" data={workersGeo} cluster clusterRadius={50} clusterMaxZoom={14}>
               <Layer {...workerClusterLayer} />
               <Layer {...workerClusterCountLayer} />
               <Layer {...workerIconLayer} />
@@ -539,7 +582,7 @@ export default function MapPage() {
               <Layer {...clientIconLayer} />
             </Source>
 
-            <Source id="requests" type="geojson" data={requestsGeo} cluster clusterRadius={45} clusterMaxZoom={12}>
+            <Source id="requests" type="geojson" data={requestsGeo} cluster clusterRadius={45} clusterMaxZoom={14}>
               <Layer {...requestClusterLayer} />
               <Layer {...requestClusterCountLayer} />
               <Layer {...requestIconLayer} />
@@ -579,6 +622,15 @@ export default function MapPage() {
                           <span>Rating: <b className="text-white">{w.averageRating.toFixed(1)} ⭐</b></span>
                           <span>Jobs: <b className="text-white">{w.completedJobs}</b></span>
                         </div>
+                        <div className="mb-2 rounded-lg border border-white/10 bg-black/30 p-2">
+                          <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Ubicación actual</p>
+                          <p className="text-[11px] text-gray-300 font-mono">
+                            📍 {w.latitude.toFixed(6)}, {w.longitude.toFixed(6)}
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-1">
+                            Actualizado: {new Date(w.updatedAt).toLocaleTimeString()}
+                          </p>
+                        </div>
                         {w.activeRequest && (
                           <div className="mt-2 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3">
                             <p className="text-[11px] font-semibold text-orange-300 mb-1">Solicitud activa</p>
@@ -609,6 +661,12 @@ export default function MapPage() {
                             <p className="font-semibold text-sm">{c.firstName} {c.lastName}</p>
                             <span className="text-[10px] text-sky-400">Cliente</span>
                           </div>
+                        </div>
+                        <div className="mb-2 rounded-lg border border-white/10 bg-black/30 p-2">
+                          <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Ubicación</p>
+                          <p className="text-[11px] text-gray-300 font-mono">
+                            📍 {c.latitude.toFixed(6)}, {c.longitude.toFixed(6)}
+                          </p>
                         </div>
                         <p className="text-xs text-gray-400">Última actividad: {new Date(c.updatedAt).toLocaleString()}</p>
                       </>
