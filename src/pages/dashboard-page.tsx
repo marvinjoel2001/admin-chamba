@@ -48,27 +48,27 @@ export default function DashboardPage() {
   return (
     <section className="flex flex-col gap-8">
       <div>
-        <h2 className="text-4xl font-bold tracking-tight">Dashboard Principal</h2>
+        <h2 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl">Dashboard Principal</h2>
         <p className="mt-2 text-on-surface-variant">Panel operativo con métricas, actividad y estado del sistema.</p>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { key: "Revenue", value: metrics.revenue },
           { key: "Workers", value: metrics.workers },
           { key: "Requests", value: metrics.requests },
           { key: "Clients", value: metrics.clients },
         ].map((item) => (
-          <div key={item.key} className="glass-panel rounded-xl p-6">
+          <div key={item.key} className="glass-panel rounded-xl p-4 sm:p-6">
             <p className="text-xs uppercase tracking-wider text-on-surface-variant">{item.key}</p>
-            <p className="mt-1 text-3xl font-semibold">
+            <p className="mt-1 text-2xl font-semibold sm:text-3xl">
               {loading ? "Cargando..." : item.value}
             </p>
           </div>
         ))}
       </div>
-      <div className="glass-panel rounded-xl p-6">
-        <h3 className="text-xl">Live Activity</h3>
-        <p className="mt-2 text-on-surface-variant">Actividad en tiempo real integrada con los módulos.</p>
+      <div className="glass-panel rounded-xl p-4 sm:p-6">
+        <h3 className="text-lg font-semibold sm:text-xl">Live Activity</h3>
+        <p className="mt-2 text-sm text-on-surface-variant sm:text-base">Actividad en tiempo real integrada con los módulos.</p>
       </div>
     </section>
   );

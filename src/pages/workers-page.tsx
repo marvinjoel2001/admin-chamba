@@ -171,7 +171,7 @@ export default function WorkersPage() {
 
   return (
     <section className="flex flex-col gap-8">
-      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Workers Directory</h2>
           <p className="mt-1 text-on-surface-variant">
@@ -205,7 +205,7 @@ export default function WorkersPage() {
       </div>
 
       <div className="glass-panel rounded-xl p-5">
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-xl font-semibold">Buzon de Verificacion</h3>
             <p className="text-sm text-on-surface-variant">
