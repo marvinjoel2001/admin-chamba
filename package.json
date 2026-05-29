@@ -1,5 +1,6 @@
 {
   "name": "chamba-admin",
+  "description": "Admin panel for Chamba",
   "private": true,
   "version": "0.0.1",
   "type": "module",
