@@ -154,12 +154,12 @@ const statusColors: Record<string, { bg: string; text: string; border: string }>
 const svgToDataUrl = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
 /* ─── SVG Icons ─── */
-// Worker free (green hard hat - more visible)
-const workerFreeSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#166534' stroke='#22c55e' stroke-width='2'/><circle cx='24' cy='18' r='7' fill='#4ade80'/><path d='M17 25c0-3.87 3.13-7 7-7s7 3.13 7 7v2H17v-2z' fill='#22c55e'/><path d='M12 30c0-6.63 5.37-12 12-12s12 5.37 12 12v3H12v-3z' fill='#4ade80'/><circle cx='18' cy='38' r='2' fill='#86efac'/><circle cx='30' cy='38' r='2' fill='#86efac'/></svg>`;
-// Worker busy (orange hard hat with tools)
-const workerBusySvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#7c2d12' stroke='#fb923c' stroke-width='2'/><circle cx='24' cy='18' r='7' fill='#fb923c'/><path d='M17 25c0-3.87 3.13-7 7-7s7 3.13 7 7v2H17v-2z' fill='#f97316'/><path d='M12 30c0-6.63 5.37-12 12-12s12 5.37 12 12v3H12v-3z' fill='#fdba74'/><text x='24' y='37' text-anchor='middle' font-size='8' fill='#7c2d12'>🔧</text></svg>`;
-// Worker offline (gray)
-const workerOfflineSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#374151' stroke='#9ca3af' stroke-width='2'/><circle cx='24' cy='18' r='7' fill='#9ca3af'/><path d='M17 25c0-3.87 3.13-7 7-7s7 3.13 7 7v2H17v-2z' fill='#6b7280'/><path d='M12 30c0-6.63 5.37-12 12-12s12 5.37 12 12v3H12v-3z' fill='#d1d5db'/><circle cx='18' cy='38' r='2' fill='#9ca3af'/><circle cx='30' cy='38' r='2' fill='#9ca3af'/></svg>`;
+// Worker free (green hard hat - pure SVG no emojis)
+const workerFreeSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#166534' stroke='#22c55e' stroke-width='2'/><circle cx='24' cy='16' r='6' fill='#4ade80'/><path d='M18 22c0-3.31 2.69-6 6-6s6 2.69 6 6v2H18v-2z' fill='#22c55e'/><path d='M13 30c0-6.08 4.92-11 11-11s11 4.92 11 11v3H13v-3z' fill='#4ade80'/><circle cx='18' cy='36' r='2' fill='#86efac'/><circle cx='30' cy='36' r='2' fill='#86efac'/></svg>`;
+// Worker busy (orange hard hat - pure SVG with wrench icon)
+const workerBusySvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#7c2d12' stroke='#fb923c' stroke-width='2'/><circle cx='24' cy='16' r='6' fill='#fb923c'/><path d='M18 22c0-3.31 2.69-6 6-6s6 2.69 6 6v2H18v-2z' fill='#f97316'/><path d='M13 30c0-6.08 4.92-11 11-11s11 4.92 11 11v3H13v-3z' fill='#fdba74'/><path d='M22 32l-2 6 2-1 2 1-2-6z' fill='#7c2d12'/><rect x='21' y='33' width='6' height='2' fill='#7c2d12' transform='rotate(45 24 34)'/></svg>`;
+// Worker offline (gray hard hat)
+const workerOfflineSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#374151' stroke='#9ca3af' stroke-width='2'/><circle cx='24' cy='16' r='6' fill='#9ca3af'/><path d='M18 22c0-3.31 2.69-6 6-6s6 2.69 6 6v2H18v-2z' fill='#6b7280'/><path d='M13 30c0-6.08 4.92-11 11-11s11 4.92 11 11v3H13v-3z' fill='#d1d5db'/><line x1='16' y1='16' x2='32' y2='32' stroke='#374151' stroke-width='3'/><line x1='32' y1='16' x2='16' y2='32' stroke='#374151' stroke-width='3'/></svg>`;
 // Client (person silhouette in blue pin)
 const clientPersonSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 58'><path fill='#0ea5e9' d='M24 0C10.7 0 0 10.7 0 24c0 16 24 34 24 34s24-18 24-34C48 10.7 37.3 0 24 0z'/><circle cx='24' cy='18' r='7' fill='#fff'/><path fill='#fff' d='M12 36c2-7 7-11 12-11s10 4 12 11'/></svg>`;
 // Request pin (yellow/amber)
@@ -357,9 +357,21 @@ export default function MapPage() {
     );
   }, [requests, requestSearch]);
 
+  // Filter workers with valid location (non-zero coordinates)
+  const workersWithLocation = useMemo(() => {
+    return filteredWorkers.filter((w) => {
+      const hasValidLocation = w.latitude !== 0 && w.longitude !== 0 && 
+                             !isNaN(w.latitude) && !isNaN(w.longitude);
+      if (!hasValidLocation) {
+        console.warn(`[Map] Worker ${w.id} (${w.firstName} ${w.lastName}) has invalid location: lat=${w.latitude}, lng=${w.longitude}`);
+      }
+      return hasValidLocation;
+    });
+  }, [filteredWorkers]);
+
   const workersGeo = useMemo<GeoJsonPoint>(() => ({
     type: "FeatureCollection",
-    features: filteredWorkers.map((w) => ({
+    features: workersWithLocation.map((w) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [w.longitude, w.latitude] as [number, number] },
       properties: {
@@ -369,7 +381,7 @@ export default function MapPage() {
         hasBusyRequest: !!w.activeRequest,
       },
     })),
-  }), [filteredWorkers]);
+  }), [workersWithLocation]);
 
   const clientsGeo = useMemo<GeoJsonPoint>(() => ({
     type: "FeatureCollection",
@@ -601,16 +613,20 @@ export default function MapPage() {
                 </div>
                 {/* Results count */}
                 <p className="text-xs text-on-surface-variant">
-                  {filteredWorkers.length} worker{filteredWorkers.length !== 1 ? 's' : ''} encontrado{filteredWorkers.length !== 1 ? 's' : ''}
+                  {workersWithLocation.length} worker{workersWithLocation.length !== 1 ? 's' : ''} en mapa
+                  {filteredWorkers.length !== workersWithLocation.length && (
+                    <span className="text-orange-400"> · {filteredWorkers.length - workersWithLocation.length} sin ubicacion</span>
+                  )}
                 </p>
                 <div className="space-y-2">
                   {filteredWorkers.slice(0, 50).map((w) => {
                     const isBusy = !!w.activeRequest;
+                    const hasLocation = w.latitude !== 0 && w.longitude !== 0 && !isNaN(w.latitude) && !isNaN(w.longitude);
                     return (
                       <div
                         key={w.id}
-                        onClick={() => flyToLocation(w.longitude, w.latitude, 16)}
-                        className="group cursor-pointer rounded-xl border border-white/10 bg-black/20 p-3 transition-all hover:bg-black/30 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
+                        onClick={() => hasLocation ? flyToLocation(w.longitude, w.latitude, 16) : null}
+                        className={`group rounded-xl border border-white/10 bg-black/20 p-3 transition-all hover:bg-black/30 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 ${!hasLocation ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -620,16 +636,22 @@ export default function MapPage() {
                             <p className="text-sm font-medium">{w.firstName} {w.lastName}</p>
                           </div>
                           <div className="flex items-center gap-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                flyToLocation(w.longitude, w.latitude, 16);
-                              }}
-                              className="rounded-full p-1.5 text-on-surface-variant opacity-0 transition-all hover:bg-primary/20 hover:text-primary group-hover:opacity-100"
-                              title="Centrar en mapa"
-                            >
-                              <Navigation size={14} />
-                            </button>
+                            {hasLocation ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  flyToLocation(w.longitude, w.latitude, 16);
+                                }}
+                                className="rounded-full p-1.5 text-on-surface-variant opacity-0 transition-all hover:bg-primary/20 hover:text-primary group-hover:opacity-100"
+                                title="Centrar en mapa"
+                              >
+                                <Navigation size={14} />
+                              </button>
+                            ) : (
+                              <span className="shrink-0 rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] text-red-300">
+                                Sin ubicacion
+                              </span>
+                            )}
                             <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${isBusy ? "bg-orange-500/20 text-orange-300" : w.isAvailable ? "bg-green-500/20 text-green-300" : "bg-gray-400/20 text-gray-300"}`}>
                               {isBusy ? "Ocupado" : w.isAvailable ? "Libre" : "Offline"}
                             </span>
