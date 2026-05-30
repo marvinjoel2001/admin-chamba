@@ -155,15 +155,15 @@ const svgToDataUrl = (svg: string) => `data:image/svg+xml;charset=utf-8,${encode
 
 /* ─── SVG Icons ─── */
 // Worker free (green hard hat - pure SVG no emojis)
-const workerFreeSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#166534' stroke='#22c55e' stroke-width='2'/><circle cx='24' cy='16' r='6' fill='#4ade80'/><path d='M18 22c0-3.31 2.69-6 6-6s6 2.69 6 6v2H18v-2z' fill='#22c55e'/><path d='M13 30c0-6.08 4.92-11 11-11s11 4.92 11 11v3H13v-3z' fill='#4ade80'/><circle cx='18' cy='36' r='2' fill='#86efac'/><circle cx='30' cy='36' r='2' fill='#86efac'/></svg>`;
+const workerFreeSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='48' height='48'><circle cx='24' cy='24' r='22' fill='#166534' stroke='#22c55e' stroke-width='2'/><circle cx='24' cy='16' r='6' fill='#4ade80'/><path d='M18 22c0-3.31 2.69-6 6-6s6 2.69 6 6v2H18v-2z' fill='#22c55e'/><path d='M13 30c0-6.08 4.92-11 11-11s11 4.92 11 11v3H13v-3z' fill='#4ade80'/><circle cx='18' cy='36' r='2' fill='#86efac'/><circle cx='30' cy='36' r='2' fill='#86efac'/></svg>`;
 // Worker busy (orange hard hat - pure SVG with wrench icon)
-const workerBusySvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#7c2d12' stroke='#fb923c' stroke-width='2'/><circle cx='24' cy='16' r='6' fill='#fb923c'/><path d='M18 22c0-3.31 2.69-6 6-6s6 2.69 6 6v2H18v-2z' fill='#f97316'/><path d='M13 30c0-6.08 4.92-11 11-11s11 4.92 11 11v3H13v-3z' fill='#fdba74'/><path d='M22 32l-2 6 2-1 2 1-2-6z' fill='#7c2d12'/><rect x='21' y='33' width='6' height='2' fill='#7c2d12' transform='rotate(45 24 34)'/></svg>`;
+const workerBusySvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='48' height='48'><circle cx='24' cy='24' r='22' fill='#7c2d12' stroke='#fb923c' stroke-width='2'/><circle cx='24' cy='16' r='6' fill='#fb923c'/><path d='M18 22c0-3.31 2.69-6 6-6s6 2.69 6 6v2H18v-2z' fill='#f97316'/><path d='M13 30c0-6.08 4.92-11 11-11s11 4.92 11 11v3H13v-3z' fill='#fdba74'/><path d='M22 32l-2 6 2-1 2 1-2-6z' fill='#7c2d12'/><rect x='21' y='33' width='6' height='2' fill='#7c2d12' transform='rotate(45 24 34)'/></svg>`;
 // Worker offline (gray hard hat)
-const workerOfflineSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#374151' stroke='#9ca3af' stroke-width='2'/><circle cx='24' cy='16' r='6' fill='#9ca3af'/><path d='M18 22c0-3.31 2.69-6 6-6s6 2.69 6 6v2H18v-2z' fill='#6b7280'/><path d='M13 30c0-6.08 4.92-11 11-11s11 4.92 11 11v3H13v-3z' fill='#d1d5db'/><line x1='16' y1='16' x2='32' y2='32' stroke='#374151' stroke-width='3'/><line x1='32' y1='16' x2='16' y2='32' stroke='#374151' stroke-width='3'/></svg>`;
+const workerOfflineSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' width='48' height='48'><circle cx='24' cy='24' r='22' fill='#374151' stroke='#9ca3af' stroke-width='2'/><circle cx='24' cy='16' r='6' fill='#9ca3af'/><path d='M18 22c0-3.31 2.69-6 6-6s6 2.69 6 6v2H18v-2z' fill='#6b7280'/><path d='M13 30c0-6.08 4.92-11 11-11s11 4.92 11 11v3H13v-3z' fill='#d1d5db'/><line x1='16' y1='16' x2='32' y2='32' stroke='#374151' stroke-width='3'/><line x1='32' y1='16' x2='16' y2='32' stroke='#374151' stroke-width='3'/></svg>`;
 // Client (person silhouette in blue pin)
-const clientPersonSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 58'><path fill='#0ea5e9' d='M24 0C10.7 0 0 10.7 0 24c0 16 24 34 24 34s24-18 24-34C48 10.7 37.3 0 24 0z'/><circle cx='24' cy='18' r='7' fill='#fff'/><path fill='#fff' d='M12 36c2-7 7-11 12-11s10 4 12 11'/></svg>`;
+const clientPersonSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 58' width='48' height='58'><path fill='#0ea5e9' d='M24 0C10.7 0 0 10.7 0 24c0 16 24 34 24 34s24-18 24-34C48 10.7 37.3 0 24 0z'/><circle cx='24' cy='18' r='7' fill='#fff'/><path fill='#fff' d='M12 36c2-7 7-11 12-11s10 4 12 11'/></svg>`;
 // Request pin (yellow/amber)
-const requestPinSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 58'><path fill='#f59e0b' d='M24 0C10.7 0 0 10.7 0 24c0 16 24 34 24 34s24-18 24-34C48 10.7 37.3 0 24 0z'/><circle cx='24' cy='22' r='8' fill='#fff'/><circle cx='24' cy='22' r='4' fill='#f59e0b'/></svg>`;
+const requestPinSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 58' width='48' height='58'><path fill='#f59e0b' d='M24 0C10.7 0 0 10.7 0 24c0 16 24 34 24 34s24-18 24-34C48 10.7 37.3 0 24 0z'/><circle cx='24' cy='22' r='8' fill='#fff'/><circle cx='24' cy='22' r='4' fill='#f59e0b'/></svg>`;
 
 /* ─── Flush interval (ms) – higher = fewer re-renders during rapid moves ─── */
 const FLUSH_INTERVAL_MS = 300;
@@ -344,18 +344,30 @@ export default function MapPage() {
     return result;
   }, [workers, workerFilter, workerSearch]);
 
+  /* ─── Filter requests to only show "today" ─── */
+  const todayRequests = useMemo(() => {
+    const todayStr = new Date().toDateString();
+    return requests.filter((r) => {
+      if (!r.updatedAt) return false;
+      return new Date(r.updatedAt).toDateString() === todayStr;
+    });
+  }, [requests]);
+
   /* ─── Filtered requests based on search (includes client name) ─── */
   const filteredRequests = useMemo(() => {
-    if (!requestSearch.trim()) return requests;
-    const search = requestSearch.toLowerCase().trim();
-    return requests.filter((r) =>
-      r.title.toLowerCase().includes(search) ||
-      r.clientName.toLowerCase().includes(search) ||
-      r.address.toLowerCase().includes(search) ||
-      r.status.toLowerCase().includes(search) ||
-      r.budget.toString().includes(search)
-    );
-  }, [requests, requestSearch]);
+    let result = todayRequests;
+    if (requestSearch.trim()) {
+      const search = requestSearch.toLowerCase().trim();
+      result = result.filter((r) =>
+        r.title.toLowerCase().includes(search) ||
+        r.clientName.toLowerCase().includes(search) ||
+        r.address.toLowerCase().includes(search) ||
+        r.status.toLowerCase().includes(search) ||
+        r.budget.toString().includes(search)
+      );
+    }
+    return result;
+  }, [todayRequests, requestSearch]);
 
   // Filter workers with valid location (non-zero coordinates)
   const workersWithLocation = useMemo(() => {
@@ -394,26 +406,35 @@ export default function MapPage() {
 
   const requestsGeo = useMemo<GeoJsonPoint>(() => ({
     type: "FeatureCollection",
-    features: requests.map((r) => ({
+    features: todayRequests.map((r) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [r.longitude, r.latitude] as [number, number] },
       properties: { id: r.id, title: r.title, status: r.status },
     })),
-  }), [requests]);
+  }), [todayRequests]);
 
   const activeWorkers = useMemo(() => workers.filter((w) => w.isAvailable).length, [workers]);
   const busyWorkers = useMemo(() => workers.filter((w) => !!w.activeRequest).length, [workers]);
+  const completedToday = useMemo(() => todayRequests.filter((r) => r.status === "completed").length, [todayRequests]);
+  const cancelledToday = useMemo(() => todayRequests.filter((r) => r.status === "cancelled").length, [todayRequests]);
+  const inProgressToday = useMemo(() => todayRequests.filter((r) => ["assigned", "in_progress"].includes(r.status)).length, [todayRequests]);
 
-  const onMapLoad = useCallback(() => {
-    const map = mapRef.current?.getMap();
+  const onMapLoad = useCallback((e: any) => {
+    const map = e.target;
     if (!map) return;
 
     const register = (name: string, svg: string) => {
       if (map.hasImage(name)) return;
-      map.loadImage(svgToDataUrl(svg), (error, image) => {
-        if (error || !image) return;
-        map.addImage(name, image, { sdf: false });
-      });
+      const img = new Image();
+      img.src = svgToDataUrl(svg);
+      img.onload = () => {
+        if (!map.hasImage(name)) {
+          map.addImage(name, img, { sdf: false });
+        }
+      };
+      img.onerror = (err) => {
+        console.error(`Error loading SVG image for ${name}`, err);
+      };
     };
 
     register("worker-free", workerFreeSvg);
@@ -489,34 +510,54 @@ export default function MapPage() {
   return (
     <section className="relative -mx-8 -mt-8 lg:-mx-12 lg:-mt-8 h-[calc(100vh-64px)] overflow-hidden">
       {/* ─── Stats overlay (top-left) ─── */}
-      <div className="absolute left-4 top-4 z-10 flex items-center gap-3 rounded-2xl border border-white/10 bg-surface-container-high/60 px-5 py-3 backdrop-blur-[20px]">
+      <div className="absolute left-4 top-4 z-10 flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-surface-container-high/60 px-5 py-3 backdrop-blur-[20px]">
+        {/* Workers Activos */}
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-500/20">
-            <Users size={16} className="text-green-400" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-500/30">
+            <Users size={16} className="text-emerald-400" />
           </div>
           <div>
-            <p className="text-2xl font-bold leading-none">{activeWorkers}</p>
-            <p className="text-[10px] text-on-surface-variant">Libres</p>
+            <p className="text-xl font-bold leading-none text-white">{activeWorkers}</p>
+            <p className="text-[9px] text-on-surface-variant font-medium mt-1">Activos</p>
           </div>
         </div>
+        
         <div className="h-8 w-px bg-white/10" />
+        
+        {/* Completados Hoy */}
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500/20">
-            <Radio size={16} className="text-orange-400" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-500/20 border border-green-500/30">
+            <MapPin size={16} className="text-green-400" />
           </div>
           <div>
-            <p className="text-2xl font-bold leading-none">{busyWorkers}</p>
-            <p className="text-[10px] text-on-surface-variant">Ocupados</p>
+            <p className="text-xl font-bold leading-none text-white">{completedToday}</p>
+            <p className="text-[9px] text-on-surface-variant font-medium mt-1">Completados</p>
           </div>
         </div>
+        
         <div className="h-8 w-px bg-white/10" />
+        
+        {/* En Proceso Hoy */}
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/20">
-            <MapPin size={16} className="text-amber-400" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/20 border border-amber-500/30">
+            <Radio size={16} className="text-amber-400" />
           </div>
           <div>
-            <p className="text-2xl font-bold leading-none">{requests.length}</p>
-            <p className="text-[10px] text-on-surface-variant">Solicitudes</p>
+            <p className="text-xl font-bold leading-none text-white">{inProgressToday}</p>
+            <p className="text-[9px] text-on-surface-variant font-medium mt-1">En Proceso</p>
+          </div>
+        </div>
+        
+        <div className="h-8 w-px bg-white/10" />
+        
+        {/* Cancelados Hoy */}
+        <div className="flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-500/20 border border-rose-500/30">
+            <X size={16} className="text-rose-400" />
+          </div>
+          <div>
+            <p className="text-xl font-bold leading-none text-white">{cancelledToday}</p>
+            <p className="text-[9px] text-on-surface-variant font-medium mt-1">Cancelados</p>
           </div>
         </div>
       </div>

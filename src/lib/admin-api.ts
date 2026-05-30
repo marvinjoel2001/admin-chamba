@@ -144,3 +144,12 @@ export async function adminCancelRequest(requestId: string) {
   const { data } = await api.post(`/mobile/admin/requests/${requestId}/cancel`);
   return data;
 }
+
+// --- Worker History ---
+
+export async function fetchWorkerHistory(workerUserId: string) {
+  const { data } = await api.get<{ workerUserId: string; jobs: any[] }>("/mobile/worker/history", {
+    params: { workerUserId },
+  });
+  return data.jobs;
+}

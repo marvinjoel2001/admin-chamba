@@ -26,7 +26,7 @@ const nav = [
   ["/map", "Real-time Map", Map],
   ["/workers", "Workers", Users],
   ["/clients", "Clients", UserSquare2],
-  ["/requests", "Requests", ClipboardList],
+  ["/requests", "Trabajos", ClipboardList],
   ["/reports", "Reports", BarChart3],
   ["/wallet", "Wallet", WalletCards],
   ["/worker-settings", "Worker Config", RadioTower],

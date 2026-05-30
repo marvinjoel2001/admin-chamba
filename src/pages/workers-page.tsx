@@ -5,28 +5,50 @@ import { Button } from "@/components/ui/button";
 import { Modal, ModalContent, ModalTrigger } from "@/components/ui/modal";
 import { toast } from "sonner";
 import {
+  RotateCw,
+  Search,
+  Calendar,
+  X,
+  DollarSign,
+  Briefcase,
+  UserCheck,
+  Image as ImageIcon,
+  User,
+} from "lucide-react";
+import {
   fetchUsers,
   fetchWorkerVerificationInbox,
   reviewWorkerVerification,
   updateUser,
   deleteUser,
+  fetchWorkerHistory,
 } from "@/lib/admin-api";
 import type { AdminUser } from "@/lib/types";
 
+const statusLabel: Record<string, string> = {
+  searching: "Buscando",
+  negotiating: "Negociando",
+  assigned: "Asignado",
+  in_progress: "En progreso",
+  completed: "Completado",
+  cancelled: "Cancelado",
+  pending: "Pendiente",
+};
+
 function verificationBadge(status?: string) {
   if (status === "verified") {
-    return <span className="inline-flex items-center rounded-full bg-sky-500/20 px-2 py-1 text-xs text-sky-300">Check azul - Verificado</span>;
+    return <span className="inline-flex items-center rounded-full bg-sky-500/20 px-2 py-0.5 text-xs text-sky-300 border border-sky-500/20">Check azul - Verificado</span>;
   }
   if (status === "pending") {
-    return <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2 py-1 text-xs text-amber-200">Pendiente</span>;
+    return <span className="inline-flex items-center rounded-full bg-amber-500/20 px-2 py-0.5 text-xs text-amber-200 border border-amber-500/20">Pendiente</span>;
   }
-  return <span className="inline-flex items-center rounded-full bg-white/10 px-2 py-1 text-xs text-on-surface-variant">No verificado</span>;
+  return <span className="inline-flex items-center rounded-full bg-white/10 px-2 py-0.5 text-xs text-on-surface-variant">No verificado</span>;
 }
 
 function photoDecisionBadge(value?: boolean | null) {
-  if (value === true) return <span className="rounded bg-emerald-500/20 px-2 py-1 text-xs text-emerald-200">Aprobada</span>;
-  if (value === false) return <span className="rounded bg-rose-500/20 px-2 py-1 text-xs text-rose-200">Rechazada</span>;
-  return <span className="rounded bg-amber-500/20 px-2 py-1 text-xs text-amber-200">Pendiente</span>;
+  if (value === true) return <span className="rounded-full bg-emerald-500/20 border border-emerald-500/20 px-2.5 py-0.5 text-xs text-emerald-300 font-medium">Aprobada</span>;
+  if (value === false) return <span className="rounded-full bg-rose-500/20 border border-rose-500/20 px-2.5 py-0.5 text-xs text-rose-300 font-medium">Rechazada</span>;
+  return <span className="rounded-full bg-amber-500/20 border border-amber-500/20 px-2.5 py-0.5 text-xs text-amber-300 font-medium">Pendiente</span>;
 }
 
 export default function WorkersPage() {
@@ -35,6 +57,22 @@ export default function WorkersPage() {
   const [loading, setLoading] = useState(true);
   const [reviewingKey, setReviewingKey] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
+  // --- Estados de Zoom y Rotación ---
+  const [rotations, setRotations] = useState<Record<string, number>>({});
+  const [expandedImage, setExpandedImage] = useState<{ url: string; alt: string; key?: string } | null>(null);
+
+  // --- Estados de Detalle y Trabajos ---
+  const [selectedWorker, setSelectedWorker] = useState<AdminUser | null>(null);
+  const [jobsModalWorker, setJobsModalWorker] = useState<AdminUser | null>(null);
+  const [workerJobs, setWorkerJobs] = useState<any[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState(false);
+  const [jobSearch, setJobSearch] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  // --- Estado de búsqueda general ---
+  const [workerSearch, setWorkerSearch] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -70,6 +108,10 @@ export default function WorkersPage() {
       }
       return withoutCurrent;
     });
+    // Sincronizar también si está abierto el modal de detalles
+    if (selectedWorker && selectedWorker.id === updated.id) {
+      setSelectedWorker(updated);
+    }
   };
 
   const [editWorker, setEditWorker] = useState<AdminUser | null>(null);
@@ -125,49 +167,108 @@ export default function WorkersPage() {
     }
   };
 
+  // --- Rotación de Imagen ---
+  const handleRotate = (key: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setRotations((prev) => ({
+      ...prev,
+      [key]: ((prev[key] ?? 0) + 90) % 360,
+    }));
+  };
+
+  // --- Abrir Detalle del Trabajador ---
+  const handleOpenWorkerDetail = async (worker: AdminUser) => {
+    setSelectedWorker(worker);
+    setLoadingJobs(true);
+    try {
+      const jobs = await fetchWorkerHistory(worker.id);
+      setWorkerJobs(jobs);
+    } catch (err) {
+      console.error("Error al obtener el historial de trabajos", err);
+      setWorkerJobs([]);
+    } finally {
+      setLoadingJobs(false);
+    }
+  };
+
+  const filteredItems = items.filter((w) => {
+    if (!workerSearch.trim()) return true;
+    const search = workerSearch.toLowerCase().trim();
+    return (
+      `${w.firstName} ${w.lastName ?? ""}`.toLowerCase().includes(search) ||
+      w.email.toLowerCase().includes(search) ||
+      w.phone?.includes(search) ||
+      w.id.toLowerCase().includes(search)
+    );
+  });
+
   const columns: ColumnDef<AdminUser>[] = [
-      {
-        id: "name",
-        header: "Worker",
-        cell: ({ row }) => `${row.original.firstName} ${row.original.lastName ?? ""}`.trim(),
-      },
-      { accessorKey: "email", header: "Email" },
-      {
-        id: "status",
-        header: "Status",
-        cell: ({ row }) => (row.original.isAvailable ? "Available" : "Inactive"),
-      },
-      {
-        id: "verified",
-        header: "Verificado",
-        cell: ({ row }) => verificationBadge(row.original.verificationStatus),
-      },
-      {
-        id: "jobs",
-        header: "Total Jobs",
-        cell: ({ row }) => row.original.completedJobs ?? 0,
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => (
-          <div className="flex gap-2">
+    {
+      id: "name",
+      header: "Worker",
+      cell: ({ row }) => {
+        const w = row.original;
+        const avatar = w.profilePhotoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80&q=80";
+        return (
+          <div className="flex items-center gap-3">
+            <img
+              src={avatar}
+              alt={w.firstName}
+              className="h-8 w-8 rounded-full object-cover border border-white/10 shrink-0"
+            />
             <button
-              onClick={() => openEdit(row.original)}
-              className="rounded bg-white/10 px-2 py-1 text-xs"
+              onClick={() => handleOpenWorkerDetail(w)}
+              className="text-left font-semibold text-sky-400 hover:text-sky-300 hover:underline transition-all"
             >
-              Editar
-            </button>
-            <button
-              onClick={() => onDelete(row.original)}
-              className="rounded bg-red-500/20 px-2 py-1 text-xs text-red-200"
-            >
-              Eliminar
+              {w.firstName} {w.lastName ?? ""}
             </button>
           </div>
-        ),
+        );
       },
-    ];
+    },
+    { accessorKey: "email", header: "Email" },
+    {
+      id: "status",
+      header: "Status",
+      cell: ({ row }) => (row.original.isAvailable ? "Available" : "Inactive"),
+    },
+    {
+      id: "verified",
+      header: "Verificado",
+      cell: ({ row }) => verificationBadge(row.original.verificationStatus),
+    },
+    {
+      id: "jobs",
+      header: "Total Jobs",
+      cell: ({ row }) => row.original.completedJobs ?? 0,
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex gap-2">
+          <button
+            onClick={() => handleOpenWorkerDetail(row.original)}
+            className="rounded bg-sky-500/20 px-2 py-1 text-xs text-sky-300 hover:bg-sky-500/30 transition-colors"
+          >
+            Ficha
+          </button>
+          <button
+            onClick={() => openEdit(row.original)}
+            className="rounded bg-white/10 px-2 py-1 text-xs hover:bg-white/20 transition-colors"
+          >
+            Editar
+          </button>
+          <button
+            onClick={() => onDelete(row.original)}
+            className="rounded bg-red-500/20 px-2 py-1 text-xs text-red-200 hover:bg-red-500/30 transition-colors"
+          >
+            Eliminar
+          </button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <section className="flex flex-col gap-8">
@@ -191,8 +292,10 @@ export default function WorkersPage() {
       </div>
 
       <div className="glass-panel overflow-hidden rounded-xl">
-        <div className="border-b border-white/5 p-4">
+        <div className="border-b border-white/5 p-4 relative">
           <input
+            value={workerSearch}
+            onChange={(e) => setWorkerSearch(e.target.value)}
             className="glass-input w-full rounded-lg px-4 py-2"
             placeholder="Search by name, ID, or specialty..."
           />
@@ -200,7 +303,7 @@ export default function WorkersPage() {
         {loading ? (
           <div className="p-6 text-sm text-on-surface-variant">Cargando...</div>
         ) : (
-          <DataTable data={items} columns={columns} />
+          <DataTable data={filteredItems} columns={columns} />
         )}
       </div>
 
@@ -240,13 +343,36 @@ export default function WorkersPage() {
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="rounded-lg border border-white/10 p-3">
-                      <p className="mb-2 text-sm font-medium">Carnet</p>
-                      <div className="mb-3 h-48 overflow-hidden rounded-md bg-black/30">
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-sm font-medium">Carnet</p>
+                        {worker.idPhotoUrl && !imageErrors[idPhotoKey] && (
+                          <button
+                            onClick={(e) => handleRotate(idPhotoKey, e)}
+                            className="rounded bg-white/5 hover:bg-white/15 p-1 border border-white/10 text-white transition-all flex items-center gap-1 text-[10px]"
+                            title="Rotar 90°"
+                          >
+                            <RotateCw className="h-3 w-3" /> Rotar
+                          </button>
+                        )}
+                      </div>
+                      <div 
+                        onClick={() => {
+                          if (worker.idPhotoUrl && !imageErrors[idPhotoKey]) {
+                            setExpandedImage({
+                              url: worker.idPhotoUrl,
+                              alt: `Carnet de ${workerName}`,
+                              key: idPhotoKey
+                            });
+                          }
+                        }}
+                        className={`mb-3 h-48 overflow-hidden rounded-md bg-black/30 border border-white/5 relative flex items-center justify-center ${worker.idPhotoUrl && !imageErrors[idPhotoKey] ? 'cursor-zoom-in' : ''}`}
+                      >
                         {worker.idPhotoUrl && !imageErrors[idPhotoKey] ? (
                           <img
                             src={worker.idPhotoUrl}
                             alt={`Carnet de ${workerName}`}
-                            className="h-full w-full object-contain"
+                            className="h-full w-full object-contain transition-transform duration-300 ease-in-out"
+                            style={{ transform: `rotate(${rotations[idPhotoKey] ?? 0}deg)` }}
                             onError={() => setImageErrors((prev) => ({ ...prev, [idPhotoKey]: true }))}
                           />
                         ) : worker.idPhotoUrl ? (
@@ -263,14 +389,14 @@ export default function WorkersPage() {
                         <button
                           disabled={!worker.idPhotoUrl || reviewingKey !== null || imageErrors[idPhotoKey]}
                           onClick={() => onReviewPhoto(worker, "id", true)}
-                          className="rounded bg-sky-500/25 px-3 py-1 text-xs text-sky-200 disabled:opacity-50"
+                          className="rounded bg-sky-500/25 px-3 py-1 text-xs text-sky-200 disabled:opacity-50 hover:bg-sky-500/40 transition-colors"
                         >
                           Aprobar
                         </button>
                         <button
                           disabled={!worker.idPhotoUrl || reviewingKey !== null || imageErrors[idPhotoKey]}
                           onClick={() => onReviewPhoto(worker, "id", false)}
-                          className="rounded bg-rose-500/25 px-3 py-1 text-xs text-rose-200 disabled:opacity-50"
+                          className="rounded bg-rose-500/25 px-3 py-1 text-xs text-rose-200 disabled:opacity-50 hover:bg-rose-500/40 transition-colors"
                         >
                           Rechazar
                         </button>
@@ -278,13 +404,36 @@ export default function WorkersPage() {
                     </div>
 
                     <div className="rounded-lg border border-white/10 p-3">
-                      <p className="mb-2 text-sm font-medium">Rostro</p>
-                      <div className="mb-3 h-48 overflow-hidden rounded-md bg-black/30">
+                      <div className="flex justify-between items-center mb-2">
+                        <p className="text-sm font-medium">Rostro</p>
+                        {worker.facePhotoUrl && !imageErrors[facePhotoKey] && (
+                          <button
+                            onClick={(e) => handleRotate(facePhotoKey, e)}
+                            className="rounded bg-white/5 hover:bg-white/15 p-1 border border-white/10 text-white transition-all flex items-center gap-1 text-[10px]"
+                            title="Rotar 90°"
+                          >
+                            <RotateCw className="h-3 w-3" /> Rotar
+                          </button>
+                        )}
+                      </div>
+                      <div 
+                        onClick={() => {
+                          if (worker.facePhotoUrl && !imageErrors[facePhotoKey]) {
+                            setExpandedImage({
+                              url: worker.facePhotoUrl,
+                              alt: `Rostro de ${workerName}`,
+                              key: facePhotoKey
+                            });
+                          }
+                        }}
+                        className={`mb-3 h-48 overflow-hidden rounded-md bg-black/30 border border-white/5 relative flex items-center justify-center ${worker.facePhotoUrl && !imageErrors[facePhotoKey] ? 'cursor-zoom-in' : ''}`}
+                      >
                         {worker.facePhotoUrl && !imageErrors[facePhotoKey] ? (
                           <img
                             src={worker.facePhotoUrl}
                             alt={`Rostro de ${workerName}`}
-                            className="h-full w-full object-contain"
+                            className="h-full w-full object-contain transition-transform duration-300 ease-in-out"
+                            style={{ transform: `rotate(${rotations[facePhotoKey] ?? 0}deg)` }}
                             onError={() => setImageErrors((prev) => ({ ...prev, [facePhotoKey]: true }))}
                           />
                         ) : worker.facePhotoUrl ? (
@@ -301,14 +450,14 @@ export default function WorkersPage() {
                         <button
                           disabled={!worker.facePhotoUrl || reviewingKey !== null || imageErrors[facePhotoKey]}
                           onClick={() => onReviewPhoto(worker, "face", true)}
-                          className="rounded bg-sky-500/25 px-3 py-1 text-xs text-sky-200 disabled:opacity-50"
+                          className="rounded bg-sky-500/25 px-3 py-1 text-xs text-sky-200 disabled:opacity-50 hover:bg-sky-500/40 transition-colors"
                         >
                           Aprobar
                         </button>
                         <button
                           disabled={!worker.facePhotoUrl || reviewingKey !== null || imageErrors[facePhotoKey]}
                           onClick={() => onReviewPhoto(worker, "face", false)}
-                          className="rounded bg-rose-500/25 px-3 py-1 text-xs text-rose-200 disabled:opacity-50"
+                          className="rounded bg-rose-500/25 px-3 py-1 text-xs text-rose-200 disabled:opacity-50 hover:bg-rose-500/40 transition-colors"
                         >
                           Rechazar
                         </button>
@@ -321,6 +470,430 @@ export default function WorkersPage() {
           </div>
         )}
       </div>
+
+      {/* ─── Lightbox/Ampliación de Imagen ─── */}
+      {expandedImage && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="absolute top-4 right-4 flex gap-4">
+            <button
+              onClick={() => handleRotate(expandedImage.key || expandedImage.url)}
+              className="rounded-full bg-white/10 p-3 text-white hover:bg-white/20 hover:scale-105 transition-all flex items-center justify-center shadow-lg"
+              title="Rotar 90°"
+            >
+              <RotateCw className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setExpandedImage(null)}
+              className="rounded-full bg-white/10 p-3 text-white hover:bg-rose-500 transition-all flex items-center justify-center shadow-lg"
+              title="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          
+          <div className="w-full max-w-4xl max-h-[80vh] flex items-center justify-center overflow-hidden">
+            <img
+              src={expandedImage.url}
+              alt={expandedImage.alt}
+              className="max-w-full max-h-[80vh] object-contain transition-all duration-300 ease-in-out shadow-2xl rounded-lg"
+              style={{ transform: `rotate(${rotations[expandedImage.key || expandedImage.url] ?? 0}deg)` }}
+            />
+          </div>
+          <p className="mt-5 text-sm text-gray-400 font-medium tracking-wide bg-white/5 px-4 py-1.5 rounded-full border border-white/5">{expandedImage.alt}</p>
+        </div>
+      )}
+
+      {/* ─── Modal de Ficha de Detalle del Trabajador ─── */}
+      {selectedWorker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0d1117]/95 shadow-2xl backdrop-blur-md overflow-hidden max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/10 px-6 py-5 bg-gradient-to-r from-purple-950/20 to-black/40">
+              <div className="flex items-center gap-4">
+                <img
+                  src={selectedWorker.profilePhotoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80"}
+                  alt={selectedWorker.firstName}
+                  className="h-16 w-16 rounded-full object-cover border-2 border-primary/50 shadow-md shadow-primary/10 shrink-0"
+                />
+                <div>
+                  <h3 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                    {selectedWorker.firstName} {selectedWorker.lastName ?? ""}
+                    {verificationBadge(selectedWorker.verificationStatus)}
+                  </h3>
+                  <p className="text-sm text-on-surface-variant/80 mt-0.5">{selectedWorker.email}</p>
+                  <p className="text-xs text-on-surface-variant/60">{selectedWorker.phone || "Sin teléfono registrado"}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => { setSelectedWorker(null); setWorkerJobs([]); }} 
+                className="rounded-full bg-white/5 p-2 text-on-surface-variant hover:bg-white/10 hover:text-white transition-all"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Stats row */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="glass-panel bg-white/5 p-4 rounded-xl border border-white/5 flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
+                    <Briefcase className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold tracking-tight text-white">{selectedWorker.completedJobs ?? 0}</p>
+                    <p className="text-xs text-on-surface-variant">Trabajos</p>
+                  </div>
+                </div>
+                
+                <div className="glass-panel bg-white/5 p-4 rounded-xl border border-white/5 flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+                    <DollarSign className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold tracking-tight text-white mt-1">
+                      Bs {loadingJobs ? "..." : (workerJobs.filter(j => j.requestStatus === 'completed').reduce((sum, j) => sum + j.amount, 0)).toFixed(2)}
+                    </p>
+                    <p className="text-xs text-on-surface-variant">Dinero Ganado</p>
+                  </div>
+                </div>
+                
+                <div className="glass-panel bg-white/5 p-4 rounded-xl border border-white/5 flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-purple-500/10 text-purple-400">
+                    <Calendar className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold tracking-tight text-white mt-1.5">
+                      {selectedWorker.createdAt ? new Date(selectedWorker.createdAt).toLocaleDateString() : "Desconocido"}
+                    </p>
+                    <p className="text-xs text-on-surface-variant">Cuenta Creada</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action: View completed jobs */}
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setJobsModalWorker(selectedWorker)}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-white py-3 font-medium text-sm transition-all hover:shadow-lg hover:shadow-primary/10 border border-white/10 hover:scale-[1.01]"
+                >
+                  <Briefcase className="h-4 w-4" />
+                  Ver Trabajos Realizados (Historial)
+                </button>
+              </div>
+
+              {/* Verification Photos */}
+              <div className="space-y-3">
+                <h4 className="text-sm font-bold tracking-wide uppercase text-on-surface-variant/70">Documentos de Verificación</h4>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {/* Carnet */}
+                  <div className="rounded-xl border border-white/5 bg-white/5 p-4">
+                    <p className="mb-2 text-xs font-semibold text-gray-300">Foto de Carnet (ID)</p>
+                    <div 
+                      onClick={() => {
+                        if (selectedWorker.idPhotoUrl) {
+                          setExpandedImage({
+                            url: selectedWorker.idPhotoUrl,
+                            alt: `Carnet de ${selectedWorker.firstName}`,
+                            key: `${selectedWorker.id}-id-detail`
+                          });
+                        }
+                      }}
+                      className={`relative mb-3 h-40 overflow-hidden rounded-lg bg-black/40 border border-white/5 flex items-center justify-center ${selectedWorker.idPhotoUrl ? 'cursor-zoom-in' : ''}`}
+                    >
+                      {selectedWorker.idPhotoUrl ? (
+                        <img
+                          src={selectedWorker.idPhotoUrl}
+                          alt="Carnet"
+                          className="h-full w-full object-contain transition-transform duration-300 ease-in-out"
+                          style={{ transform: `rotate(${rotations[`${selectedWorker.id}-id-detail`] ?? 0}deg)` }}
+                        />
+                      ) : (
+                        <span className="text-xs text-on-surface-variant/40 flex flex-col items-center gap-1">
+                          <ImageIcon className="h-5 w-5" />
+                          Sin foto de carnet
+                        </span>
+                      )}
+                    </div>
+                    {selectedWorker.idPhotoUrl && (
+                      <div className="flex items-center justify-between">
+                        {photoDecisionBadge(selectedWorker.idPhotoVerified)}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => handleRotate(`${selectedWorker.id}-id-detail`, e)}
+                            className="rounded bg-white/5 p-1.5 text-xs text-white hover:bg-white/10 border border-white/5"
+                            title="Rotar 90°"
+                          >
+                            <RotateCw className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setExpandedImage({
+                              url: selectedWorker.idPhotoUrl!,
+                              alt: `Carnet de ${selectedWorker.firstName}`,
+                              key: `${selectedWorker.id}-id-detail`
+                            })}
+                            className="rounded bg-primary/20 p-1.5 text-xs text-primary hover:bg-primary/30 border border-primary/10"
+                            title="Ampliar"
+                          >
+                            <Search className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Rostro */}
+                  <div className="rounded-xl border border-white/5 bg-white/5 p-4">
+                    <p className="mb-2 text-xs font-semibold text-gray-300">Foto de Rostro (Selfie)</p>
+                    <div 
+                      onClick={() => {
+                        if (selectedWorker.facePhotoUrl) {
+                          setExpandedImage({
+                            url: selectedWorker.facePhotoUrl,
+                            alt: `Rostro de ${selectedWorker.firstName}`,
+                            key: `${selectedWorker.id}-face-detail`
+                          });
+                        }
+                      }}
+                      className={`relative mb-3 h-40 overflow-hidden rounded-lg bg-black/40 border border-white/5 flex items-center justify-center ${selectedWorker.facePhotoUrl ? 'cursor-zoom-in' : ''}`}
+                    >
+                      {selectedWorker.facePhotoUrl ? (
+                        <img
+                          src={selectedWorker.facePhotoUrl}
+                          alt="Rostro"
+                          className="h-full w-full object-contain transition-transform duration-300 ease-in-out"
+                          style={{ transform: `rotate(${rotations[`${selectedWorker.id}-face-detail`] ?? 0}deg)` }}
+                        />
+                      ) : (
+                        <span className="text-xs text-on-surface-variant/40 flex flex-col items-center gap-1">
+                          <ImageIcon className="h-5 w-5" />
+                          Sin foto de rostro
+                        </span>
+                      )}
+                    </div>
+                    {selectedWorker.facePhotoUrl && (
+                      <div className="flex items-center justify-between">
+                        {photoDecisionBadge(selectedWorker.facePhotoVerified)}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => handleRotate(`${selectedWorker.id}-face-detail`, e)}
+                            className="rounded bg-white/5 p-1.5 text-xs text-white hover:bg-white/10 border border-white/5"
+                            title="Rotar 90°"
+                          >
+                            <RotateCw className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setExpandedImage({
+                              url: selectedWorker.facePhotoUrl!,
+                              alt: `Rostro de ${selectedWorker.firstName}`,
+                              key: `${selectedWorker.id}-face-detail`
+                            })}
+                            className="rounded bg-primary/20 p-1.5 text-xs text-primary hover:bg-primary/30 border border-primary/10"
+                            title="Ampliar"
+                          >
+                            <Search className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="border-t border-white/10 px-6 py-4 flex justify-end bg-black/20">
+              <button
+                onClick={() => { setSelectedWorker(null); setWorkerJobs([]); }}
+                className="rounded-xl bg-white/10 px-5 py-2 text-sm font-semibold text-white hover:bg-white/15 transition-all"
+              >
+                Cerrar Ficha
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Modal de Trabajos Realizados ─── */}
+      {jobsModalWorker && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#0d1117]/95 shadow-2xl backdrop-blur-md overflow-hidden max-h-[85vh] flex flex-col animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 bg-gradient-to-r from-purple-950/20 to-black/40">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  Historial de Trabajos
+                </h3>
+                <p className="text-xs text-on-surface-variant mt-0.5">Trabajos realizados por {jobsModalWorker.firstName} {jobsModalWorker.lastName ?? ""}</p>
+              </div>
+              <button 
+                onClick={() => { setJobsModalWorker(null); setJobSearch(""); setStartDate(""); setEndDate(""); }} 
+                className="rounded-full bg-white/5 p-2 text-on-surface-variant hover:bg-white/10 hover:text-white transition-all"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Filter Bar */}
+            <div className="border-b border-white/5 bg-white/[0.02] p-4 flex flex-col sm:flex-row gap-3 items-center">
+              {/* Search Box */}
+              <div className="relative w-full sm:flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant/60" />
+                <input
+                  type="text"
+                  value={jobSearch}
+                  onChange={(e) => setJobSearch(e.target.value)}
+                  placeholder="Buscar por cliente o título de orden..."
+                  className="w-full rounded-xl border border-white/10 bg-black/30 py-2 pl-9 pr-3 text-xs text-white placeholder:text-on-surface-variant/40 focus:border-primary focus:outline-none transition-all"
+                />
+              </div>
+
+              {/* Date Filters */}
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+                <div className="flex items-center gap-1.5 bg-black/35 rounded-xl border border-white/15 px-3 py-1.5">
+                  <label className="text-[9px] text-on-surface-variant/80 uppercase font-semibold">Desde</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="bg-transparent border-none text-xs text-white outline-none focus:ring-0 w-28 [color-scheme:dark]"
+                  />
+                </div>
+                
+                <div className="flex items-center gap-1.5 bg-black/35 rounded-xl border border-white/15 px-3 py-1.5">
+                  <label className="text-[9px] text-on-surface-variant/80 uppercase font-semibold">Hasta</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="bg-transparent border-none text-xs text-white outline-none focus:ring-0 w-28 [color-scheme:dark]"
+                  />
+                </div>
+
+                {(jobSearch || startDate || endDate) && (
+                  <button
+                    onClick={() => { setJobSearch(""); setStartDate(""); setEndDate(""); }}
+                    className="text-xs text-rose-300 hover:text-rose-200 bg-rose-500/10 px-3 py-2 rounded-xl transition-all border border-rose-500/20 font-medium"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Content Table / List */}
+            <div className="flex-1 overflow-auto p-6">
+              {loadingJobs ? (
+                <div className="flex flex-col items-center justify-center py-12 text-sm text-on-surface-variant/60 gap-3">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                  Cargando historial de trabajos...
+                </div>
+              ) : ( () => {
+                const filtered = workerJobs.filter((job) => {
+                  const clientName = `${job.client?.firstName ?? ''} ${job.client?.lastName ?? ''}`.toLowerCase();
+                  const matchesSearch = jobSearch.trim() === "" ||
+                    clientName.includes(jobSearch.toLowerCase()) ||
+                    job.title.toLowerCase().includes(jobSearch.toLowerCase());
+                    
+                  if (!matchesSearch) return false;
+                  
+                  if (startDate) {
+                    const start = new Date(startDate);
+                    const jobDate = new Date(job.acceptedAt || job.createdAt);
+                    start.setHours(0,0,0,0);
+                    jobDate.setHours(0,0,0,0);
+                    if (jobDate < start) return false;
+                  }
+                  
+                  if (endDate) {
+                    const end = new Date(endDate);
+                    const jobDate = new Date(job.acceptedAt || job.createdAt);
+                    end.setHours(23,59,59,999);
+                    if (jobDate > end) return false;
+                  }
+                  
+                  return true;
+                });
+
+                if (filtered.length === 0) {
+                  return (
+                    <div className="text-center py-12 border border-dashed border-white/10 rounded-xl bg-black/10">
+                      <p className="text-sm text-on-surface-variant/60">No se encontraron trabajos con los filtros seleccionados.</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="overflow-x-auto rounded-xl border border-white/5">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-white/[0.02] text-xs font-bold uppercase tracking-wider text-on-surface-variant/80 border-b border-white/10">
+                          <th className="px-4 py-3">Cliente</th>
+                          <th className="px-4 py-3">Detalles Trabajo</th>
+                          <th className="px-4 py-3 text-center">Fecha</th>
+                          <th className="px-4 py-3 text-right">Monto</th>
+                          <th className="px-4 py-3 text-center">Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 text-sm">
+                        {filtered.map((job) => (
+                          <tr key={job.requestId || job.offerId} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src={job.client?.profilePhotoUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80"}
+                                  alt={job.client?.firstName}
+                                  className="h-7 w-7 rounded-full object-cover border border-white/10 shrink-0"
+                                />
+                                <div>
+                                  <p className="font-semibold text-xs text-white">{job.client?.firstName} {job.client?.lastName ?? ""}</p>
+                                  <p className="text-[9px] text-on-surface-variant/50">ID: {job.client?.id.slice(0, 8)}...</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <p className="font-medium text-xs text-white truncate max-w-[200px]" title={job.title}>{job.title}</p>
+                              <p className="text-[10px] text-on-surface-variant/50 max-w-[200px] truncate" title={job.description}>{job.description}</p>
+                            </td>
+                            <td className="px-4 py-3 text-center text-xs text-gray-300">
+                              {job.acceptedAt ? new Date(job.acceptedAt).toLocaleDateString() : "S/F"}
+                            </td>
+                            <td className="px-4 py-3 text-right font-semibold text-emerald-400 text-xs">
+                              Bs {job.amount.toFixed(2)}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {(() => {
+                                const isCompleted = job.requestStatus === "completed";
+                                const isCancelled = job.requestStatus === "cancelled";
+                                return (
+                                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider ${isCompleted ? 'bg-green-500/10 text-green-300 border border-green-500/20' : isCancelled ? 'bg-red-500/10 text-red-300 border border-red-500/20' : 'bg-amber-500/10 text-amber-300 border border-amber-500/20'}`}>
+                                    {statusLabel[job.requestStatus] ?? job.requestStatus}
+                                  </span>
+                                );
+                              })()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })() }
+            </div>
+            
+            {/* Footer */}
+            <div className="border-t border-white/10 px-6 py-4 flex justify-end bg-black/20">
+              <button
+                onClick={() => { setJobsModalWorker(null); setJobSearch(""); setStartDate(""); setEndDate(""); }}
+                className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/95 transition-all"
+              >
+                Volver a la Ficha
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {editWorker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0d1117] p-6">
