@@ -12,7 +12,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchMapSnapshot } from "@/lib/admin-api";
 import type { MapClient, MapRequest, MapWorker } from "@/lib/types";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Users, Radio, MapPin, X, Crosshair } from "lucide-react";
+import { ChevronDown, ChevronUp, Users, Radio, MapPin, X, Crosshair, Navigation, Search } from "lucide-react";
 
 type PanelTab = "workers" | "requests";
 type WorkerFilter = "all" | "free" | "busy";
@@ -136,17 +136,30 @@ const statusLabel: Record<string, string> = {
   negotiating: "Negociando",
   assigned: "Asignado",
   in_progress: "En progreso",
+  completed: "Completado",
+  cancelled: "Cancelado",
+  pending: "Pendiente",
+};
+
+const statusColors: Record<string, { bg: string; text: string; border: string }> = {
+  searching: { bg: "bg-blue-500/20", text: "text-blue-300", border: "border-blue-500/30" },
+  negotiating: { bg: "bg-purple-500/20", text: "text-purple-300", border: "border-purple-500/30" },
+  assigned: { bg: "bg-amber-500/20", text: "text-amber-300", border: "border-amber-500/30" },
+  in_progress: { bg: "bg-orange-500/20", text: "text-orange-300", border: "border-orange-500/30" },
+  completed: { bg: "bg-green-500/20", text: "text-green-300", border: "border-green-500/30" },
+  cancelled: { bg: "bg-red-500/20", text: "text-red-300", border: "border-red-500/30" },
+  pending: { bg: "bg-gray-500/20", text: "text-gray-300", border: "border-gray-500/30" },
 };
 
 const svgToDataUrl = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 
 /* ─── SVG Icons ─── */
-// Worker free (green helmet)
-const workerFreeSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#166534'/><path fill='#4ade80' d='M24 10c-7.2 0-13 5.8-13 13v3h4v6h18v-6h4v-3c0-7.2-5.8-13-13-13zm0 5c4.4 0 8 3.6 8 8v1H16v-1c0-4.4 3.6-8 8-8z'/><circle cx='20' cy='38' r='2.5' fill='#4ade80'/><circle cx='28' cy='38' r='2.5' fill='#4ade80'/></svg>`;
-// Worker busy (orange helmet)
-const workerBusySvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#7c2d12'/><path fill='#fb923c' d='M24 10c-7.2 0-13 5.8-13 13v3h4v6h18v-6h4v-3c0-7.2-5.8-13-13-13zm0 5c4.4 0 8 3.6 8 8v1H16v-1c0-4.4 3.6-8 8-8z'/><circle cx='20' cy='38' r='2.5' fill='#fb923c'/><circle cx='28' cy='38' r='2.5' fill='#fb923c'/></svg>`;
-// Worker offline (gray helmet)
-const workerOfflineSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#374151'/><path fill='#9ca3af' d='M24 10c-7.2 0-13 5.8-13 13v3h4v6h18v-6h4v-3c0-7.2-5.8-13-13-13zm0 5c4.4 0 8 3.6 8 8v1H16v-1c0-4.4 3.6-8 8-8z'/><circle cx='20' cy='38' r='2.5' fill='#9ca3af'/><circle cx='28' cy='38' r='2.5' fill='#9ca3af'/></svg>`;
+// Worker free (green hard hat - more visible)
+const workerFreeSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#166534' stroke='#22c55e' stroke-width='2'/><circle cx='24' cy='18' r='7' fill='#4ade80'/><path d='M17 25c0-3.87 3.13-7 7-7s7 3.13 7 7v2H17v-2z' fill='#22c55e'/><path d='M12 30c0-6.63 5.37-12 12-12s12 5.37 12 12v3H12v-3z' fill='#4ade80'/><circle cx='18' cy='38' r='2' fill='#86efac'/><circle cx='30' cy='38' r='2' fill='#86efac'/></svg>`;
+// Worker busy (orange hard hat with tools)
+const workerBusySvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#7c2d12' stroke='#fb923c' stroke-width='2'/><circle cx='24' cy='18' r='7' fill='#fb923c'/><path d='M17 25c0-3.87 3.13-7 7-7s7 3.13 7 7v2H17v-2z' fill='#f97316'/><path d='M12 30c0-6.63 5.37-12 12-12s12 5.37 12 12v3H12v-3z' fill='#fdba74'/><text x='24' y='37' text-anchor='middle' font-size='8' fill='#7c2d12'>🔧</text></svg>`;
+// Worker offline (gray)
+const workerOfflineSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><circle cx='24' cy='24' r='22' fill='#374151' stroke='#9ca3af' stroke-width='2'/><circle cx='24' cy='18' r='7' fill='#9ca3af'/><path d='M17 25c0-3.87 3.13-7 7-7s7 3.13 7 7v2H17v-2z' fill='#6b7280'/><path d='M12 30c0-6.63 5.37-12 12-12s12 5.37 12 12v3H12v-3z' fill='#d1d5db'/><circle cx='18' cy='38' r='2' fill='#9ca3af'/><circle cx='30' cy='38' r='2' fill='#9ca3af'/></svg>`;
 // Client (person silhouette in blue pin)
 const clientPersonSvg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 58'><path fill='#0ea5e9' d='M24 0C10.7 0 0 10.7 0 24c0 16 24 34 24 34s24-18 24-34C48 10.7 37.3 0 24 0z'/><circle cx='24' cy='18' r='7' fill='#fff'/><path fill='#fff' d='M12 36c2-7 7-11 12-11s10 4 12 11'/></svg>`;
 // Request pin (yellow/amber)
@@ -166,6 +179,8 @@ export default function MapPage() {
   const [clients, setClients] = useState<MapClient[]>([]);
   const [requests, setRequests] = useState<MapRequest[]>([]);
   const [workerFilter, setWorkerFilter] = useState<WorkerFilter>("all");
+  const [workerSearch, setWorkerSearch] = useState("");
+  const [requestSearch, setRequestSearch] = useState("");
   const [popup, setPopup] = useState<PopupInfo | null>(null);
   const lastSyncRef = useRef<string | undefined>(undefined);
 
@@ -311,12 +326,36 @@ export default function MapPage() {
     };
   }, [scheduleWorkerFlush]);
 
-  /* ─── Filtered workers based on toggle ─── */
+  /* ─── Filtered workers based on toggle and search ─── */
   const filteredWorkers = useMemo(() => {
-    if (workerFilter === "free") return workers.filter((w) => w.isAvailable && !w.activeRequest);
-    if (workerFilter === "busy") return workers.filter((w) => !!w.activeRequest);
-    return workers;
-  }, [workers, workerFilter]);
+    let result = workers;
+    // Apply status filter
+    if (workerFilter === "free") result = result.filter((w) => w.isAvailable && !w.activeRequest);
+    if (workerFilter === "busy") result = result.filter((w) => !!w.activeRequest);
+    // Apply search filter
+    if (workerSearch.trim()) {
+      const search = workerSearch.toLowerCase().trim();
+      result = result.filter((w) =>
+        `${w.firstName} ${w.lastName}`.toLowerCase().includes(search) ||
+        w.completedJobs.toString().includes(search) ||
+        w.averageRating.toString().includes(search)
+      );
+    }
+    return result;
+  }, [workers, workerFilter, workerSearch]);
+
+  /* ─── Filtered requests based on search (includes client name) ─── */
+  const filteredRequests = useMemo(() => {
+    if (!requestSearch.trim()) return requests;
+    const search = requestSearch.toLowerCase().trim();
+    return requests.filter((r) =>
+      r.title.toLowerCase().includes(search) ||
+      r.clientName.toLowerCase().includes(search) ||
+      r.address.toLowerCase().includes(search) ||
+      r.status.toLowerCase().includes(search) ||
+      r.budget.toString().includes(search)
+    );
+  }, [requests, requestSearch]);
 
   const workersGeo = useMemo<GeoJsonPoint>(() => ({
     type: "FeatureCollection",
@@ -399,14 +438,23 @@ export default function MapPage() {
     [],
   );
 
-  const onMapMouseEnter = useCallback(() => {
+  const onMapMouseEnter = useCallback((e: MapLayerMouseEvent) => {
     const map = mapRef.current?.getMap();
-    if (map) map.getCanvas().style.cursor = "pointer";
+    if (map && e.features?.length) {
+      map.getCanvas().style.cursor = "pointer";
+    }
   }, []);
 
   const onMapMouseLeave = useCallback(() => {
     const map = mapRef.current?.getMap();
-    if (map) map.getCanvas().style.cursor = "";
+    if (map) map.getCanvas().style.cursor = "grab";
+  }, []);
+
+  const onMapMove = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (map && map.getCanvas().style.cursor === "pointer") {
+      map.getCanvas().style.cursor = "grab";
+    }
   }, []);
 
   /* ─── Fly to coordinates (centra el mapa en una ubicación) ─── */
@@ -476,57 +524,131 @@ export default function MapPage() {
         {panelOpen && (
           <div className="flex-1 overflow-auto px-4 pb-4">
             {tab === "requests" && (
-              <div className="space-y-2">
-                {requests.slice(0, 50).map((r) => (
-                  <div key={r.id} className="group rounded-xl border border-white/10 bg-black/20 p-3 hover:bg-black/30 transition-colors">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-medium">{r.title}</p>
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => flyToLocation(r.longitude, r.latitude, 16)}
-                          className="rounded-full p-1 hover:bg-primary/20 text-on-surface-variant hover:text-primary transition-colors"
-                          title="Centrar en mapa"
-                        >
-                          <Crosshair size={14} />
-                        </button>
-                        <span className="shrink-0 rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase text-on-surface-variant">{statusLabel[r.status] ?? r.status}</span>
+              <div className="space-y-3">
+                {/* Search input for requests */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" />
+                  <input
+                    type="text"
+                    value={requestSearch}
+                    onChange={(e) => setRequestSearch(e.target.value)}
+                    placeholder="Buscar por título, cliente, dirección..."
+                    className="w-full rounded-xl border border-white/10 bg-black/30 py-2 pl-9 pr-3 text-sm text-white placeholder:text-on-surface-variant/50 focus:border-primary focus:outline-none"
+                  />
+                </div>
+                {/* Results count */}
+                <p className="text-xs text-on-surface-variant">
+                  {filteredRequests.length} solicitude{filteredRequests.length !== 1 ? 's' : ''} encontrada{filteredRequests.length !== 1 ? 's' : ''}
+                </p>
+                <div className="space-y-2">
+                  {filteredRequests.slice(0, 50).map((r) => (
+                    <div
+                      key={r.id}
+                      onClick={() => flyToLocation(r.longitude, r.latitude, 16)}
+                      className="group cursor-pointer rounded-xl border border-white/10 bg-black/20 p-3 transition-all hover:bg-black/30 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-500/20">
+                            <span className="text-xs">📋</span>
+                          </div>
+                          <p className="truncate text-sm font-medium">{r.title}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              flyToLocation(r.longitude, r.latitude, 16);
+                            }}
+                            className="rounded-full p-1.5 text-on-surface-variant opacity-0 transition-all hover:bg-primary/20 hover:text-primary group-hover:opacity-100"
+                            title="Centrar en mapa"
+                          >
+                            <Navigation size={14} />
+                          </button>
+                          {( () => {
+                            const colors = statusColors[r.status] || statusColors.pending;
+                            return (
+                              <span className={`shrink-0 rounded-full border ${colors.border} ${colors.bg} px-2 py-0.5 text-[10px] uppercase ${colors.text}`}>
+                                {statusLabel[r.status] ?? r.status}
+                              </span>
+                            );
+                          })()}
+                        </div>
                       </div>
+                      <p className="mt-1 text-xs text-on-surface-variant">{r.clientName} · Bs {r.budget}</p>
+                      <p className="truncate text-xs text-on-surface-variant">{r.address}</p>
+                      <p className="mt-1 text-[10px] text-gray-500">
+                        📍 {r.latitude.toFixed(4)}, {r.longitude.toFixed(4)}
+                      </p>
                     </div>
-                    <p className="mt-1 text-xs text-on-surface-variant">{r.clientName} · Bs {r.budget}</p>
-                    <p className="truncate text-xs text-on-surface-variant">{r.address}</p>
-                    <p className="mt-1 text-[10px] text-gray-500">
-                      📍 {r.latitude.toFixed(4)}, {r.longitude.toFixed(4)}
-                    </p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
 
             {tab === "workers" && (
-              <div className="space-y-2">
-                {workers.slice(0, 50).map((w) => {
-                  const isBusy = !!w.activeRequest;
-                  return (
-                    <div key={w.id} className="rounded-xl border border-white/10 bg-black/20 p-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">{w.firstName} {w.lastName}</p>
-                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${isBusy ? "bg-orange-500/20 text-orange-300" : w.isAvailable ? "bg-green-500/20 text-green-300" : "bg-gray-400/20 text-gray-300"}`}>
-                          {isBusy ? "Ocupado" : w.isAvailable ? "Libre" : "Offline"}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-on-surface-variant">Jobs: {w.completedJobs} · Rating: {w.averageRating.toFixed(1)}</p>
-                      {w.activeRequest && (
-                        <div className="mt-2 rounded-lg border border-orange-500/20 bg-orange-500/5 p-2">
-                          <p className="text-[11px] font-medium text-orange-300">{w.activeRequest.title}</p>
-                          <p className="text-[10px] text-on-surface-variant">
-                            {w.activeRequest.workerArrived ? "Ya llegó al lugar" : "En camino"} · {statusLabel[w.activeRequest.status] ?? w.activeRequest.status}
-                          </p>
-                          <p className="text-[10px] text-on-surface-variant">Cliente: {w.activeRequest.clientName}</p>
+              <div className="space-y-3">
+                {/* Search input for workers */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" />
+                  <input
+                    type="text"
+                    value={workerSearch}
+                    onChange={(e) => setWorkerSearch(e.target.value)}
+                    placeholder="Buscar worker por nombre..."
+                    className="w-full rounded-xl border border-white/10 bg-black/30 py-2 pl-9 pr-3 text-sm text-white placeholder:text-on-surface-variant/50 focus:border-primary focus:outline-none"
+                  />
+                </div>
+                {/* Results count */}
+                <p className="text-xs text-on-surface-variant">
+                  {filteredWorkers.length} worker{filteredWorkers.length !== 1 ? 's' : ''} encontrado{filteredWorkers.length !== 1 ? 's' : ''}
+                </p>
+                <div className="space-y-2">
+                  {filteredWorkers.slice(0, 50).map((w) => {
+                    const isBusy = !!w.activeRequest;
+                    return (
+                      <div
+                        key={w.id}
+                        onClick={() => flyToLocation(w.longitude, w.latitude, 16)}
+                        className="group cursor-pointer rounded-xl border border-white/10 bg-black/20 p-3 transition-all hover:bg-black/30 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`flex h-8 w-8 items-center justify-center rounded-full ${isBusy ? "bg-orange-500/20" : w.isAvailable ? "bg-green-500/20" : "bg-gray-500/20"}`}>
+                              <span className="text-sm">{isBusy ? "🔨" : "⛑️"}</span>
+                            </div>
+                            <p className="text-sm font-medium">{w.firstName} {w.lastName}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                flyToLocation(w.longitude, w.latitude, 16);
+                              }}
+                              className="rounded-full p-1.5 text-on-surface-variant opacity-0 transition-all hover:bg-primary/20 hover:text-primary group-hover:opacity-100"
+                              title="Centrar en mapa"
+                            >
+                              <Navigation size={14} />
+                            </button>
+                            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${isBusy ? "bg-orange-500/20 text-orange-300" : w.isAvailable ? "bg-green-500/20 text-green-300" : "bg-gray-400/20 text-gray-300"}`}>
+                              {isBusy ? "Ocupado" : w.isAvailable ? "Libre" : "Offline"}
+                            </span>
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  );
-                })}
+                        <p className="mt-1 text-xs text-on-surface-variant">Jobs: {w.completedJobs} · Rating: {w.averageRating.toFixed(1)}</p>
+                        {w.activeRequest && (
+                          <div className="mt-2 rounded-lg border border-orange-500/20 bg-orange-500/5 p-2">
+                            <p className="text-[11px] font-medium text-orange-300">{w.activeRequest.title}</p>
+                            <p className="text-[10px] text-on-surface-variant">
+                              {w.activeRequest.workerArrived ? "Ya llegó al lugar" : "En camino"} · {statusLabel[w.activeRequest.status] ?? w.activeRequest.status}
+                            </p>
+                            <p className="text-[10px] text-on-surface-variant">Cliente: {w.activeRequest.clientName}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
@@ -534,7 +656,7 @@ export default function MapPage() {
       </div>
 
       {/* ─── Filter toggles (bottom-center) ─── */}
-      <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/10 bg-surface-container-high/70 p-1.5 backdrop-blur-[20px]">
+      <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/10 bg-black/40 p-1.5 backdrop-blur-md">
         {(["all", "free", "busy"] as const).map((f) => {
           const labels: Record<WorkerFilter, string> = { all: "Todos", free: "Libres", busy: "Ocupados" };
           const colors: Record<WorkerFilter, string> = {
@@ -563,6 +685,7 @@ export default function MapPage() {
             onClick={onMapClick}
             onMouseEnter={onMapMouseEnter}
             onMouseLeave={onMapMouseLeave}
+            onMove={onMapMove}
             interactiveLayerIds={INTERACTIVE_LAYERS}
             mapboxAccessToken={token}
             initialViewState={{ longitude: -68.15, latitude: -16.5, zoom: 11 }}
@@ -608,13 +731,18 @@ export default function MapPage() {
                     return (
                       <>
                         <div className="flex items-center gap-3 mb-3">
-                          <div className={`flex h-10 w-10 items-center justify-center rounded-full ${isBusy ? "bg-orange-500/20" : w.isAvailable ? "bg-green-500/20" : "bg-gray-500/20"}`}>
-                            <span className="text-lg">{isBusy ? "🔨" : "⛑️"}</span>
+                          <div className={`flex h-11 w-11 items-center justify-center rounded-full ${isBusy ? "bg-orange-500/20 border border-orange-500/30" : w.isAvailable ? "bg-green-500/20 border border-green-500/30" : "bg-gray-500/20 border border-gray-500/30"}`}>
+                            {/* Worker Icon SVG - Person with hard hat */}
+                            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none">
+                              <circle cx="12" cy="8" r="4" fill={isBusy ? "#fb923c" : w.isAvailable ? "#4ade80" : "#9ca3af"}/>
+                              <path d="M6 22v-2c0-3.31 2.69-6 6-6s6 2.69 6 6v2" stroke={isBusy ? "#fb923c" : w.isAvailable ? "#4ade80" : "#9ca3af"} strokeWidth="2" fill="none"/>
+                              <path d="M8 6h8c0-2.21-1.79-4-4-4s-4 1.79-4 4z" fill={isBusy ? "#c2410c" : w.isAvailable ? "#166534" : "#4b5563"}/>
+                            </svg>
                           </div>
                           <div>
                             <p className="font-semibold text-sm">{w.firstName} {w.lastName}</p>
                             <span className={`text-[10px] font-medium ${isBusy ? "text-orange-400" : w.isAvailable ? "text-green-400" : "text-gray-400"}`}>
-                              {isBusy ? "Ocupado" : w.isAvailable ? "Libre" : "Offline"}
+                              {isBusy ? "🛠️ Ocupado" : w.isAvailable ? "✅ Libre" : "⚪ Offline"}
                             </span>
                           </div>
                         </div>
@@ -654,12 +782,16 @@ export default function MapPage() {
                     return (
                       <>
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sky-500/20">
-                            <span className="text-lg">👤</span>
+                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-sky-500/20 border border-sky-500/30">
+                            {/* Client Icon SVG */}
+                            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none">
+                              <circle cx="12" cy="8" r="4" fill="#38bdf8"/>
+                              <path d="M4 22v-2c0-3.31 2.69-6 6-6s6 2.69 6 6v2" stroke="#38bdf8" strokeWidth="2" fill="none"/>
+                            </svg>
                           </div>
                           <div>
                             <p className="font-semibold text-sm">{c.firstName} {c.lastName}</p>
-                            <span className="text-[10px] text-sky-400">Cliente</span>
+                            <span className="text-[10px] text-sky-400">👤 Cliente</span>
                           </div>
                         </div>
                         <div className="mb-2 rounded-lg border border-white/10 bg-black/30 p-2">
@@ -678,12 +810,17 @@ export default function MapPage() {
                     return (
                       <>
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/20">
-                            <span className="text-lg">📋</span>
+                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-500/20 border border-amber-500/30">
+                            {/* Request Icon SVG - Clipboard */}
+                            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none">
+                              <rect x="5" y="3" width="14" height="18" rx="2" stroke="#fbbf24" strokeWidth="2" fill="none"/>
+                              <path d="M9 7h6M9 11h6M9 15h4" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round"/>
+                              <circle cx="15" cy="3" r="3" fill="#f59e0b"/>
+                            </svg>
                           </div>
                           <div>
                             <p className="font-semibold text-sm">{r.title}</p>
-                            <span className="text-[10px] text-amber-400">{statusLabel[r.status] ?? r.status}</span>
+                            <span className="text-[10px] text-amber-400">📋 {statusLabel[r.status] ?? r.status}</span>
                           </div>
                         </div>
                         <div className="text-xs text-gray-300 space-y-1">
