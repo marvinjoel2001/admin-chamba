@@ -191,6 +191,19 @@ export default function WorkersPage() {
     }
   };
 
+  // --- Desactivar Trabajador desde Ficha ---
+  const handleDeactivateWorker = async (worker: AdminUser) => {
+    if (!confirm(`¿Está seguro que desea desactivar al trabajador ${worker.firstName} ${worker.lastName ?? ""}?`)) return;
+    try {
+      await deleteUser(worker.id);
+      setItems((prev) => prev.filter((p) => p.id !== worker.id));
+      setSelectedWorker(null);
+      toast.success("Trabajador desactivado");
+    } catch {
+      toast.error("No se pudo desactivar en backend");
+    }
+  };
+
   const filteredItems = items.filter((w) => {
     if (!workerSearch.trim()) return true;
     const search = workerSearch.toLowerCase().trim();
@@ -513,7 +526,13 @@ export default function WorkersPage() {
                 <img
                   src={selectedWorker.profilePhotoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80"}
                   alt={selectedWorker.firstName}
-                  className="h-16 w-16 rounded-full object-cover border-2 border-primary/50 shadow-md shadow-primary/10 shrink-0"
+                  onClick={() => setExpandedImage({
+                    url: selectedWorker.profilePhotoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80",
+                    alt: `Foto de perfil de ${selectedWorker.firstName}`,
+                    key: `${selectedWorker.id}-profile-detail`
+                  })}
+                  className="h-16 w-16 rounded-full object-cover border-2 border-primary/50 shadow-md shadow-primary/10 shrink-0 cursor-zoom-in hover:scale-105 transition-all"
+                  title="Ampliar foto de perfil"
                 />
                 <div>
                   <h3 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
@@ -702,7 +721,19 @@ export default function WorkersPage() {
             </div>
             
             {/* Footer */}
-            <div className="border-t border-white/10 px-6 py-4 flex justify-end bg-black/20">
+            <div className="border-t border-white/10 px-6 py-4 flex justify-between items-center bg-black/20">
+              <div>
+                {selectedWorker.isAvailable !== false ? (
+                  <button
+                    onClick={() => handleDeactivateWorker(selectedWorker)}
+                    className="rounded-xl bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/20 px-5 py-2 text-sm font-semibold text-rose-300 transition-all hover:scale-[1.02]"
+                  >
+                    Desactivar Trabajador
+                  </button>
+                ) : (
+                  <span className="text-xs text-on-surface-variant/40">Trabajador Inactivo</span>
+                )}
+              </div>
               <button
                 onClick={() => { setSelectedWorker(null); setWorkerJobs([]); }}
                 className="rounded-xl bg-white/10 px-5 py-2 text-sm font-semibold text-white hover:bg-white/15 transition-all"
