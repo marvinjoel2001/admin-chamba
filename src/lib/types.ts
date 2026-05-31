@@ -61,9 +61,22 @@ export type MapRequest = {
   budget: number;
   address: string;
   clientName: string;
+  clientId?: string;
   latitude: number;
   longitude: number;
   updatedAt: string;
+  createdAt?: string;
+  // Worker info
+  workerId?: string;
+  workerName?: string;
+  // Timeline dates
+  assignedAt?: string;
+  workerArrivedAt?: string;
+  clientConfirmedArrivalAt?: string;
+  completedAt?: string;
+  cancelledAt?: string;
+  // Duration in minutes
+  durationMinutes?: number;
 };
 
 export type MapSnapshotResponse = {
@@ -98,6 +111,31 @@ export type ApiLogItem = {
   duration_ms: number;
   ip?: string | null;
   user_agent?: string | null;
+};
+
+// Extended request detail with full timeline
+export type RequestDetail = MapRequest & {
+  client?: AdminUser;
+  worker?: AdminUser;
+  offers?: Array<{
+    id: string;
+    workerId: string;
+    workerName: string;
+    amount: number;
+    status: string;
+    createdAt: string;
+  }>;
+  timeline: Array<{
+    stage: string;
+    label: string;
+    timestamp?: string;
+    icon: string;
+    completed: boolean;
+  }>;
+};
+
+// Extended API log item
+export type ExtendedApiLogItem = ApiLogItem & {
   query_json?: Record<string, unknown>;
   request_body_json?: Record<string, unknown>;
   response_preview?: string | null;

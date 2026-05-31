@@ -9,6 +9,7 @@ import type {
   WorkerVerificationReviewPayload,
   WorkerNotificationSettings,
   ApiLogsResponse,
+  RequestDetail,
 } from "@/lib/types";
 
 export async function deleteUser(id: string) {
@@ -152,4 +153,11 @@ export async function fetchWorkerHistory(workerUserId: string) {
     params: { workerUserId },
   });
   return data.jobs;
+}
+
+// --- Request Detail ---
+
+export async function fetchRequestDetail(requestId: string): Promise<RequestDetail> {
+  const { data } = await api.get<RequestDetail>(`/mobile/admin/requests/${requestId}`);
+  return data;
 }

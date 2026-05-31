@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Bell,
   LayoutDashboard,
@@ -20,25 +20,51 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAdminStore } from "@/store/admin-store";
+import { fetchDisputes, fetchWorkerVerificationInbox } from "@/lib/admin-api";
+import { websocketService } from "@/lib/websocket-service";
 
 const nav = [
-  ["/", "Dashboard", LayoutDashboard],
-  ["/map", "Real-time Map", Map],
-  ["/workers", "Workers", Users],
-  ["/clients", "Clients", UserSquare2],
-  ["/requests", "Trabajos", ClipboardList],
-  ["/reports", "Reports", BarChart3],
-  ["/wallet", "Wallet", WalletCards],
-  ["/worker-settings", "Worker Config", RadioTower],
-  ["/disputes", "Disputas", ShieldAlert],
-  ["/categories", "Categorías", FolderOpen],
-  ["/logs", "API Logs", Activity],
-  ["/settings", "Settings", Settings],
+  ["/", "Dashboard", LayoutDashboard, null],
+  ["/map", "Real-time Map", Map, null],
+  ["/workers", "Workers", Users, "pendingVerifications"],
+  ["/clients", "Clients", UserSquare2, null],
+  ["/requests", "Trabajos", ClipboardList, null],
+  ["/reports", "Reports", BarChart3, null],
+  ["/wallet", "Wallet", WalletCards, null],
+  ["/worker-settings", "Worker Config", RadioTower, null],
+  ["/disputes", "Disputas", ShieldAlert, "pendingDisputes"],
+  ["/categories", "Categorías", FolderOpen, null],
+  ["/logs", "API Logs", Activity, null],
+  ["/settings", "Settings", Settings, null],
 ] as const;
 
 export function AppLayout() {
-  const { search, setSearch } = useAdminStore();
+  const { search, setSearch, pendingDisputes, pendingVerifications, setPendingDisputes, setPendingVerifications } = useAdminStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Load badge counts on mount and connect WebSocket
+  useEffect(() => {
+    const loadBadgeCounts = async () => {
+      try {
+        const [disputes, verifications] = await Promise.all([
+          fetchDisputes("open"),
+          fetchWorkerVerificationInbox(),
+        ]);
+        setPendingDisputes(disputes.length);
+        setPendingVerifications(verifications.length);
+      } catch {
+        // Silently fail - badges will just show 0
+      }
+    };
+    void loadBadgeCounts();
+
+    // Connect WebSocket for real-time updates
+    websocketService.connect();
+
+    return () => {
+      websocketService.disconnect();
+    };
+  }, [setPendingDisputes, setPendingVerifications]);
 
   return (
     <div className="min-h-screen text-on-surface">
@@ -52,22 +78,31 @@ export function AppLayout() {
           <p className="mt-1 text-sm text-on-surface-variant">Admin Console</p>
         </div>
         <nav className="flex flex-1 flex-col gap-2">
-          {nav.map(([to, label, Icon]) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-6 py-3 transition-all duration-300 ${
-                  isActive
-                    ? "border-l-2 border-primary bg-primary/10 text-primary"
-                    : "text-on-surface-variant hover:bg-white/5 hover:text-on-surface"
-                }`
-              }
-            >
-              <Icon size={18} />
-              <span>{label}</span>
-            </NavLink>
-          ))}
+          {nav.map(([to, label, Icon, badgeKey]) => {
+            const badgeCount = badgeKey === "pendingDisputes" ? pendingDisputes : 
+                              badgeKey === "pendingVerifications" ? pendingVerifications : 0;
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-6 py-3 transition-all duration-300 ${
+                    isActive
+                      ? "border-l-2 border-primary bg-primary/10 text-primary"
+                      : "text-on-surface-variant hover:bg-white/5 hover:text-on-surface"
+                  }`
+                }
+              >
+                <Icon size={18} />
+                <span className="flex-1">{label}</span>
+                {badgeCount > 0 && (
+                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+                    {badgeCount > 99 ? "99+" : badgeCount}
+                  </span>
+                )}
+              </NavLink>
+            );
+          })}
         </nav>
       </aside>
       {/* Mobile Sidebar Overlay */}
@@ -87,23 +122,32 @@ export function AppLayout() {
               <p className="mt-1 text-sm text-on-surface-variant">Admin Console</p>
             </div>
             <nav className="flex flex-1 flex-col gap-2">
-              {nav.map(([to, label, Icon]) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={({ isActive }) =>
-                    `flex items-center gap-3 px-6 py-3 transition-all duration-300 ${
-                      isActive
-                        ? "border-l-2 border-primary bg-primary/10 text-primary"
-                        : "text-on-surface-variant hover:bg-white/5 hover:text-on-surface"
-                    }`
-                  }
-                >
-                  <Icon size={18} />
-                  <span>{label}</span>
-                </NavLink>
-              ))}
+              {nav.map(([to, label, Icon, badgeKey]) => {
+                const badgeCount = badgeKey === "pendingDisputes" ? pendingDisputes : 
+                                  badgeKey === "pendingVerifications" ? pendingVerifications : 0;
+                return (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-6 py-3 transition-all duration-300 ${
+                        isActive
+                          ? "border-l-2 border-primary bg-primary/10 text-primary"
+                          : "text-on-surface-variant hover:bg-white/5 hover:text-on-surface"
+                      }`
+                    }
+                  >
+                    <Icon size={18} />
+                    <span className="flex-1">{label}</span>
+                    {badgeCount > 0 && (
+                      <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+                        {badgeCount > 99 ? "99+" : badgeCount}
+                      </span>
+                    )}
+                  </NavLink>
+                );
+              })}
             </nav>
           </aside>
         </div>

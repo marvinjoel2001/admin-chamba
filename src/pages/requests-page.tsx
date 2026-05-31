@@ -1,10 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
 import { DataTable } from "@/components/ui/data-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { fetchMapSnapshot, adminCancelRequest } from "@/lib/admin-api";
-import type { MapRequest } from "@/lib/types";
+import { fetchMapSnapshot, adminCancelRequest, fetchRequestDetail } from "@/lib/admin-api";
+import type { MapRequest, RequestDetail } from "@/lib/types";
 import { toast } from "sonner";
-import { Search, Calendar, X, Eye, ShieldAlert, MapPin, DollarSign, User } from "lucide-react";
+import { Search, Calendar, X, Eye, ShieldAlert, MapPin, DollarSign, User, Users, CheckCircle, Handshake, Clock, MapPinCheck, CircleCheck, Ban, FileText, Briefcase } from "lucide-react";
 
 const statusLabel: Record<string, string> = {
   searching: "Buscando",
@@ -46,6 +46,8 @@ export default function RequestsPage() {
 
   // --- Estados de Modal y Acción ---
   const [selectedRequest, setSelectedRequest] = useState<MapRequest | null>(null);
+  const [requestDetail, setRequestDetail] = useState<RequestDetail | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const loadData = async () => {
@@ -81,6 +83,7 @@ export default function RequestsPage() {
       // Sincronizar modal si está abierto
       if (selectedRequest && selectedRequest.id === requestId) {
         setSelectedRequest((prev) => prev ? { ...prev, status: "cancelled", updatedAt: new Date().toISOString() } : null);
+        setRequestDetail((prev) => prev ? { ...prev, status: "cancelled", cancelledAt: new Date().toISOString() } : null);
       }
     } catch (err) {
       console.error("Error al cancelar solicitud", err);
@@ -89,6 +92,120 @@ export default function RequestsPage() {
       setCancellingId(null);
     }
   };
+
+  // Load request detail when modal opens
+  useEffect(() => {
+    if (selectedRequest) {
+      setLoadingDetail(true);
+      fetchRequestDetail(selectedRequest.id)
+        .then((detail) => {
+          setRequestDetail(detail);
+        })
+        .catch(() => {
+          // Fallback to basic info if API fails
+          setRequestDetail({
+            ...selectedRequest,
+            timeline: generateTimeline(selectedRequest),
+          } as RequestDetail);
+        })
+        .finally(() => {
+          setLoadingDetail(false);
+        });
+    } else {
+      setRequestDetail(null);
+    }
+  }, [selectedRequest]);
+
+  // Generate timeline from request data
+  function generateTimeline(req: MapRequest) {
+    const timeline = [];
+    
+    // Created
+    timeline.push({
+      stage: "created",
+      label: "Solicitud Creada",
+      timestamp: req.createdAt || req.updatedAt,
+      icon: "FileText",
+      completed: true,
+    });
+    
+    // Negotiating or Assigned
+    if (req.assignedAt || req.status !== "searching") {
+      timeline.push({
+        stage: "negotiating",
+        label: "Negociación / Asignación",
+        timestamp: req.assignedAt,
+        icon: "Handshake",
+        completed: true,
+      });
+    }
+    
+    // Worker Arrived
+    if (req.workerArrivedAt || ["in_progress", "completed"].includes(req.status)) {
+      timeline.push({
+        stage: "worker_arrived",
+        label: "Trabajador Llegó",
+        timestamp: req.workerArrivedAt,
+        icon: "MapPinCheck",
+        completed: !!req.workerArrivedAt,
+      });
+    }
+    
+    // Client Confirmed
+    if (req.clientConfirmedArrivalAt || ["in_progress", "completed"].includes(req.status)) {
+      timeline.push({
+        stage: "client_confirmed",
+        label: "Cliente Confirmó Llegada",
+        timestamp: req.clientConfirmedArrivalAt,
+        icon: "CheckCircle",
+        completed: !!req.clientConfirmedArrivalAt,
+      });
+    }
+    
+    // Completed or Cancelled
+    if (req.status === "completed" && req.completedAt) {
+      timeline.push({
+        stage: "completed",
+        label: "Trabajo Completado",
+        timestamp: req.completedAt,
+        icon: "CircleCheck",
+        completed: true,
+      });
+    } else if (req.status === "cancelled" && req.cancelledAt) {
+      timeline.push({
+        stage: "cancelled",
+        label: "Trabajo Cancelado",
+        timestamp: req.cancelledAt,
+        icon: "Ban",
+        completed: true,
+      });
+    }
+    
+    return timeline;
+  }
+
+  // Format duration
+  function formatDuration(minutes?: number): string {
+    if (!minutes) return "-";
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  }
+
+  // Timeline icon component
+  function TimelineIcon({ icon, completed }: { icon: string; completed: boolean }) {
+    const className = `h-5 w-5 ${completed ? "text-primary" : "text-on-surface-variant/40"}`;
+    switch (icon) {
+      case "FileText": return <FileText className={className} />;
+      case "Handshake": return <Handshake className={className} />;
+      case "MapPinCheck": return <MapPinCheck className={className} />;
+      case "CheckCircle": return <CheckCircle className={className} />;
+      case "CircleCheck": return <CircleCheck className={className} />;
+      case "Ban": return <Ban className={className} />;
+      default: return <Clock className={className} />;
+    }
+  }
 
   const filteredItems = useMemo(() => {
     return items.filter((r) => {
@@ -262,12 +379,12 @@ export default function RequestsPage() {
       {/* ─── Modal de Ficha de Detalle de Trabajo ─── */}
       {selectedRequest && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#0d1117]/95 shadow-2xl backdrop-blur-md overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0d1117]/95 shadow-2xl backdrop-blur-md overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-5 bg-gradient-to-r from-purple-950/20 to-black/40">
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary">
-                  <ShieldAlert className="h-5 w-5" />
+                  <Briefcase className="h-5 w-5" />
                 </div>
                 <div>
                   <h3 className="text-lg font-bold tracking-tight text-white">Detalle de Trabajo</h3>
@@ -283,55 +400,126 @@ export default function RequestsPage() {
             </div>
 
             {/* Content */}
-            <div className="p-6 space-y-5 overflow-y-auto max-h-[60vh]">
-              {/* Titulo */}
-              <div>
-                <h4 className="text-xs font-bold tracking-wide uppercase text-on-surface-variant/70 mb-1">Título de la Orden</h4>
-                <p className="text-sm font-semibold text-white">{selectedRequest.title}</p>
-              </div>
-
-              {/* Grid 2 Columnas */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="rounded-xl border border-white/5 bg-white/5 p-3">
-                  <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold mb-1">
-                    <User className="h-3.5 w-3.5" /> Cliente
+            <div className="p-6 space-y-5 overflow-y-auto max-h-[70vh]">
+              {loadingDetail ? (
+                <div className="flex justify-center py-8">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              ) : (
+                <>
+                  {/* Titulo */}
+                  <div>
+                    <h4 className="text-xs font-bold tracking-wide uppercase text-on-surface-variant/70 mb-1">Título de la Orden</h4>
+                    <p className="text-sm font-semibold text-white">{selectedRequest.title}</p>
                   </div>
-                  <p className="text-sm font-semibold text-white">{selectedRequest.clientName}</p>
-                </div>
 
-                <div className="rounded-xl border border-white/5 bg-white/5 p-3">
-                  <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold mb-1">
-                    <DollarSign className="h-3.5 w-3.5" /> Presupuesto
+                  {/* Grid: Cliente, Worker, Presupuesto, Duración */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="rounded-xl border border-white/5 bg-white/5 p-3">
+                      <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold mb-1">
+                        <User className="h-3.5 w-3.5" /> Cliente
+                      </div>
+                      <p className="text-sm font-semibold text-white">{selectedRequest.clientName}</p>
+                      {requestDetail?.client?.phone && (
+                        <p className="text-xs text-on-surface-variant/60 mt-0.5">{requestDetail.client.phone}</p>
+                      )}
+                    </div>
+
+                    <div className="rounded-xl border border-white/5 bg-white/5 p-3">
+                      <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold mb-1">
+                        <Users className="h-3.5 w-3.5" /> Trabajador Asignado
+                      </div>
+                      {selectedRequest.workerName ? (
+                        <>
+                          <p className="text-sm font-semibold text-white">{selectedRequest.workerName}</p>
+                          {requestDetail?.worker?.phone && (
+                            <p className="text-xs text-on-surface-variant/60 mt-0.5">{requestDetail.worker.phone}</p>
+                          )}
+                        </>
+                      ) : (
+                        <p className="text-sm text-on-surface-variant/50 italic">Sin asignar</p>
+                      )}
+                    </div>
+
+                    <div className="rounded-xl border border-white/5 bg-white/5 p-3">
+                      <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold mb-1">
+                        <DollarSign className="h-3.5 w-3.5" /> Presupuesto
+                      </div>
+                      <p className="text-sm font-bold text-emerald-400">Bs {Number(selectedRequest.budget).toFixed(2)}</p>
+                    </div>
+
+                    <div className="rounded-xl border border-white/5 bg-white/5 p-3">
+                      <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold mb-1">
+                        <Clock className="h-3.5 w-3.5" /> Duración del Trabajo
+                      </div>
+                      <p className="text-sm font-semibold text-white">
+                        {selectedRequest.durationMinutes ? formatDuration(selectedRequest.durationMinutes) : "-"}
+                      </p>
+                      {selectedRequest.completedAt && (
+                        <p className="text-xs text-on-surface-variant/60 mt-0.5">
+                          Completado: {new Date(selectedRequest.completedAt).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-sm font-bold text-emerald-400">Bs {Number(selectedRequest.budget).toFixed(2)}</p>
-                </div>
-              </div>
 
-              {/* Direccion */}
-              <div className="rounded-xl border border-white/5 bg-white/5 p-3 space-y-1">
-                <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold">
-                  <MapPin className="h-3.5 w-3.5" /> Dirección
-                </div>
-                <p className="text-xs text-white leading-relaxed">{selectedRequest.address}</p>
-              </div>
+                  {/* Direccion */}
+                  <div className="rounded-xl border border-white/5 bg-white/5 p-3 space-y-1">
+                    <div className="flex items-center gap-2 text-xs text-gray-400 font-semibold">
+                      <MapPin className="h-3.5 w-3.5" /> Dirección
+                    </div>
+                    <p className="text-xs text-white leading-relaxed">{selectedRequest.address}</p>
+                  </div>
 
-              {/* Coordenadas y Fecha */}
-              <div className="grid grid-cols-2 gap-4 text-xs text-on-surface-variant/80">
-                <div>
-                  <span className="font-semibold text-gray-400 block mb-0.5">Ubicación exacta</span>
-                  <span className="font-mono text-[10px]">📍 {selectedRequest.latitude.toFixed(6)}, {selectedRequest.longitude.toFixed(6)}</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-400 block mb-0.5">Última actualización</span>
-                  <span>{new Date(selectedRequest.updatedAt).toLocaleString()}</span>
-                </div>
-              </div>
+                  {/* Timeline */}
+                  <div className="border-t border-white/5 pt-4">
+                    <h4 className="text-xs font-bold tracking-wide uppercase text-on-surface-variant/70 mb-3 flex items-center gap-2">
+                      <Clock className="h-4 w-4" /> Timeline del Trabajo
+                    </h4>
+                    <div className="space-y-3">
+                      {(requestDetail?.timeline || generateTimeline(selectedRequest)).map((item, index, arr) => {
+                        const isLast = index === arr.length - 1;
+                        return (
+                          <div key={item.stage} className="flex gap-3">
+                            <div className="flex flex-col items-center">
+                              <div className={`flex h-8 w-8 items-center justify-center rounded-full border ${
+                                item.completed 
+                                  ? "border-primary bg-primary/20 text-primary" 
+                                  : "border-white/10 bg-white/5 text-on-surface-variant/40"
+                              }`}>
+                                <TimelineIcon icon={item.icon} completed={item.completed} />
+                              </div>
+                              {!isLast && (
+                                <div className={`w-0.5 flex-1 my-1 ${
+                                  item.completed ? "bg-primary/30" : "bg-white/10"
+                                }`} />
+                              )}
+                            </div>
+                            <div className="flex-1 pb-3">
+                              <p className={`text-sm font-semibold ${
+                                item.completed ? "text-white" : "text-on-surface-variant/50"
+                              }`}>
+                                {item.label}
+                              </p>
+                              {item.timestamp && (
+                                <p className="text-xs text-on-surface-variant/60 mt-0.5">
+                                  {new Date(item.timestamp).toLocaleString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-              {/* Estado */}
-              <div className="flex items-center justify-between border-t border-white/5 pt-4">
-                <span className="text-xs font-semibold text-gray-400">Estado Actual:</span>
-                {statusBadge(selectedRequest.status)}
-              </div>
+                  {/* Estado */}
+                  <div className="flex items-center justify-between border-t border-white/5 pt-4">
+                    <span className="text-xs font-semibold text-gray-400">Estado Actual:</span>
+                    {statusBadge(selectedRequest.status)}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Footer */}
