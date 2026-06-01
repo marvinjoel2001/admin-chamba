@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchApiLogs } from "@/lib/admin-api";
-import type { ApiLogItem } from "@/lib/types";
+import type { ExtendedApiLogItem } from "@/lib/types";
 import { toast } from "sonner";
 
 const METHODS = ["", "GET", "POST", "PATCH", "PUT", "DELETE"];
@@ -13,7 +13,7 @@ function statusClass(status: number) {
 }
 
 export default function LogsPage() {
-  const [items, setItems] = useState<ApiLogItem[]>([]);
+  const [items, setItems] = useState<ExtendedApiLogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [metrics, setMetrics] = useState({ total: 0, total4xx: 0, total5xx: 0, avgMs: 0 });

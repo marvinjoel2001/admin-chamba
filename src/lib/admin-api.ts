@@ -10,6 +10,7 @@ import type {
   WorkerNotificationSettings,
   ApiLogsResponse,
   RequestDetail,
+  PaymentMethod,
 } from "@/lib/types";
 
 export async function deleteUser(id: string) {
@@ -159,5 +160,51 @@ export async function fetchWorkerHistory(workerUserId: string) {
 
 export async function fetchRequestDetail(requestId: string): Promise<RequestDetail> {
   const { data } = await api.get<RequestDetail>(`/mobile/admin/requests/${requestId}`);
+  return data;
+}
+
+// --- Payment Methods ---
+
+export async function fetchPaymentMethods(includeInactive = false) {
+  const { data } = await api.get<PaymentMethod[]>("/payment-methods", {
+    params: { includeInactive: includeInactive ? "true" : "false" },
+  });
+  return data;
+}
+
+export async function createPaymentMethod(payload: {
+  name: string;
+  code: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}) {
+  const { data } = await api.post<PaymentMethod>("/payment-methods", payload);
+  return data;
+}
+
+export async function updatePaymentMethod(
+  id: string,
+  payload: Partial<{
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+    isActive: boolean;
+    sortOrder: number;
+  }>
+) {
+  const { data } = await api.put<PaymentMethod>(`/payment-methods/${id}`, payload);
+  return data;
+}
+
+export async function deletePaymentMethod(id: string) {
+  await api.delete(`/payment-methods/${id}`);
+}
+
+export async function seedPaymentMethods() {
+  const { data } = await api.post<{ message: string }>("/payment-methods/seed");
   return data;
 }

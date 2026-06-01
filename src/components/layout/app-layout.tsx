@@ -17,6 +17,7 @@ import {
   Activity,
   ShieldAlert,
   FolderOpen,
+  CreditCard,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAdminStore } from "@/store/admin-store";
@@ -34,6 +35,7 @@ const nav = [
   ["/worker-settings", "Worker Config", RadioTower, null],
   ["/disputes", "Disputas", ShieldAlert, "pendingDisputes"],
   ["/categories", "Categorías", FolderOpen, null],
+  ["/payment-methods", "Métodos de Pago", CreditCard, null],
   ["/logs", "API Logs", Activity, null],
   ["/settings", "Settings", Settings, null],
 ] as const;

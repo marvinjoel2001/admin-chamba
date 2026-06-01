@@ -145,7 +145,7 @@ export type ExtendedApiLogItem = ApiLogItem & {
 
 export type ApiLogsResponse = {
   total: number;
-  items: ApiLogItem[];
+  items: ExtendedApiLogItem[];
   metrics15m: {
     total: number;
     total4xx: number;
@@ -200,6 +200,22 @@ export type Category = {
   icon: string | null;
   parentId: string | null;
   active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// ─── Payment Methods ───
+
+export type PaymentMethod = {
+  id: string;
+  name: string;
+  code: string;
+  description: string | null;
+  icon: string | null;
+  color: string;
+  isActive: boolean;
+  sortOrder: number;
+  config: Record<string, any> | null;
   createdAt: string;
   updatedAt: string;
 };
