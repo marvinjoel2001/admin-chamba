@@ -165,6 +165,17 @@ export default function WorkersPage() {
     }
   };
 
+  const onToggleBlock = async (row: AdminUser) => {
+    if (!confirm(`¿${row.isBlocked ? 'Desbloquear' : 'Bloquear'} al trabajador ${row.firstName}?`)) return;
+    try {
+      const updated = await updateUser(row.id, { isBlocked: !row.isBlocked });
+      syncUpdatedWorker(updated);
+      toast.success(`Trabajador ${updated.isBlocked ? 'bloqueado' : 'desbloqueado'}`);
+    } catch {
+      toast.error(`No se pudo ${row.isBlocked ? 'desbloquear' : 'bloquear'} en backend`);
+    }
+  };
+
   const onReviewPhoto = async (
     worker: AdminUser,
     photoType: "id" | "face",
@@ -332,6 +343,12 @@ export default function WorkersPage() {
             className="rounded bg-white/10 px-2 py-1 text-xs hover:bg-white/20 transition-colors"
           >
             Editar
+          </button>
+          <button
+            onClick={() => onToggleBlock(row.original)}
+            className={`rounded px-2 py-1 text-xs transition-colors ${row.original.isBlocked ? 'bg-green-500/20 text-green-200 hover:bg-green-500/30' : 'bg-orange-500/20 text-orange-200 hover:bg-orange-500/30'}`}
+          >
+            {row.original.isBlocked ? 'Desbloquear' : 'Bloquear'}
           </button>
           <button
             onClick={() => onDelete(row.original)}

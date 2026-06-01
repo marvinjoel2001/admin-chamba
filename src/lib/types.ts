@@ -12,6 +12,7 @@ export type AdminUser = {
   facePhotoVerified?: boolean | null;
   verificationReviewedAt?: string | null;
   isAvailable?: boolean;
+  isBlocked?: boolean;
   completedJobs?: number;
   averageRating?: number;
   createdAt?: string;

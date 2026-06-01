@@ -54,16 +54,30 @@ export default function ClientsPage() {
     }
   };
 
+  const onToggleBlock = async (row: AdminUser) => {
+    if (!confirm(`¿${row.isBlocked ? 'Desbloquear' : 'Bloquear'} al cliente ${row.firstName}?`)) return;
+    try {
+      const updated = await updateUser(row.id, { isBlocked: !row.isBlocked });
+      setItems((prev) => prev.map((p) => (p.id === row.id ? updated : p)));
+      toast.success(`Cliente ${updated.isBlocked ? 'bloqueado' : 'desbloqueado'}`);
+    } catch {
+      toast.error(`No se pudo ${row.isBlocked ? 'desbloquear' : 'bloquear'} en backend`);
+    }
+  };
+
   const columns = useMemo<ColumnDef<AdminUser>[]>(() => [
     { id: "name", header: "Cliente", cell: ({ row }) => `${row.original.firstName} ${row.original.lastName ?? ""}`.trim() },
     { accessorKey: "email", header: "Email" },
-    { id: "status", header: "Estado", cell: ({ row }) => (row.original.isAvailable ? "Activo" : "Inactivo") },
+    { id: "status", header: "Estado", cell: ({ row }) => (row.original.isBlocked ? "Bloqueado" : row.original.isAvailable ? "Activo" : "Inactivo") },
     {
       id: "actions",
       header: "Acciones",
       cell: ({ row }) => (
         <div className="flex gap-2">
           <button onClick={() => openEdit(row.original)} className="rounded bg-white/10 px-2 py-1 text-xs">Editar</button>
+          <button onClick={() => onToggleBlock(row.original)} className={`rounded px-2 py-1 text-xs ${row.original.isBlocked ? 'bg-green-500/20 text-green-200' : 'bg-orange-500/20 text-orange-200'}`}>
+            {row.original.isBlocked ? 'Desbloquear' : 'Bloquear'}
+          </button>
           <button onClick={() => onDelete(row.original)} className="rounded bg-red-500/20 px-2 py-1 text-xs text-red-200">Eliminar</button>
         </div>
       ),
