@@ -14,7 +14,13 @@ import {
   UserCheck,
   Image as ImageIcon,
   User,
+  Star,
+  MessageSquare,
+  MapPin,
+  Navigation,
 } from "lucide-react";
+import Map, { Marker, Popup } from "react-map-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import {
   fetchUsers,
   fetchWorkerVerificationInbox,
@@ -22,6 +28,7 @@ import {
   updateUser,
   deleteUser,
   fetchWorkerHistory,
+  fetchWorkerReviews,
 } from "@/lib/admin-api";
 import type { AdminUser } from "@/lib/types";
 
@@ -67,6 +74,19 @@ export default function WorkersPage() {
   const [jobsModalWorker, setJobsModalWorker] = useState<AdminUser | null>(null);
   const [workerJobs, setWorkerJobs] = useState<any[]>([]);
   const [loadingJobs, setLoadingJobs] = useState(false);
+  const [workerReviews, setWorkerReviews] = useState<any[]>([]);
+
+  // --- Estados para Mapa de Trabajos ---
+  const [mapModalWorker, setMapModalWorker] = useState<AdminUser | null>(null);
+  const [mapJobs, setMapJobs] = useState<any[]>([]);
+  const [selectedJob, setSelectedJob] = useState<any | null>(null);
+  const [mapViewport, setMapViewport] = useState({
+    latitude: -17.7833,
+    longitude: -63.1833,
+    zoom: 12,
+  });
+  const [loadingReviews, setLoadingReviews] = useState(false);
+  const [reviewsModalWorker, setReviewsModalWorker] = useState<AdminUser | null>(null);
   const [jobSearch, setJobSearch] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -180,14 +200,47 @@ export default function WorkersPage() {
   const handleOpenWorkerDetail = async (worker: AdminUser) => {
     setSelectedWorker(worker);
     setLoadingJobs(true);
+    setLoadingReviews(true);
     try {
-      const jobs = await fetchWorkerHistory(worker.id);
+      const [jobs, reviews] = await Promise.all([
+        fetchWorkerHistory(worker.id),
+        fetchWorkerReviews(worker.id)
+      ]);
       setWorkerJobs(jobs);
+      setWorkerReviews(reviews);
     } catch (err) {
-      console.error("Error al obtener el historial de trabajos", err);
+      console.error("Error al obtener datos del trabajador", err);
       setWorkerJobs([]);
+      setWorkerReviews([]);
     } finally {
       setLoadingJobs(false);
+      setLoadingReviews(false);
+    }
+  };
+
+  // --- Abrir Mapa de Trabajos ---
+  const openMapModal = async (worker: AdminUser) => {
+    setMapModalWorker(worker);
+    try {
+      const jobs = await fetchWorkerHistory(worker.id);
+      // Filter only completed jobs with location
+      const jobsWithLocation = jobs.filter(
+        (job: any) =>
+          job.status === 'completed' && job.latitude && job.longitude
+      );
+      setMapJobs(jobsWithLocation);
+
+      // Center map on first job if available
+      if (jobsWithLocation.length > 0) {
+        setMapViewport({
+          latitude: jobsWithLocation[0].latitude,
+          longitude: jobsWithLocation[0].longitude,
+          zoom: 13,
+        });
+      }
+    } catch (err) {
+      console.error("Error cargando trabajos para mapa:", err);
+      setMapJobs([]);
     }
   };
 
@@ -265,6 +318,14 @@ export default function WorkersPage() {
             className="rounded bg-sky-500/20 px-2 py-1 text-xs text-sky-300 hover:bg-sky-500/30 transition-colors"
           >
             Ficha
+          </button>
+          <button
+            onClick={() => openMapModal(row.original)}
+            className="rounded bg-emerald-500/20 px-2 py-1 text-xs text-emerald-300 hover:bg-emerald-500/30 transition-colors"
+            title="Ver mapa de trabajos completados"
+          >
+            <MapPin className="h-3 w-3 inline mr-1" />
+            Mapa
           </button>
           <button
             onClick={() => openEdit(row.original)}
@@ -590,14 +651,28 @@ export default function WorkersPage() {
                 </div>
               </div>
 
-              {/* Action: View completed jobs */}
-              <div className="flex justify-center">
+              {/* Action: View completed jobs, map and reviews */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <button
                   onClick={() => setJobsModalWorker(selectedWorker)}
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-white py-3 font-medium text-sm transition-all hover:shadow-lg hover:shadow-primary/10 border border-white/10 hover:scale-[1.01]"
                 >
                   <Briefcase className="h-4 w-4" />
-                  Ver Trabajos Realizados (Historial)
+                  Ver Trabajos
+                </button>
+                <button
+                  onClick={() => openMapModal(selectedWorker)}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-500/95 hover:to-teal-600/95 text-white py-3 font-medium text-sm transition-all hover:shadow-lg hover:shadow-emerald-500/10 border border-white/10 hover:scale-[1.01]"
+                >
+                  <MapPin className="h-4 w-4" />
+                  Mapa de Trabajos
+                </button>
+                <button
+                  onClick={() => setReviewsModalWorker(selectedWorker)}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-500/95 hover:to-orange-600/95 text-white py-3 font-medium text-sm transition-all hover:shadow-lg hover:shadow-amber-500/10 border border-white/10 hover:scale-[1.01]"
+                >
+                  <Star className="h-4 w-4" />
+                  Ver Reseñas
                 </button>
               </div>
 
@@ -925,6 +1000,91 @@ export default function WorkersPage() {
         </div>
       )}
 
+      {/* --- MODAL: RESEÑAS DE CLIENTES --- */}
+      {reviewsModalWorker && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-4xl rounded-2xl border border-white/10 bg-[#0d1117] shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400">
+                  <Star className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white leading-tight">Reseñas de Clientes</h3>
+                  <p className="text-xs text-on-surface-variant mt-0.5">Calificaciones recibidas por {reviewsModalWorker.firstName} {reviewsModalWorker.lastName ?? ""}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setReviewsModalWorker(null)} 
+                className="rounded-full bg-white/5 p-2 text-on-surface-variant hover:bg-white/10 hover:text-white transition-all"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-[#0a0c10]">
+              {loadingReviews ? (
+                <div className="flex h-40 items-center justify-center flex-col gap-3">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-amber-500 border-r-transparent"></div>
+                  <p className="text-sm text-on-surface-variant">Cargando reseñas...</p>
+                </div>
+              ) : workerReviews.length === 0 ? (
+                <div className="flex h-40 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/5">
+                  <Star className="h-8 w-8 text-white/20 mb-3" />
+                  <p className="text-sm font-medium text-white/60">Aún no hay reseñas</p>
+                  <p className="text-xs text-white/40 text-center max-w-xs mt-1">Este trabajador todavía no ha recibido calificaciones de sus clientes.</p>
+                </div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {workerReviews.map((review, i) => (
+                    <div key={i} className="rounded-xl border border-white/5 bg-white/5 p-4 flex flex-col gap-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 bg-amber-500/20 text-amber-400 px-2 py-1 rounded-md">
+                            <Star className="h-3.5 w-3.5 fill-current" />
+                            <span className="text-xs font-bold">{review.stars}</span>
+                          </div>
+                          <span className="text-xs text-on-surface-variant/60">
+                            {review.created_at ? new Date(review.created_at).toLocaleDateString() : ""}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {review.comment ? (
+                        <p className="text-sm text-gray-300 italic">"{review.comment}"</p>
+                      ) : (
+                        <p className="text-sm text-on-surface-variant/40 italic">Sin comentario</p>
+                      )}
+                      
+                      <div className="mt-auto pt-3 border-t border-white/5 flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] text-primary font-bold">
+                          {(review.client_name || "C")[0].toUpperCase()}
+                        </div>
+                        <span className="text-xs text-on-surface-variant font-medium truncate">
+                          {review.client_name || "Cliente anónimo"}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Footer */}
+            <div className="border-t border-white/10 px-6 py-4 flex justify-end bg-black/20">
+              <button
+                onClick={() => setReviewsModalWorker(null)}
+                className="rounded-xl bg-amber-600 px-5 py-2 text-sm font-semibold text-white hover:bg-amber-500 transition-all"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {editWorker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0d1117] p-6">
@@ -946,6 +1106,120 @@ export default function WorkersPage() {
             <div className="mt-5 flex justify-end gap-3">
               <button onClick={() => setEditWorker(null)} className="rounded-lg px-4 py-2 text-sm text-on-surface-variant hover:bg-white/10">Cancelar</button>
               <button onClick={onEdit} className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/80">Guardar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL: MAPA DE TRABAJOS COMPLETADOS ─── */}
+      {mapModalWorker && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-5xl rounded-2xl border border-white/10 bg-[#0d1117] shadow-2xl flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400">
+                  <MapPin className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white leading-tight">Mapa de Trabajos</h3>
+                  <p className="text-xs text-on-surface-variant mt-0.5">Ubicación de trabajos completados por {mapModalWorker.firstName} {mapModalWorker.lastName ?? ""}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-on-surface-variant bg-white/10 px-3 py-1 rounded-full">
+                  {mapJobs.length} trabajos en el mapa
+                </span>
+                <button
+                  onClick={() => { setMapModalWorker(null); setSelectedJob(null); }}
+                  className="rounded-full bg-white/5 p-2 text-on-surface-variant hover:bg-white/10 hover:text-white transition-all"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Map Content */}
+            <div className="flex-1 relative" style={{ height: "60vh", minHeight: "400px" }}>
+              {mapJobs.length === 0 ? (
+                <div className="flex h-full flex-col items-center justify-center p-8">
+                  <MapPin className="h-12 w-12 text-white/20 mb-4" />
+                  <p className="text-white/60 font-medium">No hay trabajos completados con ubicación</p>
+                  <p className="text-white/40 text-sm mt-1 text-center max-w-sm">
+                    Este trabajador aún no tiene trabajos completados registrados con coordenadas.
+                  </p>
+                </div>
+              ) : (
+                <Map
+                  mapboxAccessToken={import.meta.env.VITE_MAPBOX_TOKEN || ""}
+                  initialViewState={mapViewport}
+                  style={{ width: "100%", height: "100%" }}
+                  mapStyle="mapbox://styles/mapbox/dark-v11"
+                  onMove={(evt) => setMapViewport(evt.viewState)}
+                >
+                  {mapJobs.map((job, index) => (
+                    <Marker
+                      key={job.id || index}
+                      longitude={job.longitude}
+                      latitude={job.latitude}
+                      anchor="bottom"
+                      onClick={(e) => {
+                        e.originalEvent.stopPropagation();
+                        setSelectedJob(job);
+                      }}
+                    >
+                      <div className="cursor-pointer hover:scale-110 transition-transform">
+                        <div className="flex flex-col items-center">
+                          <div className="bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg whitespace-nowrap">
+                            Bs {job.budget || 0}
+                          </div>
+                          <div className="w-0.5 h-3 bg-emerald-500"></div>
+                          <div className="w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-lg"></div>
+                        </div>
+                      </div>
+                    </Marker>
+                  ))}
+
+                  {selectedJob && (
+                    <Popup
+                      longitude={selectedJob.longitude}
+                      latitude={selectedJob.latitude}
+                      anchor="top"
+                      onClose={() => setSelectedJob(null)}
+                      closeButton={true}
+                      closeOnClick={false}
+                      className="worker-job-popup"
+                    >
+                      <div className="p-3 min-w-[200px]">
+                        <h4 className="font-semibold text-sm mb-1">{selectedJob.title}</h4>
+                        <p className="text-xs text-gray-600 mb-2">{selectedJob.category}</p>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">Completado</span>
+                          <span className="font-medium">Bs {selectedJob.budget}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2 line-clamp-2">{selectedJob.address}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(selectedJob.completedAt || selectedJob.createdAt).toLocaleDateString('es-ES')}
+                        </p>
+                      </div>
+                    </Popup>
+                  )}
+                </Map>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="border-t border-white/10 px-6 py-4 flex justify-between items-center bg-black/20">
+              <p className="text-xs text-on-surface-variant">
+                <Navigation className="h-3 w-3 inline mr-1" />
+                Click en un marcador para ver detalles del trabajo
+              </p>
+              <button
+                onClick={() => { setMapModalWorker(null); setSelectedJob(null); }}
+                className="rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/95 transition-all"
+              >
+                Cerrar
+              </button>
             </div>
           </div>
         </div>

@@ -156,6 +156,11 @@ export async function fetchWorkerHistory(workerUserId: string) {
   return data.jobs;
 }
 
+export async function fetchWorkerReviews(workerUserId: string) {
+  const { data } = await api.get(`/mobile/workers/${workerUserId}/profile`);
+  return data.reviews || [];
+}
+
 // --- Request Detail ---
 
 export async function fetchRequestDetail(requestId: string): Promise<RequestDetail> {
