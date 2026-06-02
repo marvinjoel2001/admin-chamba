@@ -102,7 +102,7 @@ export default function DisputesPage() {
                   <div>
                     <p className="font-semibold">{d.reason}</p>
                     <p className="text-xs text-on-surface-variant">
-                      {d.requestTitle ? `Solicitud: ${d.requestTitle} · ` : ""}
+                      {d.requestTitle?.trim() ? `Solicitud: ${d.requestTitle.trim()} · ` : ""}
                       {d.reporterName} ({d.reporterType})
                     </p>
                   </div>

@@ -146,25 +146,25 @@ export default function PaymentMethodsPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Métodos de Pago</h1>
-          <p className="text-slate-600">
+          <h1 className="text-xl font-bold sm:text-2xl">Métodos de Pago</h1>
+          <p className="text-sm text-on-surface-variant">
             Gestiona las formas de pago disponibles para los clientes
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={handleSeed}
-            className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 flex items-center gap-2"
+            className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-on-surface-variant hover:bg-white/10"
           >
             <RefreshCw className="w-4 h-4" />
             Crear por defecto
           </button>
           <button
             onClick={openCreate}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/80"
           >
             <Plus className="w-4 h-4" />
             Nuevo método
@@ -173,63 +173,63 @@ export default function PaymentMethodsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-4 mb-4">
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+      <div className="flex items-center gap-4">
+        <label className="flex items-center gap-2 text-sm text-on-surface-variant">
           <input
             type="checkbox"
             checked={showInactive}
             onChange={(e) => setShowInactive(e.target.checked)}
-            className="rounded border-slate-300"
+            className="rounded border-white/30 bg-white/5"
           />
           Mostrar inactivos
         </label>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
+      <div className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
         <table className="w-full text-left">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead className="border-b border-white/10 bg-white/5">
             <tr>
-              <th className="px-4 py-3 text-sm font-semibold text-slate-700">
+              <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant">
                 Orden
               </th>
-              <th className="px-4 py-3 text-sm font-semibold text-slate-700">
+              <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant">
                 Icono
               </th>
-              <th className="px-4 py-3 text-sm font-semibold text-slate-700">
+              <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant">
                 Nombre
               </th>
-              <th className="px-4 py-3 text-sm font-semibold text-slate-700">
+              <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant">
                 Código
               </th>
-              <th className="px-4 py-3 text-sm font-semibold text-slate-700">
+              <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant">
                 Descripción
               </th>
-              <th className="px-4 py-3 text-sm font-semibold text-slate-700">
+              <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant">
                 Estado
               </th>
-              <th className="px-4 py-3 text-sm font-semibold text-slate-700 text-right">
+              <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant text-right">
                 Acciones
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200">
+          <tbody className="divide-y divide-white/10">
             {loading ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-on-surface-variant">
                   Cargando...
                 </td>
               </tr>
             ) : methods.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-on-surface-variant">
                   No hay métodos de pago. Crea uno nuevo o usa "Crear por defecto".
                 </td>
               </tr>
             ) : (
               methods.map((method) => (
-                <tr key={method.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 text-sm text-slate-900">
+                <tr key={method.id} className="hover:bg-white/5">
+                  <td className="px-4 py-3 text-sm">
                     {method.sortOrder}
                   </td>
                   <td className="px-4 py-3">
@@ -243,24 +243,24 @@ export default function PaymentMethodsPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <div className="font-medium text-slate-900">
+                    <div className="font-medium">
                       {method.name}
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <code className="text-sm bg-slate-100 px-2 py-1 rounded text-slate-700">
+                    <code className="text-sm bg-white/10 px-2 py-1 rounded text-on-surface-variant">
                       {method.code}
                     </code>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-600 max-w-xs truncate">
+                  <td className="px-4 py-3 text-sm text-on-surface-variant max-w-xs truncate">
                     {method.description || "—"}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
                         method.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-700"
+                          ? "bg-green-500/20 text-green-400"
+                          : "bg-white/10 text-on-surface-variant"
                       }`}
                     >
                       {method.isActive ? (
@@ -277,14 +277,14 @@ export default function PaymentMethodsPage() {
                     <div className="flex items-center justify-end gap-1">
                       <button
                         onClick={() => openEdit(method)}
-                        className="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-2 text-on-surface-variant hover:text-primary hover:bg-white/10 rounded-lg transition-colors"
                         title="Editar"
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(method)}
-                        className="p-2 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 text-on-surface-variant hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                         title="Eliminar"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -300,15 +300,15 @@ export default function PaymentMethodsPage() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="rounded-2xl border border-white/10 bg-[#0d1117] shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b border-white/10">
+              <h2 className="text-lg font-semibold">
                 {editMethod ? "Editar Método de Pago" : "Nuevo Método de Pago"}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-2 text-slate-400 hover:text-slate-600 rounded-lg"
+                className="p-2 text-on-surface-variant hover:text-white rounded-lg hover:bg-white/10"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -316,21 +316,21 @@ export default function PaymentMethodsPage() {
 
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Nombre <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-on-surface-variant mb-1">
+                  Nombre <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white placeholder:text-on-surface-variant/50 outline-none focus:border-primary"
                   placeholder="Ej: Efectivo"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Código <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-on-surface-variant mb-1">
+                  Código <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -338,17 +338,17 @@ export default function PaymentMethodsPage() {
                   onChange={(e) =>
                     setForm({ ...form, code: e.target.value.toLowerCase() })
                   }
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white placeholder:text-on-surface-variant/50 outline-none focus:border-primary disabled:opacity-50"
                   placeholder="Ej: cash"
                   disabled={!!editMethod}
                 />
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-on-surface-variant/70 mt-1">
                   Identificador único, no se puede cambiar después
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-on-surface-variant mb-1">
                   Descripción
                 </label>
                 <textarea
@@ -356,29 +356,29 @@ export default function PaymentMethodsPage() {
                   onChange={(e) =>
                     setForm({ ...form, description: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white placeholder:text-on-surface-variant/50 outline-none focus:border-primary"
                   rows={2}
                   placeholder="Descripción del método de pago"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-on-surface-variant mb-1">
                   Icono
                 </label>
                 <select
                   value={form.icon}
                   onChange={(e) => setForm({ ...form, icon: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-primary"
                 >
-                  <option value="">— Seleccionar —</option>
-                  <option value="money-bill">💵 Dinero (Efectivo)</option>
-                  <option value="credit-card">💳 Tarjeta</option>
+                  <option value="" className="bg-[#0d1117]">— Seleccionar —</option>
+                  <option value="money-bill" className="bg-[#0d1117]">💵 Dinero (Efectivo)</option>
+                  <option value="credit-card" className="bg-[#0d1117]">💳 Tarjeta</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-on-surface-variant mb-1">
                   Color
                 </label>
                 <div className="flex items-center gap-2">
@@ -386,20 +386,20 @@ export default function PaymentMethodsPage() {
                     type="color"
                     value={form.color}
                     onChange={(e) => setForm({ ...form, color: e.target.value })}
-                    className="w-10 h-10 rounded cursor-pointer"
+                    className="w-10 h-10 rounded cursor-pointer bg-transparent"
                   />
                   <input
                     type="text"
                     value={form.color}
                     onChange={(e) => setForm({ ...form, color: e.target.value })}
-                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                    className="flex-1 px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white text-sm outline-none focus:border-primary"
                     placeholder="#4CAF50"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-on-surface-variant mb-1">
                   Orden
                 </label>
                 <input
@@ -408,7 +408,7 @@ export default function PaymentMethodsPage() {
                   onChange={(e) =>
                     setForm({ ...form, sortOrder: parseInt(e.target.value) || 0 })
                   }
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-primary"
                 />
               </div>
 
@@ -419,23 +419,23 @@ export default function PaymentMethodsPage() {
                   onChange={(e) =>
                     setForm({ ...form, isActive: e.target.checked })
                   }
-                  className="rounded border-slate-300"
+                  className="rounded border-white/30 bg-white/5"
                 />
-                <span className="text-sm text-slate-700">Activo</span>
+                <span className="text-sm text-on-surface-variant">Activo</span>
               </label>
             </div>
 
-            <div className="flex items-center justify-end gap-2 p-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-2 p-4 border-t border-white/10">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg"
+                className="px-4 py-2 text-sm font-medium text-on-surface-variant hover:bg-white/10 rounded-lg"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving || !form.name.trim() || !form.code.trim()}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? "Guardando..." : "Guardar"}
               </button>
