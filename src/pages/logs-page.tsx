@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Fragment } from "react";
 import { fetchApiLogs } from "@/lib/admin-api";
 import type { ExtendedApiLogItem } from "@/lib/types";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ export default function LogsPage() {
   const [statusMin, setStatusMin] = useState("");
   const [statusMax, setStatusMax] = useState("");
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const filters = useMemo(
     () => ({
@@ -114,15 +115,40 @@ export default function LogsPage() {
               </thead>
               <tbody>
                 {items.map((row) => (
-                  <tr key={row.id} className="border-b border-white/5 align-top">
-                    <td className="px-4 py-3 text-xs text-on-surface-variant">{new Date(row.created_at).toLocaleString()}</td>
-                    <td className="px-4 py-3 text-xs">{row.method}</td>
-                    <td className="px-4 py-3 text-xs"><span className={`rounded px-2 py-1 ${statusClass(row.status_code)}`}>{row.status_code}</span></td>
-                    <td className="px-4 py-3 text-xs">{row.duration_ms} ms</td>
-                    <td className="px-4 py-3 text-xs break-all">{row.path}</td>
-                    <td className="px-4 py-3 text-xs">{row.ip || "-"}</td>
-                    <td className="px-4 py-3 text-xs text-rose-200 break-all">{row.error_message || "-"}</td>
-                  </tr>
+                  <Fragment key={row.id}>
+                    <tr 
+                      className="border-b border-white/5 align-top cursor-pointer hover:bg-white/5 transition-colors"
+                      onClick={() => setExpandedId(expandedId === row.id ? null : row.id)}
+                    >
+                      <td className="px-4 py-3 text-xs text-on-surface-variant">{new Date(row.created_at).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-xs">{row.method}</td>
+                      <td className="px-4 py-3 text-xs"><span className={`rounded px-2 py-1 ${statusClass(row.status_code)}`}>{row.status_code}</span></td>
+                      <td className="px-4 py-3 text-xs whitespace-nowrap">{row.duration_ms} ms</td>
+                      <td className="px-4 py-3 text-xs break-all">{row.path}</td>
+                      <td className="px-4 py-3 text-xs">{row.ip || "-"}</td>
+                      <td className="px-4 py-3 text-xs text-rose-200 break-all">{row.error_message || "-"}</td>
+                    </tr>
+                    {expandedId === row.id && (
+                      <tr className="bg-black/20 border-b border-white/5">
+                        <td colSpan={7} className="p-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-xs font-bold mb-2 uppercase tracking-wider text-on-surface-variant">Request Body (JSON)</p>
+                              <pre className="bg-black/60 border border-white/10 p-3 rounded-lg text-xs text-emerald-200 overflow-auto max-h-60">
+                                {JSON.stringify(row.request_body_json, null, 2)}
+                              </pre>
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold mb-2 uppercase tracking-wider text-on-surface-variant">Response Preview / Query</p>
+                              <pre className="bg-black/60 border border-white/10 p-3 rounded-lg text-xs text-sky-200 overflow-auto max-h-60 whitespace-pre-wrap">
+                                {row.response_preview || JSON.stringify(row.query_json, null, 2) || "Sin respuesta"}
+                              </pre>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
