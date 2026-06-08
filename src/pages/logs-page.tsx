@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, Fragment } from "react";
 import { fetchApiLogs } from "@/lib/admin-api";
 import type { ExtendedApiLogItem } from "@/lib/types";
 import { toast } from "sonner";
+import { Copy } from "lucide-react";
 
 const METHODS = ["", "GET", "POST", "PATCH", "PUT", "DELETE"];
 
@@ -23,6 +24,15 @@ export default function LogsPage() {
   const [statusMax, setStatusMax] = useState("");
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  const handleCopy = (content: string) => {
+    if (!content) return;
+    navigator.clipboard.writeText(content).then(() => {
+      toast.success("Copiado al portapapeles");
+    }).catch(() => {
+      toast.error("Error al copiar");
+    });
+  };
 
   const filters = useMemo(
     () => ({
@@ -133,13 +143,31 @@ export default function LogsPage() {
                         <td colSpan={7} className="p-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <p className="text-xs font-bold mb-2 uppercase tracking-wider text-on-surface-variant">Request Body (JSON)</p>
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Request Body (JSON)</p>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); handleCopy(JSON.stringify(row.request_body_json, null, 2)); }}
+                                  className="text-on-surface-variant hover:text-primary transition-colors"
+                                  title="Copiar JSON"
+                                >
+                                  <Copy size={16} />
+                                </button>
+                              </div>
                               <pre className="bg-black/60 border border-white/10 p-3 rounded-lg text-xs text-emerald-200 overflow-auto max-h-60">
                                 {JSON.stringify(row.request_body_json, null, 2)}
                               </pre>
                             </div>
                             <div>
-                              <p className="text-xs font-bold mb-2 uppercase tracking-wider text-on-surface-variant">Response Preview / Query</p>
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Response Preview / Query</p>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); handleCopy(row.response_preview || JSON.stringify(row.query_json, null, 2) || ""); }}
+                                  className="text-on-surface-variant hover:text-primary transition-colors"
+                                  title="Copiar respuesta"
+                                >
+                                  <Copy size={16} />
+                                </button>
+                              </div>
                               <pre className="bg-black/60 border border-white/10 p-3 rounded-lg text-xs text-sky-200 overflow-auto max-h-60 whitespace-pre-wrap">
                                 {row.response_preview || JSON.stringify(row.query_json, null, 2) || "Sin respuesta"}
                               </pre>

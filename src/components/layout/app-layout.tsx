@@ -80,7 +80,7 @@ export function AppLayout() {
           </Link>
           <p className="mt-1 text-sm text-on-surface-variant">Admin Console</p>
         </div>
-        <nav className="flex flex-1 flex-col gap-2">
+        <nav className="flex flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden pb-8 custom-scrollbar">
           {nav.map(([to, label, Icon, badgeKey]) => {
             const badgeCount = badgeKey === "pendingDisputes" ? pendingDisputes : 
                               badgeKey === "pendingVerifications" ? pendingVerifications : 0;
@@ -124,7 +124,7 @@ export function AppLayout() {
               </Link>
               <p className="mt-1 text-sm text-on-surface-variant">Admin Console</p>
             </div>
-            <nav className="flex flex-1 flex-col gap-2">
+            <nav className="flex flex-1 flex-col gap-2 overflow-y-auto overflow-x-hidden pb-8 custom-scrollbar">
               {nav.map(([to, label, Icon, badgeKey]) => {
                 const badgeCount = badgeKey === "pendingDisputes" ? pendingDisputes : 
                                   badgeKey === "pendingVerifications" ? pendingVerifications : 0;
