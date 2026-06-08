@@ -217,12 +217,18 @@ export async function seedPaymentMethods() {
 // --- Notifications ---
 
 export async function broadcastNotification(payload: {
-  target: 'all' | 'workers' | 'clients';
+  target: 'all' | 'workers' | 'clients' | 'custom';
   type: 'push' | 'toast';
   title: string;
   body: string;
   toastType?: 'info' | 'success' | 'error';
+  userIds?: string[];
 }) {
   const { data } = await api.post("/mobile/admin/notifications/broadcast", payload);
+  return data;
+}
+
+export async function fetchPushUsers() {
+  const { data } = await api.get<{id: string, firstName: string, lastName: string, type: string, lastSeenAt: string}[]>("/mobile/admin/push-users");
   return data;
 }
