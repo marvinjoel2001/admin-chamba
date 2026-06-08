@@ -14,6 +14,7 @@ import LogsPage from "@/pages/logs-page";
 import DisputesPage from "@/pages/disputes-page";
 import CategoriesPage from "@/pages/categories-page";
 import PaymentMethodsPage from "@/pages/payment-methods-page";
+import NotificationsPage from "@/pages/notifications-page";
 
 const router = createBrowserRouter([
   {
@@ -32,6 +33,7 @@ const router = createBrowserRouter([
       { path: "disputes", element: <DisputesPage /> },
       { path: "categories", element: <CategoriesPage /> },
       { path: "payment-methods", element: <PaymentMethodsPage /> },
+      { path: "notifications", element: <NotificationsPage /> },
       { path: "settings", element: <SettingsPage /> },
     ],
   },

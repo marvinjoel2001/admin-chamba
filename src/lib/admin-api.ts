@@ -213,3 +213,16 @@ export async function seedPaymentMethods() {
   const { data } = await api.post<{ message: string }>("/payment-methods/seed");
   return data;
 }
+
+// --- Notifications ---
+
+export async function broadcastNotification(payload: {
+  target: 'all' | 'workers' | 'clients';
+  type: 'push' | 'toast';
+  title: string;
+  body: string;
+  toastType?: 'info' | 'success' | 'error';
+}) {
+  const { data } = await api.post("/mobile/admin/notifications/broadcast", payload);
+  return data;
+}

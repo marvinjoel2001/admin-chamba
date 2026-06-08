@@ -36,6 +36,7 @@ const nav = [
   ["/disputes", "Disputas", ShieldAlert, "pendingDisputes"],
   ["/categories", "Categorías", FolderOpen, null],
   ["/payment-methods", "Métodos de Pago", CreditCard, null],
+  ["/notifications", "Notificaciones", Bell, null],
   ["/logs", "API Logs", Activity, null],
   ["/settings", "Settings", Settings, null],
 ] as const;
