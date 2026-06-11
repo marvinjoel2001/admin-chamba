@@ -146,7 +146,7 @@ export default function DisputesPage() {
   );
 }
 
-function DisputeChat({
+export function DisputeChat({
   dispute,
   onClose,
 }: {

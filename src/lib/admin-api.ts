@@ -82,6 +82,11 @@ export async function fetchApiLogs(params?: {
 
 // --- Disputes ---
 
+export async function fetchUserDisputes(userId: string) {
+  const { data } = await api.get<{ made: Dispute[]; received: Dispute[] }>(`/mobile/admin/users/${userId}/disputes`);
+  return data;
+}
+
 export async function fetchDisputes(status?: string) {
   const { data } = await api.get<{ disputes: Dispute[] }>("/mobile/admin/disputes", {
     params: status ? { status } : undefined,

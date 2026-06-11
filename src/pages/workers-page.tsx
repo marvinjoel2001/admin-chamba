@@ -18,6 +18,7 @@ import {
   MessageSquare,
   MapPin,
   Navigation,
+  Flag,
 } from "lucide-react";
 import Map, { Marker, Popup } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -31,6 +32,7 @@ import {
   fetchWorkerReviews,
 } from "@/lib/admin-api";
 import type { AdminUser } from "@/lib/types";
+import { UserReportsModal } from "@/components/user-reports-modal";
 
 const statusLabel: Record<string, string> = {
   searching: "Buscando",
@@ -87,6 +89,7 @@ export default function WorkersPage() {
   });
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [reviewsModalWorker, setReviewsModalWorker] = useState<AdminUser | null>(null);
+  const [reportsModalWorker, setReportsModalWorker] = useState<AdminUser | null>(null);
   const [jobSearch, setJobSearch] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -632,7 +635,17 @@ export default function WorkersPage() {
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Stats row */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                <div className="glass-panel bg-white/5 p-4 rounded-xl border border-white/5 flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
+                    <Star className="h-5 w-5 fill-amber-400/20" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold tracking-tight text-white">{selectedWorker.averageRating?.toFixed(1) ?? "0.0"}</p>
+                    <p className="text-xs text-on-surface-variant">Calificación</p>
+                  </div>
+                </div>
+
                 <div className="glass-panel bg-white/5 p-4 rounded-xl border border-white/5 flex items-center gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-sky-500/10 text-sky-400">
                     <Briefcase className="h-5 w-5" />
@@ -669,7 +682,7 @@ export default function WorkersPage() {
               </div>
 
               {/* Action: View completed jobs, map and reviews */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <button
                   onClick={() => setJobsModalWorker(selectedWorker)}
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-purple-600 hover:from-primary/95 hover:to-purple-600/95 text-white py-3 font-medium text-sm transition-all hover:shadow-lg hover:shadow-primary/10 border border-white/10 hover:scale-[1.01]"
@@ -690,6 +703,13 @@ export default function WorkersPage() {
                 >
                   <Star className="h-4 w-4" />
                   Ver Reseñas
+                </button>
+                <button
+                  onClick={() => setReportsModalWorker(selectedWorker)}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-500/95 hover:to-red-600/95 text-white py-3 font-medium text-sm transition-all hover:shadow-lg hover:shadow-rose-500/10 border border-white/10 hover:scale-[1.01]"
+                >
+                  <Flag className="h-4 w-4" />
+                  Ver Reportes
                 </button>
               </div>
 
@@ -1240,6 +1260,12 @@ export default function WorkersPage() {
             </div>
           </div>
         </div>
+      )}
+      {reportsModalWorker && (
+        <UserReportsModal
+          user={reportsModalWorker}
+          onClose={() => setReportsModalWorker(null)}
+        />
       )}
     </section>
   );
