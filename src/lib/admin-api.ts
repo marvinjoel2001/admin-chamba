@@ -11,6 +11,7 @@ import type {
   ApiLogsResponse,
   RequestDetail,
   PaymentMethod,
+  AiConfig,
 } from "@/lib/types";
 
 export async function deleteUser(id: string) {
@@ -237,3 +238,15 @@ export async function fetchPushUsers() {
   const { data } = await api.get<{id: string, firstName: string, lastName: string, type: string, lastSeenAt: string}[]>("/mobile/admin/push-users");
   return data;
 }
+
+// --- AI Config ---
+
+export async function fetchAiConfig(): Promise<AiConfig> {
+  const { data } = await api.get<AiConfig>("/mobile/admin/ai-config");
+  return data;
+}
+
+export async function updateAiConfig(payload: AiConfig): Promise<AiConfig> {
+  const { data } = await api.post<AiConfig>("/mobile/admin/ai-config", payload);
+  return data;
+}

@@ -220,3 +220,13 @@ export type PaymentMethod = {
   createdAt: string;
   updatedAt: string;
 };
+
+// ─── AI Config ───
+
+export type AiConfig = {
+  activeProvider: string;
+  geminiKey: string;
+  nvidiaKey: string;
+  deepseekKey: string;
+};
+
