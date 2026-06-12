@@ -819,7 +819,7 @@ export default function MapPage() {
                             📍 {w.latitude.toFixed(6)}, {w.longitude.toFixed(6)}
                           </p>
                           <p className="text-[10px] text-gray-500 mt-1">
-                            Actualizado: {new Date(w.updatedAt).toLocaleTimeString()}
+                            Actualizado: {new Date(w.updatedAt).toLocaleString()}
                           </p>
                         </div>
                         {w.activeRequest && (
