@@ -67,6 +67,7 @@ export type MapRequest = {
   longitude: number;
   updatedAt: string;
   createdAt?: string;
+  photoUrl?: string | null;
   // Worker info
   workerId?: string;
   workerName?: string;
@@ -102,6 +103,25 @@ export type WalletResponse = {
 
 export type WorkerNotificationSettings = {
   radiusKm: number;
+};
+
+export type NotifiedWorker = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  profilePhotoUrl?: string | null;
+  phone?: string | null;
+  averageRating: number;
+  completedJobs: number;
+  notifiedAt: string;
+  offerStatus?: string | null;
+  offerAmount?: number | null;
+};
+
+export type NotifiedWorkersResponse = {
+  requestId: string;
+  total: number;
+  workers: NotifiedWorker[];
 };
 
 export type ApiLogItem = {

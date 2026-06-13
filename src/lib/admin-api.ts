@@ -8,6 +8,7 @@ import type {
   WalletResponse,
   WorkerVerificationReviewPayload,
   WorkerNotificationSettings,
+  NotifiedWorkersResponse,
   ApiLogsResponse,
   RequestDetail,
   PaymentMethod,
@@ -23,7 +24,10 @@ export async function fetchUsers(): Promise<AdminUser[]> {
   return data;
 }
 
-export async function updateUser(id: string, payload: Partial<AdminUser>) {
+export async function updateUser(
+  id: string,
+  payload: Partial<AdminUser> & { password?: string },
+) {
   const { data } = await api.patch<AdminUser>(`/users/${id}`, payload);
   return data;
 }
@@ -171,6 +175,11 @@ export async function fetchWorkerReviews(workerUserId: string) {
 
 export async function fetchRequestDetail(requestId: string): Promise<RequestDetail> {
   const { data } = await api.get<RequestDetail>(`/mobile/admin/requests/${requestId}`);
+  return data;
+}
+
+export async function fetchRequestNotifiedWorkers(requestId: string): Promise<NotifiedWorkersResponse> {
+  const { data } = await api.get<NotifiedWorkersResponse>(`/mobile/admin/requests/${requestId}/notified-workers`);
   return data;
 }
 

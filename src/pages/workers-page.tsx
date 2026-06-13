@@ -138,22 +138,47 @@ export default function WorkersPage() {
   };
 
   const [editWorker, setEditWorker] = useState<AdminUser | null>(null);
-  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", phone: "" });
+  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", phone: "", email: "", password: "" });
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const openEdit = (row: AdminUser) => {
     setEditWorker(row);
-    setEditForm({ firstName: row.firstName, lastName: row.lastName ?? "", phone: row.phone ?? "" });
+    setEditForm({ firstName: row.firstName, lastName: row.lastName ?? "", phone: row.phone ?? "", email: row.email ?? "", password: "" });
   };
 
   const onEdit = async () => {
     if (!editWorker) return;
+    if (!editForm.firstName.trim()) {
+      toast.error("El nombre es obligatorio");
+      return;
+    }
+    if (!editForm.email.trim()) {
+      toast.error("El email es obligatorio");
+      return;
+    }
+    if (editForm.password && editForm.password.length < 4) {
+      toast.error("La contraseña debe tener al menos 4 caracteres");
+      return;
+    }
+    setSavingEdit(true);
     try {
-      const updated = await updateUser(editWorker.id, editForm);
+      const payload: Partial<AdminUser> & { password?: string } = {
+        firstName: editForm.firstName.trim(),
+        lastName: editForm.lastName.trim(),
+        phone: editForm.phone.trim() || undefined,
+        email: editForm.email.trim(),
+      };
+      if (editForm.password.trim()) {
+        payload.password = editForm.password.trim();
+      }
+      const updated = await updateUser(editWorker.id, payload);
       syncUpdatedWorker(updated);
       setEditWorker(null);
-      toast.success("Trabajador actualizado");
-    } catch {
-      toast.error("No se pudo actualizar en backend");
+      toast.success(editForm.password.trim() ? "Trabajador actualizado (incluida contraseña)" : "Trabajador actualizado");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "No se pudo actualizar en backend");
+    } finally {
+      setSavingEdit(false);
     }
   };
 
@@ -1124,25 +1149,37 @@ export default function WorkersPage() {
 
       {editWorker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0d1117] p-6">
-            <h3 className="mb-4 text-lg font-bold">Editar Trabajador</h3>
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0d1117] p-6 max-h-[90vh] overflow-y-auto">
+            <h3 className="mb-1 text-lg font-bold">Editar Trabajador</h3>
+            <p className="mb-4 text-xs text-on-surface-variant">Modifica datos de contacto, email y contraseña de acceso.</p>
             <div className="space-y-3">
-              <div>
-                <label className="mb-1 block text-xs text-on-surface-variant">Nombre</label>
-                <input value={editForm.firstName} onChange={(e) => setEditForm({...editForm, firstName: e.target.value})} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-on-surface-variant">Apellido</label>
-                <input value={editForm.lastName} onChange={(e) => setEditForm({...editForm, lastName: e.target.value})} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs text-on-surface-variant">Nombre</label>
+                  <input value={editForm.firstName} onChange={(e) => setEditForm({...editForm, firstName: e.target.value})} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-on-surface-variant">Apellido</label>
+                  <input value={editForm.lastName} onChange={(e) => setEditForm({...editForm, lastName: e.target.value})} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" />
+                </div>
               </div>
               <div>
                 <label className="mb-1 block text-xs text-on-surface-variant">Teléfono</label>
                 <input value={editForm.phone} onChange={(e) => setEditForm({...editForm, phone: e.target.value})} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" />
               </div>
+              <div>
+                <label className="mb-1 block text-xs text-on-surface-variant">Email (acceso)</label>
+                <input type="email" value={editForm.email} onChange={(e) => setEditForm({...editForm, email: e.target.value})} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" placeholder="correo@ejemplo.com" />
+              </div>
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+                <label className="mb-1 block text-xs font-medium text-amber-300">Nueva contraseña</label>
+                <input type="text" value={editForm.password} onChange={(e) => setEditForm({...editForm, password: e.target.value})} className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-primary" placeholder="Dejar vacío para no cambiar" autoComplete="new-password" />
+                <p className="mt-1 text-[10px] text-on-surface-variant/70">Solo se cambia si escribes algo. Mínimo 4 caracteres.</p>
+              </div>
             </div>
             <div className="mt-5 flex justify-end gap-3">
-              <button onClick={() => setEditWorker(null)} className="rounded-lg px-4 py-2 text-sm text-on-surface-variant hover:bg-white/10">Cancelar</button>
-              <button onClick={onEdit} className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/80">Guardar</button>
+              <button onClick={() => setEditWorker(null)} disabled={savingEdit} className="rounded-lg px-4 py-2 text-sm text-on-surface-variant hover:bg-white/10 disabled:opacity-50">Cancelar</button>
+              <button onClick={onEdit} disabled={savingEdit} className="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white hover:bg-primary/80 disabled:opacity-50">{savingEdit ? "Guardando..." : "Guardar"}</button>
             </div>
           </div>
         </div>
