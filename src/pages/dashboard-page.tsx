@@ -18,7 +18,7 @@ export default function DashboardPage() {
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const newToday = users.filter((u) => new Date(u.createdAt) >= today).length;
+        const newToday = users.filter((u) => u.createdAt && new Date(u.createdAt) >= today).length;
         setNewUsersToday(newToday);
       } catch {
         // En caso de error mantenemos en 0
