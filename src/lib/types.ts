@@ -77,6 +77,7 @@ export type MapRequest = {
   clientConfirmedArrivalAt?: string;
   completedAt?: string;
   cancelledAt?: string;
+  cancelledBy?: string | null;
   // Duration in minutes
   durationMinutes?: number;
 };

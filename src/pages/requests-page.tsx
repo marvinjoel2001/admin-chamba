@@ -696,9 +696,16 @@ export default function RequestsPage() {
                   </div>
 
                   {/* Estado */}
-                  <div className="flex items-center justify-between border-t border-white/5 pt-4">
-                    <span className="text-xs font-semibold text-gray-400">Estado Actual:</span>
-                    {statusBadge(selectedRequest.status)}
+                  <div className="flex flex-col gap-2 border-t border-white/5 pt-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-gray-400">Estado Actual:</span>
+                      {statusBadge(selectedRequest.status)}
+                    </div>
+                    {selectedRequest.status === "cancelled" && selectedRequest.cancelledBy && (
+                      <p className="text-xs text-rose-400 text-right mt-1">
+                        Cancelado por: <strong>{selectedRequest.cancelledBy}</strong>
+                      </p>
+                    )}
                   </div>
                 </>
               )}
