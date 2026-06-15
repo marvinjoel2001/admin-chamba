@@ -510,66 +510,82 @@ export default function MapPage() {
   return (
     <section className="relative -mx-8 -mt-8 lg:-mx-12 lg:-mt-8 h-[calc(100vh-64px)] overflow-hidden">
       {/* ─── Stats overlay (top-left) ─── */}
-      <div className="absolute left-4 top-4 z-10 flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-surface-container-high/60 px-5 py-3 backdrop-blur-[20px]">
+      <div className="absolute left-6 top-6 z-10 flex flex-wrap items-center gap-4">
         {/* Workers Activos */}
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-500/30">
-            <Users size={16} className="text-emerald-400" />
+        <div className="flex items-center gap-4 rounded-3xl border border-white/5 bg-[#120f1a]/60 p-4 backdrop-blur-xl hover:bg-[#120f1a]/80 transition-all shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/10 shadow-[0_0_20px_rgba(168,85,247,0.15)] relative">
+            <div className="absolute inset-0 rounded-full border border-purple-500/30"></div>
+            <Users size={20} className="text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
           </div>
-          <div>
+          <div className="pr-2">
             <p className="text-xl font-bold leading-none text-white">{activeWorkers}</p>
-            <p className="text-[9px] text-on-surface-variant font-medium mt-1">Activos</p>
+            <p className="text-[13px] text-white/50 leading-tight mt-1">Activos</p>
           </div>
         </div>
-        
-        <div className="h-8 w-px bg-white/10" />
         
         {/* Completados Hoy */}
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-500/20 border border-green-500/30">
-            <MapPin size={16} className="text-green-400" />
+        <div className="flex items-center gap-4 rounded-3xl border border-white/5 bg-[#120f1a]/60 p-4 backdrop-blur-xl hover:bg-[#120f1a]/80 transition-all shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.15)] relative">
+            <div className="absolute inset-0 rounded-full border border-emerald-500/30"></div>
+            <MapPin size={20} className="text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
           </div>
-          <div>
+          <div className="pr-2">
             <p className="text-xl font-bold leading-none text-white">{completedToday}</p>
-            <p className="text-[9px] text-on-surface-variant font-medium mt-1">Completados</p>
+            <p className="text-[13px] text-white/50 leading-tight mt-1">Completados</p>
           </div>
         </div>
-        
-        <div className="h-8 w-px bg-white/10" />
         
         {/* En Proceso Hoy */}
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/20 border border-amber-500/30">
-            <Radio size={16} className="text-amber-400" />
+        <div className="flex items-center gap-4 rounded-3xl border border-white/5 bg-[#120f1a]/60 p-4 backdrop-blur-xl hover:bg-[#120f1a]/80 transition-all shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.15)] relative">
+            <div className="absolute inset-0 rounded-full border border-amber-500/30"></div>
+            <Radio size={20} className="text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
           </div>
-          <div>
+          <div className="pr-2">
             <p className="text-xl font-bold leading-none text-white">{inProgressToday}</p>
-            <p className="text-[9px] text-on-surface-variant font-medium mt-1">En Proceso</p>
+            <p className="text-[13px] text-white/50 leading-tight mt-1">En Proceso</p>
           </div>
         </div>
         
-        <div className="h-8 w-px bg-white/10" />
-        
         {/* Cancelados Hoy */}
-        <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-500/20 border border-rose-500/30">
-            <X size={16} className="text-rose-400" />
+        <div className="flex items-center gap-4 rounded-3xl border border-white/5 bg-[#120f1a]/60 p-4 backdrop-blur-xl hover:bg-[#120f1a]/80 transition-all shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/10 shadow-[0_0_20px_rgba(244,63,94,0.15)] relative">
+            <div className="absolute inset-0 rounded-full border border-rose-500/30"></div>
+            <X size={20} className="text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
           </div>
-          <div>
+          <div className="pr-2">
             <p className="text-xl font-bold leading-none text-white">{cancelledToday}</p>
-            <p className="text-[9px] text-on-surface-variant font-medium mt-1">Cancelados</p>
+            <p className="text-[13px] text-white/50 leading-tight mt-1">Cancelados</p>
           </div>
         </div>
       </div>
 
       {/* ─── Side panel overlay (right) ─── */}
-      <div className={`absolute right-4 top-4 z-10 flex w-[340px] flex-col rounded-2xl border border-primary/20 bg-surface-container-high/70 backdrop-blur-[28px] transition-all duration-300 ${panelOpen ? "max-h-[calc(100%-2rem)]" : "max-h-[52px]"}`}>
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2 text-sm">
-            <button className={`rounded-full px-3 py-1 transition-colors ${tab === "requests" ? "bg-primary/20 text-primary" : "text-on-surface-variant hover:text-on-surface"}`} onClick={() => setTab("requests")}>Solicitudes</button>
-            <button className={`rounded-full px-3 py-1 transition-colors ${tab === "workers" ? "bg-primary/20 text-primary" : "text-on-surface-variant hover:text-on-surface"}`} onClick={() => setTab("workers")}>Workers</button>
+      <div className={`absolute right-6 top-6 z-10 flex w-[350px] flex-col rounded-[24px] border border-white/5 bg-[#120f1a]/80 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] ${panelOpen ? "max-h-[calc(100%-3rem)]" : "max-h-[72px]"}`}>
+        <div className="flex items-center justify-between p-5 border-b border-white/5">
+          <div className="flex items-center gap-1 w-full max-w-[240px]">
+            <button 
+              className={`flex-1 rounded-xl py-2.5 text-[13px] font-medium transition-all ${
+                tab === "requests" 
+                  ? "bg-purple-500/10 text-purple-300 border border-purple-500/20 shadow-[inset_0_0_12px_rgba(168,85,247,0.15)]" 
+                  : "text-white/50 hover:text-white hover:bg-white/5 border border-transparent"
+              }`} 
+              onClick={() => setTab("requests")}
+            >
+              Solicitudes
+            </button>
+            <button 
+              className={`flex-1 rounded-xl py-2.5 text-[13px] font-medium transition-all ${
+                tab === "workers" 
+                  ? "bg-purple-500/10 text-purple-300 border border-purple-500/20 shadow-[inset_0_0_12px_rgba(168,85,247,0.15)]" 
+                  : "text-white/50 hover:text-white hover:bg-white/5 border border-transparent"
+              }`} 
+              onClick={() => setTab("workers")}
+            >
+              Workers
+            </button>
           </div>
-          <button onClick={() => setPanelOpen((v) => !v)} className="text-on-surface-variant hover:text-on-surface">
+          <button onClick={() => setPanelOpen((v) => !v)} className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors">
             {panelOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
         </div>
@@ -580,13 +596,13 @@ export default function MapPage() {
               <div className="space-y-3">
                 {/* Search input for requests */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
                   <input
                     type="text"
                     value={requestSearch}
                     onChange={(e) => setRequestSearch(e.target.value)}
                     placeholder="Buscar por título, cliente, dirección..."
-                    className="w-full rounded-xl border border-white/10 bg-black/30 py-2 pl-9 pr-3 text-sm text-white placeholder:text-on-surface-variant/50 focus:border-primary focus:outline-none"
+                    className="w-full flex items-center gap-2 rounded-xl bg-black/40 border border-white/5 py-2.5 pl-9 pr-3 shadow-inner text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:ring-0"
                   />
                 </div>
                 {/* Results count */}
@@ -643,13 +659,13 @@ export default function MapPage() {
               <div className="space-y-3">
                 {/* Search input for workers */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-on-surface-variant" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
                   <input
                     type="text"
                     value={workerSearch}
                     onChange={(e) => setWorkerSearch(e.target.value)}
                     placeholder="Buscar worker por nombre..."
-                    className="w-full rounded-xl border border-white/10 bg-black/30 py-2 pl-9 pr-3 text-sm text-white placeholder:text-on-surface-variant/50 focus:border-primary focus:outline-none"
+                    className="w-full flex items-center gap-2 rounded-xl bg-black/40 border border-white/5 py-2.5 pl-9 pr-3 shadow-inner text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:ring-0"
                   />
                 </div>
                 {/* Results count */}
