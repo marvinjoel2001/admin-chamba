@@ -106,6 +106,9 @@ export default function LogsPage() {
           <button className={`rounded-lg px-3 py-2 text-sm ${autoRefresh ? "bg-primary/20 text-primary" : "bg-white/10 text-on-surface-variant"}`} onClick={() => setAutoRefresh((v) => !v)}>
             Auto refresh {autoRefresh ? "ON" : "OFF"}
           </button>
+          <button className={`rounded-lg px-3 py-2 text-sm ${search === "[AI]" ? "bg-purple-500/20 text-purple-300" : "bg-white/10 text-on-surface-variant"}`} onClick={() => setSearch(search === "[AI]" ? "" : "[AI]")}>
+            🤖 Solo IA
+          </button>
           <div className="rounded-lg bg-white/5 px-3 py-2 text-sm text-on-surface-variant">Total: {total}</div>
         </div>
       </div>
