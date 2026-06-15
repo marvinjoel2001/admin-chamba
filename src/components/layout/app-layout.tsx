@@ -22,6 +22,7 @@ import {
   Command,
   Sun,
   ChevronDown,
+  ChevronsLeft,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAdminStore } from "@/store/admin-store";
@@ -48,6 +49,7 @@ const nav = [
 export function AppLayout() {
   const { search, setSearch, pendingDisputes, pendingVerifications, setPendingDisputes, setPendingVerifications } = useAdminStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Load badge counts on mount and connect WebSocket
   useEffect(() => {
@@ -79,13 +81,15 @@ export function AppLayout() {
       <div className="bg-glow-2" />
       
       {/* Sidebar - Floating */}
-      <aside className="fixed left-4 top-4 bottom-4 z-40 hidden w-[260px] flex-col rounded-[24px] border border-white/5 bg-[#130f1e]/80 py-6 backdrop-blur-[20px] md:flex shadow-[0_0_50px_-12px_rgba(124,58,237,0.15)]">
-        <div className="mb-8 px-6">
-          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-white">
-            <Droplets size={20} className="text-purple-400" />Chamba Admin
+      <aside className={`fixed left-4 top-4 bottom-4 z-40 hidden flex-col rounded-[24px] border border-white/5 bg-[#130f1e]/80 py-6 backdrop-blur-[20px] md:flex shadow-[0_0_50px_-12px_rgba(124,58,237,0.15)] transition-all duration-300 ${isCollapsed ? 'w-[88px]' : 'w-[260px]'}`}>
+        <div className={`mb-8 px-6 flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
+          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-white overflow-hidden whitespace-nowrap">
+            <Droplets size={20} className="text-purple-400 flex-shrink-0" />
+            {!isCollapsed && <span>Chamba Admin</span>}
           </Link>
-          <p className="mt-1 text-xs text-white/40">Admin Console</p>
         </div>
+        {!isCollapsed && <p className="mb-4 px-6 text-xs text-white/40 -mt-6">Admin Console</p>}
+        
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden px-3 pb-4 custom-scrollbar">
           {nav.map(([to, label, Icon, badgeKey]) => {
             const badgeCount = badgeKey === "pendingDisputes" ? pendingDisputes : 
@@ -104,9 +108,14 @@ export function AppLayout() {
               >
                 {({ isActive }) => (
                   <>
-                    <Icon size={18} className={isActive ? "text-purple-400" : "text-white/40 group-hover:text-white/60 transition-colors"} />
-                    <span className="flex-1">{label}</span>
-                    {badgeCount > 0 && (
+                    <div className="relative flex items-center justify-center">
+                      <Icon size={18} className={isActive ? "text-purple-400" : "text-white/40 group-hover:text-white/60 transition-colors"} />
+                      {badgeCount > 0 && isCollapsed && (
+                        <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+                      )}
+                    </div>
+                    {!isCollapsed && <span className="flex-1">{label}</span>}
+                    {badgeCount > 0 && !isCollapsed && (
                       <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500/80 px-1.5 text-[10px] font-bold text-white">
                         {badgeCount > 99 ? "99+" : badgeCount}
                       </span>
@@ -120,6 +129,14 @@ export function AppLayout() {
             );
           })}
         </nav>
+
+        {/* Collapse Button */}
+        <button 
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="absolute -right-4 bottom-8 flex h-8 w-8 items-center justify-center rounded-full border border-white/5 bg-[#1a1528] text-white/50 hover:text-white hover:bg-white/5 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all z-50 group"
+        >
+          <ChevronsLeft size={16} className={`transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`} />
+        </button>
       </aside>
 
       {/* Mobile Sidebar Overlay */}
@@ -171,7 +188,7 @@ export function AppLayout() {
       )}
 
       {/* Header - Floating Pill */}
-      <header className="fixed top-4 right-4 z-30 flex h-16 items-center justify-between rounded-[24px] border border-white/5 bg-[#130f1e]/80 px-6 backdrop-blur-2xl md:left-[292px] shadow-[0_0_40px_-10px_rgba(124,58,237,0.1)]">
+      <header className={`fixed top-4 right-4 z-30 flex h-16 items-center justify-between rounded-[24px] border border-white/5 bg-[#130f1e]/80 px-6 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_40px_-10px_rgba(124,58,237,0.1)] ${isCollapsed ? 'md:left-[120px]' : 'md:left-[292px]'}`}>
         <button
           className="text-white/60 md:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -215,7 +232,7 @@ export function AppLayout() {
       </header>
 
       {/* Main Content Area */}
-      <main className="w-full px-4 pb-12 pt-28 md:pl-[292px] md:pr-4">
+      <main className={`w-full px-4 pb-12 pt-28 md:pr-4 transition-all duration-300 ${isCollapsed ? 'md:pl-[120px]' : 'md:pl-[292px]'}`}>
         <Outlet />
       </main>
     </div>

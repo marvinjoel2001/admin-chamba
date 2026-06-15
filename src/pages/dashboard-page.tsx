@@ -41,46 +41,50 @@ export default function DashboardPage() {
         {/* Top Widgets Row */}
         <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Activos */}
-          <div className="flex items-center gap-4 rounded-[20px] border border-white/5 bg-[#130f1e]/80 p-5 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
-              <Users className="text-purple-400" size={24} />
+          <div className="flex items-center gap-4 rounded-3xl border border-white/5 bg-[#120f1a]/60 p-5 backdrop-blur-xl hover:bg-[#120f1a]/80 transition-all">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/10 shadow-[0_0_20px_rgba(168,85,247,0.15)] relative">
+              <div className="absolute inset-0 rounded-full border border-purple-500/30"></div>
+              <Users className="text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]" size={20} />
             </div>
-            <div>
-              <div className="text-2xl font-bold text-white">{loading ? "-" : totalUsers}</div>
-              <div className="text-sm text-white/40">Activos</div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-white leading-tight">{loading ? "-" : totalUsers}</span>
+              <span className="text-[13px] text-white/50 leading-tight">Activos</span>
             </div>
           </div>
 
           {/* Completados */}
-          <div className="flex items-center gap-4 rounded-[20px] border border-white/5 bg-[#130f1e]/80 p-5 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-              <CheckCircle2 className="text-emerald-400" size={24} />
+          <div className="flex items-center gap-4 rounded-3xl border border-white/5 bg-[#120f1a]/60 p-5 backdrop-blur-xl hover:bg-[#120f1a]/80 transition-all">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.15)] relative">
+              <div className="absolute inset-0 rounded-full border border-emerald-500/30"></div>
+              <CheckCircle2 className="text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" size={20} />
             </div>
-            <div>
-              <div className="text-2xl font-bold text-white">0</div>
-              <div className="text-sm text-white/40">Completados</div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-white leading-tight">0</span>
+              <span className="text-[13px] text-white/50 leading-tight">Completados</span>
             </div>
           </div>
 
           {/* En Proceso */}
-          <div className="flex items-center gap-4 rounded-[20px] border border-white/5 bg-[#130f1e]/80 p-5 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.2)]">
-              <Radio className="text-amber-400" size={24} />
+          <div className="flex items-center gap-4 rounded-3xl border border-white/5 bg-[#120f1a]/60 p-5 backdrop-blur-xl hover:bg-[#120f1a]/80 transition-all">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500/10 shadow-[0_0_20px_rgba(249,115,22,0.15)] relative">
+              <div className="absolute inset-0 rounded-full border border-orange-500/30"></div>
+              <Radio className="text-orange-400 drop-shadow-[0_0_8px_rgba(249,115,22,0.8)]" size={20} />
             </div>
-            <div>
-              <div className="text-2xl font-bold text-white">0</div>
-              <div className="text-sm text-white/40">En Proceso</div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-white leading-tight">0</span>
+              <span className="text-[13px] text-white/50 leading-tight">En Proceso</span>
             </div>
           </div>
 
           {/* Cancelados */}
-          <div className="flex items-center gap-4 rounded-[20px] border border-white/5 bg-[#130f1e]/80 p-5 backdrop-blur-xl shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/10 border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.2)]">
-              <XCircle className="text-rose-400" size={24} />
+          <div className="flex items-center gap-4 rounded-3xl border border-white/5 bg-[#120f1a]/60 p-5 backdrop-blur-xl hover:bg-[#120f1a]/80 transition-all">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/10 shadow-[0_0_20px_rgba(244,63,94,0.15)] relative">
+              <div className="absolute inset-0 rounded-full border border-rose-500/30"></div>
+              <XCircle className="text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]" size={20} />
             </div>
-            <div>
-              <div className="text-2xl font-bold text-white">0</div>
-              <div className="text-sm text-white/40">Cancelados</div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-white leading-tight">0</span>
+              <span className="text-[13px] text-white/50 leading-tight">Cancelados</span>
             </div>
           </div>
         </div>
@@ -88,19 +92,19 @@ export default function DashboardPage() {
       </div>
 
       {/* Right Side Panel */}
-      <div className="w-[350px] flex-shrink-0 flex flex-col rounded-[24px] border border-white/5 bg-[#130f1e]/80 backdrop-blur-xl overflow-hidden shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)]">
+      <div className="w-[350px] flex-shrink-0 flex flex-col rounded-[24px] border border-white/5 bg-[#120f1a]/80 backdrop-blur-2xl overflow-hidden shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)]">
         {/* Tabs */}
-        <div className="flex items-center justify-between p-4 border-b border-white/5">
-          <div className="flex items-center gap-1 bg-black/20 rounded-lg p-1 w-full max-w-[240px]">
-            <button className="flex-1 rounded-md bg-purple-500/20 text-purple-300 py-1.5 text-sm font-medium border border-purple-500/30 shadow-[inset_0_0_10px_rgba(168,85,247,0.1)]">
+        <div className="flex items-center justify-between p-5 border-b border-white/5">
+          <div className="flex items-center gap-1 w-full max-w-[240px]">
+            <button className="flex-1 rounded-xl bg-purple-500/10 text-purple-300 py-2.5 text-[13px] font-medium border border-purple-500/20 shadow-[inset_0_0_12px_rgba(168,85,247,0.15)]">
               Solicitudes
             </button>
-            <button className="flex-1 rounded-md text-white/50 py-1.5 text-sm font-medium hover:text-white transition-colors">
+            <button className="flex-1 rounded-xl text-white/50 py-2.5 text-[13px] font-medium hover:text-white transition-colors">
               Workers
             </button>
           </div>
-          <button className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
-            <SlidersHorizontal size={18} />
+          <button className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors">
+            <SlidersHorizontal size={16} />
           </button>
         </div>
 
