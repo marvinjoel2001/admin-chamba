@@ -10,7 +10,7 @@ import { Flag, X, Calendar } from "lucide-react";
 export default function ClientsPage() {
   const [items, setItems] = useState<AdminUser[]>([]);
   const [editClient, setEditClient] = useState<AdminUser | null>(null);
-  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", phone: "" });
+  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", phone: "", email: "", password: "" });
   const [selectedClient, setSelectedClient] = useState<AdminUser | null>(null);
   const [reportsModalClient, setReportsModalClient] = useState<AdminUser | null>(null);
 
@@ -32,16 +32,37 @@ export default function ClientsPage() {
 
   const openEdit = (row: AdminUser) => {
     setEditClient(row);
-    setEditForm({ firstName: row.firstName, lastName: row.lastName ?? "", phone: row.phone ?? "" });
+    setEditForm({ firstName: row.firstName, lastName: row.lastName ?? "", phone: row.phone ?? "", email: row.email ?? "", password: "" });
   };
 
   const onEdit = async () => {
     if (!editClient) return;
+    if (!editForm.firstName.trim()) {
+      toast.error("El nombre es obligatorio");
+      return;
+    }
+    if (!editForm.email.trim()) {
+      toast.error("El email es obligatorio");
+      return;
+    }
+    if (editForm.password && editForm.password.length < 4) {
+      toast.error("La contraseña debe tener al menos 4 caracteres");
+      return;
+    }
     try {
-      const updated = await updateUser(editClient.id, editForm);
+      const payload: Partial<AdminUser> & { password?: string } = {
+        firstName: editForm.firstName.trim(),
+        lastName: editForm.lastName.trim(),
+        phone: editForm.phone.trim() || undefined,
+        email: editForm.email.trim(),
+      };
+      if (editForm.password.trim()) {
+        payload.password = editForm.password.trim();
+      }
+      const updated = await updateUser(editClient.id, payload);
       setItems((prev) => prev.map((p) => (p.id === editClient.id ? updated : p)));
       setEditClient(null);
-      toast.success("Cliente actualizado");
+      toast.success(editForm.password.trim() ? "Cliente actualizado (incluida contraseña)" : "Cliente actualizado");
     } catch {
       toast.error("No se pudo actualizar en backend");
     }
@@ -131,17 +152,28 @@ export default function ClientsPage() {
           <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0d1117] p-6">
             <h3 className="mb-4 text-lg font-bold">Editar Cliente</h3>
             <div className="space-y-3">
-              <div>
-                <label className="mb-1 block text-xs text-on-surface-variant">Nombre</label>
-                <input value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-on-surface-variant">Apellido</label>
-                <input value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs text-on-surface-variant">Nombre</label>
+                  <input value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-on-surface-variant">Apellido</label>
+                  <input value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" />
+                </div>
               </div>
               <div>
                 <label className="mb-1 block text-xs text-on-surface-variant">Teléfono</label>
                 <input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-on-surface-variant">Email (acceso)</label>
+                <input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" placeholder="correo@ejemplo.com" />
+              </div>
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-2">
+                <label className="mb-1 block text-xs font-medium text-amber-300">Nueva contraseña</label>
+                <input type="text" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-primary" placeholder="Dejar vacío para no cambiar" autoComplete="new-password" />
+                <p className="mt-1 text-[10px] text-on-surface-variant/70">Solo se cambia si escribes algo. Mínimo 4 caracteres.</p>
               </div>
             </div>
             <div className="mt-5 flex justify-end gap-3">

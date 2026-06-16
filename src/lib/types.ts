@@ -17,6 +17,9 @@ export type AdminUser = {
   averageRating?: number;
   createdAt?: string;
   profilePhotoUrl?: string;
+  workModalities?: string[];
+  hourlyRate?: number;
+  dailyRate?: number;
 };
 
 export type WorkerVerificationReviewPayload = {

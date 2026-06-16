@@ -605,10 +605,15 @@ export default function MapPage() {
                     className="w-full flex items-center gap-2 rounded-xl bg-black/40 border border-white/5 py-2.5 pl-9 pr-3 shadow-inner text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:ring-0"
                   />
                 </div>
-                {/* Results count */}
-                <p className="text-xs text-on-surface-variant">
-                  {filteredRequests.length} solicitude{filteredRequests.length !== 1 ? 's' : ''} encontrada{filteredRequests.length !== 1 ? 's' : ''}
-                </p>
+                {/* Results count & Date */}
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-on-surface-variant">
+                    {filteredRequests.length} solicitude{filteredRequests.length !== 1 ? 's' : ''} encontrada{filteredRequests.length !== 1 ? 's' : ''}
+                  </p>
+                  <p className="text-[11px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                    📅 Datos de Hoy ({new Date().toLocaleDateString()})
+                  </p>
+                </div>
                 <div className="space-y-2">
                   {filteredRequests.slice(0, 50).map((r) => (
                     <div
@@ -617,13 +622,13 @@ export default function MapPage() {
                       className="group cursor-pointer rounded-xl border border-white/10 bg-black/20 p-3 transition-all hover:bg-black/30 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-500/20">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-amber-500/20">
                             <span className="text-xs">📋</span>
                           </div>
-                          <p className="truncate text-sm font-medium">{r.title}</p>
+                          <p className="truncate text-sm font-medium" title={r.title}>{r.title}</p>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 shrink-0">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -685,14 +690,14 @@ export default function MapPage() {
                         onClick={() => hasLocation ? flyToLocation(w.longitude, w.latitude, 16) : null}
                         className={`group rounded-xl border border-white/10 bg-black/20 p-3 transition-all hover:bg-black/30 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 ${!hasLocation ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={`flex h-8 w-8 items-center justify-center rounded-full ${isBusy ? "bg-orange-500/20" : w.isAvailable ? "bg-green-500/20" : "bg-gray-500/20"}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <div className={`shrink-0 flex h-8 w-8 items-center justify-center rounded-full ${isBusy ? "bg-orange-500/20" : w.isAvailable ? "bg-green-500/20" : "bg-gray-500/20"}`}>
                               <span className="text-sm">{isBusy ? "🔨" : "⛑️"}</span>
                             </div>
-                            <p className="text-sm font-medium">{w.firstName} {w.lastName}</p>
+                            <p className="truncate text-sm font-medium" title={`${w.firstName} ${w.lastName}`}>{w.firstName} {w.lastName}</p>
                           </div>
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 shrink-0">
                             {hasLocation ? (
                               <button
                                 onClick={(e) => {
@@ -717,8 +722,8 @@ export default function MapPage() {
                         <p className="mt-1 text-xs text-on-surface-variant">Jobs: {w.completedJobs} · Rating: {w.averageRating.toFixed(1)}</p>
                         {w.activeRequest && (
                           <div className="mt-2 rounded-lg border border-orange-500/20 bg-orange-500/5 p-2">
-                            <p className="text-[11px] font-medium text-orange-300">{w.activeRequest.title}</p>
-                            <p className="text-[10px] text-on-surface-variant">
+                            <p className="text-[11px] font-medium text-orange-300 truncate" title={w.activeRequest.title}>{w.activeRequest.title}</p>
+                            <p className="text-[10px] text-on-surface-variant truncate">
                               {w.activeRequest.workerArrived ? "Ya llegó al lugar" : "En camino"} · {statusLabel[w.activeRequest.status] ?? w.activeRequest.status}
                             </p>
                             <p className="text-[10px] text-on-surface-variant">Cliente: {w.activeRequest.clientName}</p>
@@ -818,8 +823,8 @@ export default function MapPage() {
                               <path d="M8 6h8c0-2.21-1.79-4-4-4s-4 1.79-4 4z" fill={isBusy ? "#c2410c" : w.isAvailable ? "#166534" : "#4b5563"}/>
                             </svg>
                           </div>
-                          <div>
-                            <p className="font-semibold text-sm">{w.firstName} {w.lastName}</p>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-sm truncate" title={`${w.firstName} ${w.lastName}`}>{w.firstName} {w.lastName}</p>
                             <span className={`text-[10px] font-medium ${isBusy ? "text-orange-400" : w.isAvailable ? "text-green-400" : "text-gray-400"}`}>
                               {isBusy ? "🛠️ Ocupado" : w.isAvailable ? "✅ Libre" : "⚪ Offline"}
                             </span>
@@ -841,8 +846,8 @@ export default function MapPage() {
                         {w.activeRequest && (
                           <div className="mt-2 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3">
                             <p className="text-[11px] font-semibold text-orange-300 mb-1">Solicitud activa</p>
-                            <p className="text-xs text-gray-200 font-medium">{w.activeRequest.title}</p>
-                            <p className="text-[11px] text-gray-400 mt-1">
+                            <p className="text-xs text-gray-200 font-medium truncate" title={w.activeRequest.title}>{w.activeRequest.title}</p>
+                            <p className="text-[11px] text-gray-400 mt-1 truncate">
                               {w.activeRequest.workerArrived ? "✅ Ya llegó al lugar" : "🚗 En camino al trabajo"}
                             </p>
                             <p className="text-[11px] text-gray-400">Estado: {statusLabel[w.activeRequest.status] ?? w.activeRequest.status}</p>

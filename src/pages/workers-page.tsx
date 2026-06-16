@@ -138,12 +138,30 @@ export default function WorkersPage() {
   };
 
   const [editWorker, setEditWorker] = useState<AdminUser | null>(null);
-  const [editForm, setEditForm] = useState({ firstName: "", lastName: "", phone: "", email: "", password: "" });
+  const [editForm, setEditForm] = useState<{
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email: string;
+    password?: string;
+    workModalities: string[];
+    hourlyRate: string;
+    dailyRate: string;
+  }>({ firstName: "", lastName: "", phone: "", email: "", password: "", workModalities: [], hourlyRate: "", dailyRate: "" });
   const [savingEdit, setSavingEdit] = useState(false);
 
   const openEdit = (row: AdminUser) => {
     setEditWorker(row);
-    setEditForm({ firstName: row.firstName, lastName: row.lastName ?? "", phone: row.phone ?? "", email: row.email ?? "", password: "" });
+    setEditForm({ 
+      firstName: row.firstName, 
+      lastName: row.lastName ?? "", 
+      phone: row.phone ?? "", 
+      email: row.email ?? "", 
+      password: "",
+      workModalities: row.workModalities || [],
+      hourlyRate: row.hourlyRate ? String(row.hourlyRate) : "",
+      dailyRate: row.dailyRate ? String(row.dailyRate) : ""
+    });
   };
 
   const onEdit = async () => {
@@ -156,7 +174,7 @@ export default function WorkersPage() {
       toast.error("El email es obligatorio");
       return;
     }
-    if (editForm.password && editForm.password.length < 4) {
+    if (editForm.password && editForm.password.length > 0 && editForm.password.length < 4) {
       toast.error("La contraseña debe tener al menos 4 caracteres");
       return;
     }
@@ -167,14 +185,17 @@ export default function WorkersPage() {
         lastName: editForm.lastName.trim(),
         phone: editForm.phone.trim() || undefined,
         email: editForm.email.trim(),
+        workModalities: editForm.workModalities,
+        hourlyRate: editForm.hourlyRate ? parseFloat(editForm.hourlyRate) : undefined,
+        dailyRate: editForm.dailyRate ? parseFloat(editForm.dailyRate) : undefined,
       };
-      if (editForm.password.trim()) {
+      if (editForm.password && editForm.password.trim()) {
         payload.password = editForm.password.trim();
       }
       const updated = await updateUser(editWorker.id, payload);
       syncUpdatedWorker(updated);
       setEditWorker(null);
-      toast.success(editForm.password.trim() ? "Trabajador actualizado (incluida contraseña)" : "Trabajador actualizado");
+      toast.success(editForm.password && editForm.password.trim() ? "Trabajador actualizado (incluida contraseña)" : "Trabajador actualizado");
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "No se pudo actualizar en backend");
     } finally {
@@ -706,6 +727,37 @@ export default function WorkersPage() {
                 </div>
               </div>
 
+              {/* Modalities and Pricing */}
+              <div className="glass-panel bg-white/5 p-5 rounded-xl border border-white/5">
+                <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-sky-400" /> Preferencias y Tarifas de Trabajo
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-on-surface-variant mb-1.5 uppercase tracking-wide">Modalidades</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedWorker.workModalities?.length ? selectedWorker.workModalities.map(m => (
+                        <span key={m} className="bg-sky-500/20 text-sky-300 border border-sky-500/30 px-2 py-0.5 rounded text-[10px] uppercase font-semibold tracking-wider">
+                          {m === 'fixed' ? 'Por Trabajo' : m === 'hourly' ? 'Por Hora' : m === 'daily' ? 'Por Día' : m}
+                        </span>
+                      )) : <span className="text-xs text-on-surface-variant/60 italic">No especificadas</span>}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs text-on-surface-variant mb-1.5 uppercase tracking-wide">Tarifa por Hora</p>
+                    <p className="text-sm font-semibold text-emerald-400">
+                      {selectedWorker.hourlyRate ? `Bs ${selectedWorker.hourlyRate}` : <span className="text-on-surface-variant/60 italic">No definida</span>}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-on-surface-variant mb-1.5 uppercase tracking-wide">Tarifa por Día</p>
+                    <p className="text-sm font-semibold text-emerald-400">
+                      {selectedWorker.dailyRate ? `Bs ${selectedWorker.dailyRate}` : <span className="text-on-surface-variant/60 italic">No definida</span>}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Action: View completed jobs, map and reviews */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <button
@@ -1171,9 +1223,44 @@ export default function WorkersPage() {
                 <label className="mb-1 block text-xs text-on-surface-variant">Email (acceso)</label>
                 <input type="email" value={editForm.email} onChange={(e) => setEditForm({...editForm, email: e.target.value})} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" placeholder="correo@ejemplo.com" />
               </div>
-              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+              <div className="pt-2 border-t border-white/10">
+                <label className="mb-2 block text-xs font-semibold text-white">Modalidades de Trabajo</label>
+                <div className="flex gap-4">
+                  {[
+                    { id: 'fixed', label: 'Por Trabajo' },
+                    { id: 'hourly', label: 'Por Hora' },
+                    { id: 'daily', label: 'Por Día' }
+                  ].map(mod => (
+                    <label key={mod.id} className="flex items-center gap-1.5 text-sm text-on-surface-variant cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={editForm.workModalities.includes(mod.id)}
+                        onChange={(e) => {
+                          const newMods = e.target.checked 
+                            ? [...editForm.workModalities, mod.id]
+                            : editForm.workModalities.filter(m => m !== mod.id);
+                          setEditForm({ ...editForm, workModalities: newMods });
+                        }}
+                        className="rounded border-white/20 bg-white/5 text-primary focus:ring-primary focus:ring-offset-0"
+                      />
+                      {mod.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-xs text-on-surface-variant">Tarifa por Hora (Bs)</label>
+                  <input type="number" step="0.1" value={editForm.hourlyRate} onChange={(e) => setEditForm({...editForm, hourlyRate: e.target.value})} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" placeholder="0.00" disabled={!editForm.workModalities.includes('hourly')} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs text-on-surface-variant">Tarifa por Día (Bs)</label>
+                  <input type="number" step="0.1" value={editForm.dailyRate} onChange={(e) => setEditForm({...editForm, dailyRate: e.target.value})} className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary" placeholder="0.00" disabled={!editForm.workModalities.includes('daily')} />
+                </div>
+              </div>
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-4">
                 <label className="mb-1 block text-xs font-medium text-amber-300">Nueva contraseña</label>
-                <input type="text" value={editForm.password} onChange={(e) => setEditForm({...editForm, password: e.target.value})} className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-primary" placeholder="Dejar vacío para no cambiar" autoComplete="new-password" />
+                <input type="text" value={editForm.password || ""} onChange={(e) => setEditForm({...editForm, password: e.target.value})} className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-primary" placeholder="Dejar vacío para no cambiar" autoComplete="new-password" />
                 <p className="mt-1 text-[10px] text-on-surface-variant/70">Solo se cambia si escribes algo. Mínimo 4 caracteres.</p>
               </div>
             </div>
