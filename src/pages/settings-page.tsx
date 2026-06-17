@@ -14,6 +14,9 @@ export default function SettingsPage() {
     nvidiaKey: "",
     deepseekKey: "",
   });
+  const [testMessage, setTestMessage] = useState("");
+  const [testResult, setTestResult] = useState<any>(null);
+  const [testing, setTesting] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,6 +43,32 @@ export default function SettingsPage() {
       toast.error("Error al guardar la configuración de IA");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleTestAi = async () => {
+    if (!testMessage.trim()) {
+      toast.error("Ingresa un mensaje para probar");
+      return;
+    }
+    setTesting(true);
+    setTestResult(null);
+    try {
+      // Usamos el endpoint de preview que dispara internamente el LLM
+      const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/mobile/request-categories/preview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description: testMessage })
+      });
+      if (!res.ok) throw new Error("Error en el servidor");
+      const data = await res.json();
+      setTestResult(data);
+      toast.success("¡Prueba exitosa!");
+    } catch (e) {
+      toast.error("La prueba falló. Revisa tus API keys.");
+      setTestResult({ error: String(e) });
+    } finally {
+      setTesting(false);
     }
   };
 
@@ -140,6 +169,38 @@ export default function SettingsPage() {
               >
                 {saving ? "Guardando..." : "Guardar Configuración IA"}
               </Button>
+            </div>
+
+            {/* AI Test Section */}
+            <div className="mt-8 border-t border-white/10 pt-6">
+              <h3 className="mb-3 text-lg font-bold">Probar Inteligencia Artificial</h3>
+              <p className="text-sm text-on-surface-variant mb-4">
+                Envía una descripción de prueba para verificar si el LLM configurado responde correctamente y genera las categorías. Esto también aparecerá en tus API Logs.
+              </p>
+              <div className="flex gap-3">
+                <Input 
+                  placeholder="Ej: Necesito un plomero para arreglar una fuga..." 
+                  value={testMessage}
+                  onChange={(e) => setTestMessage(e.target.value)}
+                  className="flex-1"
+                />
+                <Button 
+                  onClick={handleTestAi} 
+                  disabled={testing}
+                  className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                >
+                  {testing ? "Probando..." : "Probar LLM"}
+                </Button>
+              </div>
+              
+              {testResult && (
+                <div className="mt-4 p-4 rounded-xl border border-white/10 bg-black/40">
+                  <p className="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">Respuesta de la IA</p>
+                  <pre className="text-xs text-sky-200 overflow-auto whitespace-pre-wrap">
+                    {JSON.stringify(testResult, null, 2)}
+                  </pre>
+                </div>
+              )}
             </div>
           </div>
         )}
