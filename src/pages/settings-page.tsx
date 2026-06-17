@@ -177,6 +177,9 @@ export default function SettingsPage() {
               <p className="text-sm text-on-surface-variant mb-4">
                 Envía una descripción de prueba para verificar si el LLM configurado responde correctamente y genera las categorías. Esto también aparecerá en tus API Logs.
               </p>
+              <p className="text-xs text-yellow-400/80 mb-4">
+                ⚠ El modelo de razonamiento (Minimax M2.7) tarda entre 20 y 40 segundos en responder. Es normal que el botón permanezca en "Esperando..." durante ese tiempo.
+              </p>
               <div className="flex gap-3">
                 <Input 
                   placeholder="Ej: Necesito un plomero para arreglar una fuga..." 
@@ -184,12 +187,12 @@ export default function SettingsPage() {
                   onChange={(e) => setTestMessage(e.target.value)}
                   className="flex-1"
                 />
-                <Button 
-                  onClick={handleTestAi} 
+                <Button
+                  onClick={handleTestAi}
                   disabled={testing}
                   className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
                 >
-                  {testing ? "Probando..." : "Probar LLM"}
+                  {testing ? "Esperando respuesta (~20s)..." : "Probar LLM"}
                 </Button>
               </div>
               
