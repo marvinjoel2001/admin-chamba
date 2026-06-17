@@ -76,6 +76,28 @@ export default function SettingsPage() {
     }
   };
 
+  const safeFetch = async (url: string, options?: RequestInit) => {
+    const res = await fetch(url, options);
+    if (res.status === 404) {
+      return {
+        ok: false as const,
+        error:
+          "Endpoint no encontrado en el servidor. Asegúrate de haber desplegado la versión más reciente del backend (git push origin main).",
+      };
+    }
+    let body: any;
+    try {
+      body = await res.json();
+    } catch {
+      return { ok: false as const, error: `El servidor respondió con estado ${res.status} pero sin JSON válido.` };
+    }
+    if (!res.ok) {
+      const msg = body?.message ?? body?.error ?? `Error ${res.status}`;
+      return { ok: false as const, error: String(msg) };
+    }
+    return body;
+  };
+
   const handleTestAi = async () => {
     if (!testMessage.trim()) {
       toast.error("Ingresa un mensaje para probar");
@@ -84,18 +106,18 @@ export default function SettingsPage() {
     setTesting(true);
     setTestResult(null);
     try {
-      const res = await fetch(`${API_BASE}/mobile/admin/ai-config/test`, {
+      const data = await safeFetch(`${API_BASE}/mobile/admin/ai-config/test`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: testMessage }),
       });
-      const data = await res.json();
       setTestResult(data);
       if (data.ok) toast.success(`Respuesta recibida en ${data.durationMs}ms`);
-      else toast.error("La IA no respondió correctamente");
+      else toast.error(data.error ?? "La IA no respondió correctamente");
     } catch (e) {
-      toast.error("Error de conexión con el servidor");
-      setTestResult({ ok: false, error: String(e) });
+      const msg = "No se pudo conectar con el servidor. Verifica tu conexión.";
+      toast.error(msg);
+      setTestResult({ ok: false, error: msg });
     } finally {
       setTesting(false);
     }
@@ -105,11 +127,14 @@ export default function SettingsPage() {
     setCheckingStatus(true);
     setAiStatus(null);
     try {
-      const res = await fetch(`${API_BASE}/mobile/admin/ai-config/status`);
-      const data: AiStatusResult = await res.json();
-      setAiStatus(data);
+      const data = await safeFetch(`${API_BASE}/mobile/admin/ai-config/status`);
+      if (!data.ok && data.error) {
+        toast.error(data.error);
+      } else {
+        setAiStatus(data as AiStatusResult);
+      }
     } catch {
-      toast.error("Error al comprobar el estado");
+      toast.error("No se pudo conectar con el servidor.");
     } finally {
       setCheckingStatus(false);
     }
