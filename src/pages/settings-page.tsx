@@ -12,6 +12,7 @@ export default function SettingsPage() {
     activeProvider: "nvidia",
     geminiKey: "",
     nvidiaKey: "",
+    nvidiaModel: "meta/llama-3.1-8b-instruct",
     deepseekKey: "",
   });
   const [testMessage, setTestMessage] = useState("");
@@ -125,16 +126,31 @@ export default function SettingsPage() {
               </select>
             </div>
 
-            <div className={`p-4 rounded-xl border ${aiConfig.activeProvider === 'nvidia' ? 'border-primary/50 bg-primary/5' : 'border-white/10 bg-white/5'}`}>
-              <label className="mb-1 block text-sm font-medium text-white">
-                API Key de Nvidia (integrate.api.nvidia.com)
-              </label>
-              <Input 
-                type="password"
-                placeholder="nvapi-..." 
-                value={aiConfig.nvidiaKey}
-                onChange={(e) => setAiConfig({ ...aiConfig, nvidiaKey: e.target.value })}
-              />
+            <div className={`p-4 rounded-xl border space-y-3 ${aiConfig.activeProvider === 'nvidia' ? 'border-primary/50 bg-primary/5' : 'border-white/10 bg-white/5'}`}>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-white">
+                  API Key de Nvidia (integrate.api.nvidia.com)
+                </label>
+                <Input
+                  type="password"
+                  placeholder="nvapi-..."
+                  value={aiConfig.nvidiaKey}
+                  onChange={(e) => setAiConfig({ ...aiConfig, nvidiaKey: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-white">
+                  Modelo de Nvidia
+                </label>
+                <Input
+                  placeholder="meta/llama-3.1-8b-instruct"
+                  value={aiConfig.nvidiaModel}
+                  onChange={(e) => setAiConfig({ ...aiConfig, nvidiaModel: e.target.value })}
+                />
+                <p className="mt-1 text-xs text-on-surface-variant">
+                  Recomendado: <code className="text-sky-300">meta/llama-3.1-8b-instruct</code> (~1s) · Potente: <code className="text-sky-300">meta/llama-3.3-70b-instruct</code> (~3s) · Razonamiento: <code className="text-sky-300">minimaxai/minimax-m2.7</code> (~25s)
+                </p>
+              </div>
             </div>
 
             <div className={`p-4 rounded-xl border ${aiConfig.activeProvider === 'gemini' ? 'border-primary/50 bg-primary/5' : 'border-white/10 bg-white/5'}`}>

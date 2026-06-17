@@ -251,6 +251,7 @@ export type AiConfig = {
   activeProvider: string;
   geminiKey: string;
   nvidiaKey: string;
+  nvidiaModel: string;
   deepseekKey: string;
 };
 
