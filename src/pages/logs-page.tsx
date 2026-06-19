@@ -100,7 +100,7 @@ export default function LogsPage() {
               <option key={m} value={m}>{m || "Todos los metodos"}</option>
             ))}
           </select>
-          <input className="glass-input rounded-lg px-3 py-2" placeholder="Buscar por path o error" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <input className="glass-input rounded-lg px-3 py-2" placeholder="Buscar por ID, path o error" value={search} onChange={(e) => setSearch(e.target.value)} />
           <input className="glass-input rounded-lg px-3 py-2" placeholder="Status min (ej 200)" value={statusMin} onChange={(e) => setStatusMin(e.target.value)} />
           <input className="glass-input rounded-lg px-3 py-2" placeholder="Status max (ej 599)" value={statusMax} onChange={(e) => setStatusMax(e.target.value)} />
           <button className={`rounded-lg px-3 py-2 text-sm ${autoRefresh ? "bg-primary/20 text-primary" : "bg-white/10 text-on-surface-variant"}`} onClick={() => setAutoRefresh((v) => !v)}>
