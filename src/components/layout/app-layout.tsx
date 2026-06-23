@@ -42,6 +42,7 @@ const nav = [
   ["/categories", "Categorías", FolderOpen, null],
   ["/payment-methods", "Métodos de Pago", CreditCard, null],
   ["/notifications", "Notificaciones", Bell, null],
+  ["/leads", "Postulantes", UserSquare2, null],
   ["/logs", "API Logs", Activity, null],
   ["/settings", "Configuración", Settings, null],
 ] as const;

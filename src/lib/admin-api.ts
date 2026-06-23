@@ -13,7 +13,18 @@ import type {
   RequestDetail,
   PaymentMethod,
   AiConfig,
+  WorkerLead,
 } from "@/lib/types";
+
+export async function fetchWorkerLeads(): Promise<WorkerLead[]> {
+  const { data } = await api.get<WorkerLead[]>("/worker-leads");
+  return data;
+}
+
+export async function markWorkerLeadContacted(id: string): Promise<WorkerLead> {
+  const { data } = await api.patch<WorkerLead>(`/worker-leads/${id}/contacted`);
+  return data;
+}
 
 export async function deleteUser(id: string) {
   await api.delete(`/users/${id}`);

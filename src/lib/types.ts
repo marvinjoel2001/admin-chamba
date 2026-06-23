@@ -255,3 +255,15 @@ export type AiConfig = {
   deepseekKey: string;
 };
 
+export type WorkerLead = {
+  id: string;
+  fullName: string;
+  whatsapp: string;
+  email: string | null;
+  city: string;
+  category: string;
+  isContacted: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
