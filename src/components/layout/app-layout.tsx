@@ -23,11 +23,17 @@ import {
   Sun,
   ChevronDown,
   ChevronsLeft,
+  LogOut,
+  KeyRound,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAdminStore } from "@/store/admin-store";
+import { useAuthStore } from "@/store/auth-store";
+import { api } from "@/lib/api";
 import { fetchDisputes, fetchWorkerVerificationInbox } from "@/lib/admin-api";
 import { websocketService } from "@/lib/websocket-service";
+import { Modal, ModalContent } from "@/components/ui/modal";
+import { toast } from "sonner";
 
 const nav = [
   ["/", "Dashboard", LayoutDashboard, null],
@@ -49,8 +55,42 @@ const nav = [
 
 export function AppLayout() {
   const { search, setSearch, pendingDisputes, pendingVerifications, setPendingDisputes, setPendingVerifications } = useAdminStore();
+  const { user, logout } = useAuthStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPassword || !newPassword) {
+      toast.error("Por favor completa los campos");
+      return;
+    }
+    
+    setIsChangingPassword(true);
+    try {
+      await api.post("/auth/admin/change-password", {
+        currentPassword,
+        newPassword,
+      });
+      toast.success("Contraseña actualizada exitosamente");
+      setPasswordModalOpen(false);
+      setCurrentPassword("");
+      setNewPassword("");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Error al cambiar la contraseña");
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
 
   // Load badge counts on mount and connect WebSocket
   useEffect(() => {
@@ -219,15 +259,48 @@ export function AppLayout() {
           <button className="text-white/60 hover:text-white transition-colors">
             <Sun size={18} />
           </button>
-          <div className="flex items-center gap-3 border-l border-white/10 pl-6 cursor-pointer hover:bg-white/5 rounded-full p-1 pr-3 -mr-3 transition-colors">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 font-medium text-white shadow-[0_0_15px_rgba(147,51,234,0.4)] border border-purple-400/30">
-              A
+          <div className="relative">
+            <div 
+              className="flex items-center gap-3 border-l border-white/10 pl-6 cursor-pointer hover:bg-white/5 rounded-full p-1 pr-3 -mr-3 transition-colors"
+              onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 font-medium text-white shadow-[0_0_15px_rgba(147,51,234,0.4)] border border-purple-400/30">
+                {user?.username?.charAt(0).toUpperCase() || "A"}
+              </div>
+              <div className="hidden flex-col md:flex">
+                <span className="text-sm font-semibold text-white leading-tight capitalize">{user?.username || "Admin"}</span>
+                <span className="text-[10px] text-white/50 leading-tight">Super Admin</span>
+              </div>
+              <ChevronDown size={14} className="text-white/40" />
             </div>
-            <div className="hidden flex-col md:flex">
-              <span className="text-sm font-semibold text-white leading-tight">Admin</span>
-              <span className="text-[10px] text-white/50 leading-tight">Super Admin</span>
-            </div>
-            <ChevronDown size={14} className="text-white/40" />
+
+            {profileMenuOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setProfileMenuOpen(false)} 
+                />
+                <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl border border-white/10 bg-[#130f1e]/95 p-1 shadow-xl backdrop-blur-md">
+                  <button
+                    onClick={() => {
+                      setProfileMenuOpen(false);
+                      setPasswordModalOpen(true);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white"
+                  >
+                    <KeyRound size={16} />
+                    Cambiar Contraseña
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                  >
+                    <LogOut size={16} />
+                    Cerrar Sesión
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -236,6 +309,59 @@ export function AppLayout() {
       <main className={`w-full px-4 pb-12 pt-28 md:pr-4 transition-all duration-300 ${isCollapsed ? 'md:pl-[120px]' : 'md:pl-[292px]'}`}>
         <Outlet />
       </main>
+
+      <Modal open={passwordModalOpen} onOpenChange={setPasswordModalOpen}>
+        <ModalContent>
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-white">Cambiar Contraseña</h2>
+            <p className="mt-1 text-sm text-white/50">
+              Ingresa tu contraseña actual y la nueva para actualizar.
+            </p>
+          </div>
+          <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-white/70">
+                Contraseña Actual
+              </label>
+              <Input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-black/40 text-white"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-white/70">
+                Nueva Contraseña
+              </label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-black/40 text-white"
+              />
+            </div>
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setPasswordModalOpen(false)}
+                className="rounded-xl px-4 py-2 text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isChangingPassword}
+                className="rounded-xl bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500 disabled:opacity-50"
+              >
+                {isChangingPassword ? "Guardando..." : "Guardar"}
+              </button>
+            </div>
+          </form>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

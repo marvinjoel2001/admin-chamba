@@ -15,12 +15,40 @@ import DisputesPage from "@/pages/disputes-page";
 import CategoriesPage from "@/pages/categories-page";
 import PaymentMethodsPage from "@/pages/payment-methods-page";
 import NotificationsPage from "@/pages/notifications-page";
+import LoginPage from "@/pages/login-page";
+import { useAuthStore } from "@/store/auth-store";
+import { Navigate } from "react-router-dom";
 import LeadsPage from "@/pages/leads-page";
+
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated());
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
+
+function RedirectIfAuth({ children }: { children: React.ReactNode }) {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated());
+  if (isAuthenticated) return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 
 const router = createBrowserRouter([
   {
+    path: "/login",
+    element: (
+      <RedirectIfAuth>
+        <LoginPage />
+      </RedirectIfAuth>
+    ),
+  },
+  {
     path: "/",
-    element: <AppLayout />,
+    element: (
+      <RequireAuth>
+        <AppLayout />
+      </RequireAuth>
+    ),
     children: [
       { index: true, element: <DashboardPage /> },
       { path: "map", element: <MapPage /> },
@@ -40,6 +68,7 @@ const router = createBrowserRouter([
     ],
   },
 ]);
+
 
 export default function App() {
   return (
