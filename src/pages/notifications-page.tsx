@@ -11,6 +11,7 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(false);
   const [target, setTarget] = useState<"all" | "workers" | "clients" | "custom">("all");
   const [type, setType] = useState<"push" | "toast">("push");
+  const [isCallAlert, setIsCallAlert] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [toastType, setToastType] = useState<"info" | "success" | "error">("info");
@@ -55,6 +56,7 @@ export default function NotificationsPage() {
         body,
         toastType: type === "toast" ? toastType : undefined,
         userIds: target === "custom" ? Array.from(selectedUserIds) : undefined,
+        isCallAlert: type === "push" ? isCallAlert : undefined,
       });
       toast.success("Notificación enviada correctamente.");
       setTitle("");
@@ -145,6 +147,20 @@ export default function NotificationsPage() {
                 <span>Toast en tiempo real (Sockets)</span>
               </label>
             </div>
+            {type === "push" && (
+              <div className="mt-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={isCallAlert}
+                    onChange={(e) => setIsCallAlert(e.target.checked)}
+                    className="accent-primary"
+                  />
+                  <span>Es alerta de llamada (Despertar App)</span>
+                </label>
+                <p className="text-xs text-on-surface-variant mt-1 ml-6">Envía un mensaje de datos (data-only) para probar el Full Screen Intent.</p>
+              </div>
+            )}
           </div>
 
           {type === "toast" && (

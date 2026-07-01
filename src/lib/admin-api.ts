@@ -249,6 +249,7 @@ export async function broadcastNotification(payload: {
   body: string;
   toastType?: 'info' | 'success' | 'error';
   userIds?: string[];
+  isCallAlert?: boolean;
 }) {
   const { data } = await api.post("/mobile/admin/notifications/broadcast", payload);
   return data;
