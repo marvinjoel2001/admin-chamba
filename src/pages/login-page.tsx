@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Droplets, Lock, User, Loader2 } from "lucide-react";
+import { Lock, User, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/auth-store";
 import { api } from "@/lib/api";
@@ -41,10 +41,12 @@ export default function LoginPage() {
       <div className="bg-glow-1" />
       <div className="bg-glow-2" />
 
-      <div className="relative w-full max-w-md overflow-hidden rounded-[24px] border border-white/10 bg-[#130f1e]/80 p-8 shadow-[0_0_50px_-12px_rgba(124,58,237,0.15)] backdrop-blur-[20px]">
+      <div className="relative w-full max-w-md overflow-hidden rounded-[32px] border border-white/10 bg-white/5 p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.37),inset_0_1px_2px_rgba(255,255,255,0.1)] backdrop-blur-[24px]">
+        <div className="absolute -inset-[100%] z-[-1] animate-[spin_20s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_50%,#a855f7_100%)] opacity-20"></div>
         <div className="mb-8 flex flex-col items-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-purple-500/20 shadow-[inset_0_0_20px_rgba(168,85,247,0.2)]">
-            <Droplets size={32} className="text-purple-400" />
+          <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-white/5 p-4 shadow-[inset_0_0_20px_rgba(255,255,255,0.05),0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-xl border border-white/10 relative group">
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-purple-500/20 to-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <img src="/icon.png" alt="Chamba" className="h-full w-full object-contain drop-shadow-2xl relative z-10" />
           </div>
           <h1 className="text-2xl font-bold text-white">Chamba Admin</h1>
           <p className="mt-2 text-sm text-white/50">
@@ -66,7 +68,7 @@ export default function LoginPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pl-10 pr-4 text-sm text-white placeholder-white/20 outline-none transition-all focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50"
+                className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 backdrop-blur-md outline-none transition-all focus:border-purple-500/70 focus:bg-white/10 focus:ring-4 focus:ring-purple-500/20"
                 placeholder="Ingresa tu usuario"
               />
             </div>
@@ -85,7 +87,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-black/40 py-2.5 pl-10 pr-4 text-sm text-white placeholder-white/20 outline-none transition-all focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50"
+                className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-10 pr-4 text-sm text-white placeholder-white/30 backdrop-blur-md outline-none transition-all focus:border-purple-500/70 focus:bg-white/10 focus:ring-4 focus:ring-purple-500/20"
                 placeholder="••••••••"
               />
             </div>
@@ -94,7 +96,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 py-3 text-sm font-semibold text-white shadow-[0_0_20px_rgba(147,51,234,0.4)] transition-all hover:bg-purple-500 active:scale-[0.98] disabled:opacity-50"
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 py-3.5 text-sm font-semibold text-white shadow-[0_0_20px_rgba(147,51,234,0.3)] transition-all hover:shadow-[0_0_30px_rgba(147,51,234,0.5)] hover:from-purple-500 hover:to-indigo-500 active:scale-[0.98] disabled:opacity-50"
           >
             {isLoading ? (
               <Loader2 size={18} className="animate-spin" />
