@@ -267,3 +267,17 @@ export type WorkerLead = {
   updatedAt: string;
 };
 
+
+export type AdminAgency = {
+  id: string;
+  name: string;
+  taxId: string | null;
+  contactEmail: string;
+  contactPhone: string | null;
+  commissionRate: number;
+  isActive: boolean;
+  createdAt: string;
+  workersCount: number;
+  offersCount: number;
+  offersAcceptedCount: number;
+};

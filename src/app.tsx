@@ -19,6 +19,7 @@ import LoginPage from "@/pages/login-page";
 import { useAuthStore } from "@/store/auth-store";
 import { Navigate } from "react-router-dom";
 import LeadsPage from "@/pages/leads-page";
+import AgenciesPage from "@/pages/agencies-page";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated());
@@ -64,6 +65,7 @@ const router = createBrowserRouter([
       { path: "payment-methods", element: <PaymentMethodsPage /> },
       { path: "notifications", element: <NotificationsPage /> },
       { path: "leads", element: <LeadsPage /> },
+      { path: "agencies", element: <AgenciesPage /> },
       { path: "settings", element: <SettingsPage /> },
     ],
   },

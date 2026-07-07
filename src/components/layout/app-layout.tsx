@@ -18,6 +18,7 @@ import {
   ShieldAlert,
   FolderOpen,
   CreditCard,
+  Building2,
   Search,
   Command,
   Sun,
@@ -49,6 +50,7 @@ const nav = [
   ["/payment-methods", "Métodos de Pago", CreditCard, null],
   ["/notifications", "Notificaciones", Bell, null],
   ["/leads", "Postulantes", UserSquare2, null],
+  ["/agencies", "Agencias", Building2, null],
   ["/logs", "API Logs", Activity, null],
   ["/settings", "Configuración", Settings, null],
 ] as const;

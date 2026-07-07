@@ -270,4 +270,38 @@ export async function fetchAiConfig(): Promise<AiConfig> {
 export async function updateAiConfig(payload: AiConfig): Promise<AiConfig> {
   const { data } = await api.post<AiConfig>("/mobile/admin/ai-config", payload);
   return data;
-}
+}
+// ── Agencias (B2B) ─────────────────────────────────────────────
+
+export async function fetchAgencies() {
+  const { data } = await api.get<import("@/lib/types").AdminAgency[]>("/admin/agencies");
+  return data;
+}
+
+export async function createAgency(payload: {
+  name: string;
+  contactEmail: string;
+  password: string;
+  contactPhone?: string;
+  taxId?: string;
+  commissionRate?: number;
+}) {
+  const { data } = await api.post<import("@/lib/types").AdminAgency>("/admin/agencies", payload);
+  return data;
+}
+
+export async function updateAgency(
+  id: string,
+  payload: Partial<{
+    name: string;
+    contactEmail: string;
+    contactPhone: string;
+    taxId: string;
+    commissionRate: number;
+    isActive: boolean;
+    password: string;
+  }>,
+) {
+  const { data } = await api.patch<import("@/lib/types").AdminAgency>(`/admin/agencies/${id}`, payload);
+  return data;
+}
