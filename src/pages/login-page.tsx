@@ -37,7 +37,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0a0812] text-white">
+    <div className="flex min-h-screen items-center justify-center bg-[#13101d] text-white">
       <div className="bg-glow-1" />
       <div className="bg-glow-2" />
 

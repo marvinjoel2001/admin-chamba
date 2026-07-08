@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -6,7 +6,7 @@
 
 body {
   @apply bg-background text-on-surface font-sans antialiased;
-  background-color: #0b0b0f;
+  background-color: #13101d;
   overflow-x: hidden;
 }
 
@@ -33,7 +33,7 @@ body {
 }
 
 .glass-panel {
-  background-color: rgba(21, 21, 32, 0.6);
+  background-color: rgba(35, 30, 48, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.05);

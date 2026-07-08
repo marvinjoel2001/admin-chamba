@@ -119,12 +119,12 @@ export function AppLayout() {
   }, [setPendingDisputes, setPendingVerifications]);
 
   return (
-    <div className="min-h-screen text-on-surface bg-[#0a0812]">
+    <div className="min-h-screen text-on-surface bg-[#13101d]">
       <div className="bg-glow-1" />
       <div className="bg-glow-2" />
       
       {/* Sidebar - Floating */}
-      <aside className={`fixed left-4 top-4 bottom-4 z-40 hidden flex-col rounded-[24px] border border-white/5 bg-[#130f1e]/80 py-6 backdrop-blur-[20px] md:flex shadow-[0_0_50px_-12px_rgba(124,58,237,0.15)] transition-all duration-300 ${isCollapsed ? 'w-[88px]' : 'w-[260px]'}`}>
+      <aside className={`fixed left-4 top-4 bottom-4 z-40 hidden flex-col rounded-[24px] border border-white/5 bg-[#1c162b]/80 py-6 backdrop-blur-[20px] md:flex shadow-[0_0_50px_-12px_rgba(124,58,237,0.15)] transition-all duration-300 ${isCollapsed ? 'w-[88px]' : 'w-[260px]'}`}>
         <div className={`mb-8 px-6 flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
           <Link to="/" className="flex items-center gap-2 text-xl font-bold text-white overflow-hidden whitespace-nowrap">
             <img src="/favicon.png" alt="Chamba Logo" className="w-5 h-5 object-cover rounded-full flex-shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
@@ -189,7 +189,7 @@ export function AppLayout() {
           onClick={() => setMobileMenuOpen(false)}
         >
           <aside
-            className="absolute left-0 top-0 h-screen w-[280px] flex-col border-r border-white/10 bg-[#130f1e] py-6"
+            className="absolute left-0 top-0 h-screen w-[280px] flex-col border-r border-white/10 bg-[#1c162b] py-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-8 px-6">
@@ -231,7 +231,7 @@ export function AppLayout() {
       )}
 
       {/* Header - Floating Pill */}
-      <header className={`fixed top-4 right-4 z-30 flex h-16 items-center justify-between rounded-[24px] border border-white/5 bg-[#130f1e]/80 px-6 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_40px_-10px_rgba(124,58,237,0.1)] ${isCollapsed ? 'md:left-[120px]' : 'md:left-[292px]'}`}>
+      <header className={`fixed top-4 right-4 z-30 flex h-16 items-center justify-between rounded-[24px] border border-white/5 bg-[#1c162b]/80 px-6 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_40px_-10px_rgba(124,58,237,0.1)] ${isCollapsed ? 'md:left-[120px]' : 'md:left-[292px]'}`}>
         <button
           className="text-white/60 md:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
