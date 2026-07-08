@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { fetchAgencies, createAgency, updateAgency } from "@/lib/admin-api";
+import { fetchAgencies, createAgency, updateAgency, deleteAgency } from "@/lib/admin-api";
 import type { AdminAgency } from "@/lib/types";
 import { toast } from "sonner";
 import {
@@ -11,7 +11,9 @@ import {
   Users,
   Send,
   CheckCircle2,
+  CheckCircle2,
   KeyRound,
+  Trash2,
 } from "lucide-react";
 
 type AgencyForm = {
@@ -128,6 +130,18 @@ export default function AgenciesPage() {
     }
   };
 
+  const handleDelete = async (agency: AdminAgency) => {
+    if (!confirm(`¿Estás seguro de que deseas eliminar la agencia "${agency.name}"? Esta acción no se puede deshacer.`)) return;
+    
+    try {
+      await deleteAgency(agency.id);
+      toast.success("Agencia eliminada correctamente");
+      load();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "No se pudo eliminar la agencia (podría tener datos asociados)");
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -171,13 +185,22 @@ export default function AgenciesPage() {
                   <Building2 className="h-5 w-5 text-primary" />
                   <h3 className="font-semibold">{agency.name}</h3>
                 </div>
-                <button
-                  onClick={() => openEdit(agency)}
-                  className="rounded p-1.5 text-on-surface-variant hover:bg-white/10 hover:text-primary"
-                  title="Editar"
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => openEdit(agency)}
+                    className="rounded p-1.5 text-on-surface-variant hover:bg-white/10 hover:text-primary"
+                    title="Editar"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(agency)}
+                    className="rounded p-1.5 text-on-surface-variant hover:bg-red-500/10 hover:text-red-400"
+                    title="Eliminar"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
 
               <p className="text-sm text-on-surface-variant">{agency.contactEmail}</p>

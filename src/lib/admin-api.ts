@@ -305,3 +305,7 @@ export async function updateAgency(
   const { data } = await api.patch<import("@/lib/types").AdminAgency>(`/admin/agencies/${id}`, payload);
   return data;
 }
+
+export async function deleteAgency(id: string) {
+  await api.delete(`/admin/agencies/${id}`);
+}
