@@ -127,7 +127,7 @@ export function AppLayout() {
       <aside className={`fixed left-4 top-4 bottom-4 z-40 hidden flex-col rounded-[24px] border border-white/5 bg-[#130f1e]/80 py-6 backdrop-blur-[20px] md:flex shadow-[0_0_50px_-12px_rgba(124,58,237,0.15)] transition-all duration-300 ${isCollapsed ? 'w-[88px]' : 'w-[260px]'}`}>
         <div className={`mb-8 px-6 flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
           <Link to="/" className="flex items-center gap-2 text-xl font-bold text-white overflow-hidden whitespace-nowrap">
-            <Droplets size={20} className="text-purple-400 flex-shrink-0" />
+            <img src="/favicon.png" alt="Chamba Logo" className="w-5 h-5 object-cover rounded-full flex-shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
             {!isCollapsed && <span>Chamba Admin</span>}
           </Link>
         </div>
@@ -194,7 +194,7 @@ export function AppLayout() {
           >
             <div className="mb-8 px-6">
               <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-white" onClick={() => setMobileMenuOpen(false)}>
-                <Droplets size={22} className="text-purple-400" />Chamba Admin
+                <img src="/favicon.png" alt="Chamba Logo" className="w-6 h-6 object-cover rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]" />Chamba Admin
               </Link>
               <p className="mt-1 text-sm text-white/40">Admin Console</p>
             </div>
