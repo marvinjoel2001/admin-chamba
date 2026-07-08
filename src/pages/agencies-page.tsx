@@ -11,7 +11,6 @@ import {
   Users,
   Send,
   CheckCircle2,
-  CheckCircle2,
   KeyRound,
   Trash2,
 } from "lucide-react";
