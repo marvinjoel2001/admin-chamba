@@ -14,6 +14,7 @@ import type {
   PaymentMethod,
   AiConfig,
   WorkerLead,
+  StripeConfig,
 } from "@/lib/types";
 
 export async function fetchWorkerLeads(): Promise<WorkerLead[]> {
@@ -271,6 +272,19 @@ export async function updateAiConfig(payload: AiConfig): Promise<AiConfig> {
   const { data } = await api.post<AiConfig>("/mobile/admin/ai-config", payload);
   return data;
 }
+
+// --- Stripe Config ---
+
+export async function fetchStripeConfig(): Promise<StripeConfig> {
+  const { data } = await api.get<StripeConfig>("/mobile/admin/stripe-config");
+  return data;
+}
+
+export async function updateStripeConfig(payload: StripeConfig): Promise<StripeConfig> {
+  const { data } = await api.post<StripeConfig>("/mobile/admin/stripe-config", payload);
+  return data;
+}
+
 // ── Agencias (B2B) ─────────────────────────────────────────────
 
 export async function fetchAgencies() {

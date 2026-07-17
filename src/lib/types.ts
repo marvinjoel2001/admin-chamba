@@ -267,6 +267,12 @@ export type WorkerLead = {
   updatedAt: string;
 };
 
+export type StripeConfig = {
+  active: boolean;
+  publishableKey: string;
+  secretKey: string;
+};
+
 
 export type AdminAgency = {
   id: string;

@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { fetchAiConfig, updateAiConfig } from "@/lib/admin-api";
-import type { AiConfig } from "@/lib/types";
+import { fetchAiConfig, updateAiConfig, fetchStripeConfig, updateStripeConfig } from "@/lib/admin-api";
+import type { AiConfig, StripeConfig } from "@/lib/types";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
@@ -35,6 +35,11 @@ export default function SettingsPage() {
     nvidiaModel: "meta/llama-3.1-8b-instruct",
     deepseekKey: "",
   });
+  const [stripeConfig, setStripeConfig] = useState<StripeConfig>({
+    active: false,
+    publishableKey: "",
+    secretKey: "",
+  });
   const [nvidiaModelMode, setNvidiaModelMode] = useState<"select" | "custom">("select");
 
   const [testMessage, setTestMessage] = useState("");
@@ -47,8 +52,12 @@ export default function SettingsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const config = await fetchAiConfig();
+      const [config, stripeConfigData] = await Promise.all([
+        fetchAiConfig(),
+        fetchStripeConfig().catch(() => ({ active: false, publishableKey: "", secretKey: "" }))
+      ]);
       setAiConfig(config);
+      setStripeConfig(stripeConfigData);
       const isPreset = NVIDIA_MODELS.some(
         (m) => m.value !== "custom" && m.value === config.nvidiaModel,
       );
@@ -67,10 +76,13 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateAiConfig(aiConfig);
-      toast.success("Configuración de IA guardada");
+      await Promise.all([
+        updateAiConfig(aiConfig),
+        updateStripeConfig(stripeConfig)
+      ]);
+      toast.success("Configuraciones guardadas");
     } catch {
-      toast.error("Error al guardar la configuración de IA");
+      toast.error("Error al guardar la configuración");
     } finally {
       setSaving(false);
     }
@@ -431,6 +443,58 @@ export default function SettingsPage() {
             </div>
           </div>
         )}
+      </section>
+
+      {/* Stripe Config */}
+      <section className="glass-panel max-w-2xl rounded-2xl p-6">
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold">Pasarela de Pagos (Stripe)</h2>
+            <p className="mt-1 text-sm text-on-surface-variant">
+              Configura tus llaves de Stripe para habilitar los pagos con tarjeta.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-white/70">Activo</span>
+            <button
+              type="button"
+              role="switch"
+              onClick={() => setStripeConfig({ ...stripeConfig, active: !stripeConfig.active })}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                stripeConfig.active ? "bg-emerald-500" : "bg-white/20"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  stripeConfig.active ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="mb-1 block text-sm font-medium text-white/70">Publishable Key</label>
+            <Input
+              type="password"
+              placeholder="pk_test_..."
+              value={stripeConfig.publishableKey}
+              onChange={(e) => setStripeConfig({ ...stripeConfig, publishableKey: e.target.value })}
+              className="bg-black/20"
+            />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-white/70">Secret Key</label>
+            <Input
+              type="password"
+              placeholder="sk_test_..."
+              value={stripeConfig.secretKey}
+              onChange={(e) => setStripeConfig({ ...stripeConfig, secretKey: e.target.value })}
+              className="bg-black/20"
+            />
+          </div>
+        </div>
       </section>
     </div>
   );
