@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, Fragment } from "react";
-import { fetchApiLogs } from "@/lib/admin-api";
+import { fetchApiLogs, clearApiLogs } from "@/lib/admin-api";
 import type { ExtendedApiLogItem } from "@/lib/types";
 import { toast } from "sonner";
 import { Copy } from "lucide-react";
@@ -77,13 +77,38 @@ export default function LogsPage() {
     };
   }, [filters, autoRefresh]);
 
+  const handleClearLogs = async () => {
+    if (!confirm("¿Estás seguro de que quieres borrar TODOS los registros de logs? Esta acción no se puede deshacer.")) return;
+    
+    setLoading(true);
+    try {
+      await clearApiLogs();
+      toast.success("Logs borrados exitosamente");
+      setItems([]);
+      setTotal(0);
+      setMetrics({ total: 0, total4xx: 0, total5xx: 0, avgMs: 0 });
+    } catch (err: any) {
+      toast.error("Error al borrar logs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">API Logs Monitor</h2>
-        <p className="mt-2 text-on-surface-variant">
-          Vista de trafico HTTP del backend (entradas/salidas) estilo consola operativa.
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">API Logs Monitor</h2>
+          <p className="mt-2 text-on-surface-variant">
+            Vista de trafico HTTP del backend (entradas/salidas) estilo consola operativa.
+          </p>
+        </div>
+        <button 
+          onClick={handleClearLogs}
+          className="rounded-lg bg-rose-500/20 text-rose-300 px-4 py-2 text-sm font-semibold hover:bg-rose-500/30 transition-colors border border-rose-500/20"
+        >
+          Borrar Todos
+        </button>
       </div>
 
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
@@ -94,7 +119,7 @@ export default function LogsPage() {
       </div>
 
       <div className="glass-panel rounded-xl p-4">
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-6">
+        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-7">
           <select className="glass-input rounded-lg px-3 py-2" value={method} onChange={(e) => setMethod(e.target.value)}>
             {METHODS.map((m) => (
               <option key={m} value={m}>{m || "Todos los metodos"}</option>
@@ -109,7 +134,7 @@ export default function LogsPage() {
           <button className={`rounded-lg px-3 py-2 text-sm ${search === "[AI]" ? "bg-purple-500/20 text-purple-300" : "bg-white/10 text-on-surface-variant"}`} onClick={() => setSearch(search === "[AI]" ? "" : "[AI]")}>
             🤖 Solo IA
           </button>
-          <div className="rounded-lg bg-white/5 px-3 py-2 text-sm text-on-surface-variant">Total: {total}</div>
+          <div className="rounded-lg bg-white/5 px-3 py-2 text-sm text-on-surface-variant flex items-center justify-center">Total: {total}</div>
         </div>
       </div>
 

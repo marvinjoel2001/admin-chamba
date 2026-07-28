@@ -97,6 +97,10 @@ export async function fetchApiLogs(params?: {
   return data;
 }
 
+export async function clearApiLogs() {
+  await api.delete("/mobile/admin/logs/clear");
+}
+
 // --- Disputes ---
 
 export async function fetchUserDisputes(userId: string) {
