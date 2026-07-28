@@ -260,6 +260,14 @@ export async function broadcastNotification(payload: {
   return data;
 }
 
+export async function simulateJobRequestNotification(payload: {
+  target: 'all' | 'workers' | 'custom';
+  userIds?: string[];
+}) {
+  const { data } = await api.post("/mobile/admin/notifications/simulate-request", payload);
+  return data;
+}
+
 export async function fetchPushUsers() {
   const { data } = await api.get<{id: string, firstName: string, lastName: string, type: string, lastSeenAt: string}[]>("/mobile/admin/push-users");
   return data;

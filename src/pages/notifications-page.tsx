@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { broadcastNotification, fetchPushUsers } from "@/lib/admin-api";
+import { broadcastNotification, fetchPushUsers, simulateJobRequestNotification } from "@/lib/admin-api";
 import { Search } from "lucide-react";
 
 type PushUser = { id: string; firstName: string; lastName: string; type: string; lastSeenAt: string };
 
 export default function NotificationsPage() {
   const [loading, setLoading] = useState(false);
+  const [simulating, setSimulating] = useState(false);
   const [target, setTarget] = useState<"all" | "workers" | "clients" | "custom">("all");
   const [type, setType] = useState<"push" | "toast">("push");
   const [isCallAlert, setIsCallAlert] = useState(false);
@@ -66,6 +67,26 @@ export default function NotificationsPage() {
       toast.error(err.message || "Error al enviar la notificación.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSimulate = async () => {
+    if (target === "custom" && selectedUserIds.size === 0) {
+      toast.error("Selecciona al menos un usuario.");
+      return;
+    }
+
+    setSimulating(true);
+    try {
+      const res = await simulateJobRequestNotification({
+        target: target === "custom" ? "custom" : "workers",
+        userIds: target === "custom" ? Array.from(selectedUserIds) : undefined,
+      });
+      toast.success(`Alerta de solicitud enviada a ${res.count} dispositivo(s).`);
+    } catch (err: any) {
+      toast.error(err.message || "Error al enviar la alerta.");
+    } finally {
+      setSimulating(false);
     }
   };
 
@@ -211,6 +232,27 @@ export default function NotificationsPage() {
           >
             {loading ? "Enviando..." : target === "custom" ? `Enviar a ${selectedUserIds.size} usuarios` : "Enviar Notificación"}
           </Button>
+
+          <div className="border-t border-white/10 pt-6">
+            <h2 className="text-lg font-semibold">Simular solicitud nueva</h2>
+            <p className="mt-1 text-sm text-on-surface-variant">
+              Envía la alerta de trabajo nuevo exactamente como le llega a un worker en
+              producción: mismo <code>type</code>, mismo texto, con <code>jobId</code> y{" "}
+              <code>deep_link</code>. No requiere escribir nada ni crea una solicitud real.
+            </p>
+            <p className="mt-2 text-xs text-on-surface-variant">
+              {target === "custom"
+                ? `Se enviará a los ${selectedUserIds.size} usuario(s) seleccionados.`
+                : "Se enviará a todos los workers con token registrado."}
+            </p>
+            <Button
+              className="mt-4 w-full bg-primary-container text-white"
+              onClick={handleSimulate}
+              disabled={simulating}
+            >
+              {simulating ? "Enviando..." : "Enviar alerta de solicitud nueva"}
+            </Button>
+          </div>
         </div>
       </section>
 
