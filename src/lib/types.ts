@@ -138,19 +138,71 @@ export type ApiLogItem = {
   user_agent?: string | null;
 };
 
-// Extended request detail with full timeline
-export type RequestDetail = MapRequest & {
-  client?: AdminUser;
-  worker?: AdminUser;
-  offers?: Array<{
+export type RequestOfferItem = {
+  id: string;
+  workerUserId: string;
+  workerName: string;
+  workerPhoto?: string | null;
+  workerPhone?: string | null;
+  workerRating: number;
+  workerCompletedJobs: number;
+  agencyName?: string | null;
+  amount: number;
+  message?: string;
+  status: string;
+  expiresAt?: string | null;
+  createdAt: string;
+};
+
+// Extended request detail with full timeline & negotiations
+export type RequestDetail = {
+  id: string;
+  title: string;
+  description?: string;
+  category?: string;
+  budget: number;
+  currency?: string;
+  status: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  paymentMethod?: string;
+  modality?: "hourly" | "daily" | "fixed" | string;
+  estimatedHours?: number | null;
+  hourlyRate?: number | null;
+  days?: number | null;
+  dailyRate?: number | null;
+  startDate?: string | null;
+  workerArrived?: boolean;
+  clientConfirmedArrival?: boolean;
+  createdAt: string;
+  updatedAt: string;
+  assignedAt?: string | null;
+  completedAt?: string | null;
+  cancelledAt?: string | null;
+  cancelledBy?: string | null;
+  cancelReason?: string | null;
+  notifiedCount?: number;
+  client?: {
     id: string;
-    workerId: string;
-    workerName: string;
-    amount: number;
-    status: string;
-    createdAt: string;
-  }>;
-  timeline: Array<{
+    firstName: string;
+    lastName: string;
+    phone?: string | null;
+    profilePhotoUrl?: string | null;
+    averageRating: number;
+  };
+  worker?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    phone?: string | null;
+    profilePhotoUrl?: string | null;
+    averageRating: number;
+    completedJobs: number;
+  } | null;
+  photos?: Array<{ id: string; url: string; createdAt: string }>;
+  offers?: RequestOfferItem[];
+  timeline?: Array<{
     stage: string;
     label: string;
     timestamp?: string;
