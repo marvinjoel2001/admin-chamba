@@ -2,12 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
+:root,
+.dark {
+  color-scheme: dark;
+  --bg-app: #13101d;
+  --bg-sidebar: rgba(28, 22, 43, 0.88);
+  --bg-header: rgba(28, 22, 43, 0.88);
+  --bg-panel: rgba(35, 30, 48, 0.65);
+  --bg-card: #1c162b;
+  --bg-card-hover: #261e3a;
+  --bg-input: rgba(0, 0, 0, 0.35);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.16);
+  --text-main: #f1f0f7;
+  --text-muted: rgba(255, 255, 255, 0.65);
+  --text-subtle: rgba(255, 255, 255, 0.45);
+  --primary-color: #d2bbff;
+  --primary-container: #7c3aed;
+  --secondary-color: #ffe083;
+  --error-color: #ffb4ab;
+  --glow-1: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+  --glow-2: radial-gradient(circle, rgba(238, 194, 0, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+}
+
+.light {
+  color-scheme: light;
+  --bg-app: #f5f4fa;
+  --bg-sidebar: rgba(255, 255, 255, 0.95);
+  --bg-header: rgba(255, 255, 255, 0.95);
+  --bg-panel: rgba(255, 255, 255, 0.9);
+  --bg-card: #ffffff;
+  --bg-card-hover: #f7f6fd;
+  --bg-input: #f3f1f9;
+  --border-subtle: rgba(124, 58, 237, 0.14);
+  --border-medium: rgba(124, 58, 237, 0.25);
+  --text-main: #130f24;
+  --text-muted: #524c6b;
+  --text-subtle: #797296;
+  --primary-color: #7c3aed;
+  --primary-container: #6d28d9;
+  --secondary-color: #d97706;
+  --error-color: #dc2626;
+  --glow-1: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, rgba(245, 244, 250, 0) 70%);
+  --glow-2: radial-gradient(circle, rgba(56, 189, 248, 0.1) 0%, rgba(245, 244, 250, 0) 70%);
+}
 
 body {
-  @apply bg-background text-on-surface font-sans antialiased;
-  background-color: #13101d;
+  @apply font-sans antialiased;
+  background-color: var(--bg-app);
+  color: var(--text-main);
   overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 .bg-glow-1 {
@@ -16,9 +61,10 @@ body {
   left: -10%;
   width: 50vw;
   height: 50vw;
-  background: radial-gradient(circle, rgba(124, 58, 237, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+  background: var(--glow-1);
   z-index: -1;
   pointer-events: none;
+  transition: background 0.3s ease;
 }
 
 .bg-glow-2 {
@@ -27,23 +73,29 @@ body {
   right: -10%;
   width: 50vw;
   height: 50vw;
-  background: radial-gradient(circle, rgba(238, 194, 0, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+  background: var(--glow-2);
   z-index: -1;
   pointer-events: none;
+  transition: background 0.3s ease;
 }
 
 .glass-panel {
-  background-color: rgba(35, 30, 48, 0.6);
+  background-color: var(--bg-panel);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 100%);
+  border: 1px solid var(--border-subtle);
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.light .glass-panel {
+  box-shadow: 0 4px 20px -2px rgba(124, 58, 237, 0.07), 0 2px 8px -1px rgba(0, 0, 0, 0.04);
 }
 
 .glass-input {
-  background-color: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: all 0.3s ease;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  transition: all 0.2s ease;
 }
 
 .glass-input:focus {
@@ -52,19 +104,192 @@ body {
   outline: none;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Light Mode Contrast Overrides:
+   Ensures text on light backgrounds is dark and readable,
+   while text inside colored/solid buttons/pills stays white.
+   ───────────────────────────────────────────────────────────── */
+
+/* General headings and text inside cards/panels */
+.light h1:not([class*="bg-"]):not([class*="from-"]):not([class*="text-purple-"]):not([class*="text-emerald-"]):not([class*="text-rose-"]),
+.light h2:not([class*="bg-"]):not([class*="from-"]):not([class*="text-purple-"]):not([class*="text-emerald-"]):not([class*="text-rose-"]),
+.light h3:not([class*="bg-"]):not([class*="from-"]):not([class*="text-purple-"]):not([class*="text-emerald-"]):not([class*="text-rose-"]),
+.light h4:not([class*="bg-"]):not([class*="from-"]):not([class*="text-purple-"]):not([class*="text-emerald-"]):not([class*="text-rose-"]),
+.light h5,
+.light h6 {
+  color: #130f24;
+}
+
+/* Base text classes when used on light cards */
+.light .text-on-surface {
+  color: #130f24 !important;
+}
+
+.light .text-on-surface-variant {
+  color: #524c6b !important;
+}
+
+.light .text-white:not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-sky"]):not([class*="bg-blue"]):not([class*="bg-primary"]):not([class*="bg-gradient"]):not([class*="badge"]) {
+  color: #130f24;
+}
+
+.light .text-white\/90,
+.light .text-white\/80 {
+  color: #1a1530;
+}
+
+.light .text-white\/70,
+.light .text-white\/60 {
+  color: #524c6b;
+}
+
+.light .text-white\/50,
+.light .text-white\/40 {
+  color: #797296;
+}
+
+.light .text-white\/30,
+.light .text-white\/20 {
+  color: #9f99bc;
+}
+
+.light .text-gray-200,
+.light .text-gray-300 {
+  color: #3b3552;
+}
+
+.light .text-gray-400,
+.light .text-gray-500 {
+  color: #5e587a;
+}
+
+/* Subtle borders in light mode */
+.light .border-white\/5,
+.light .border-white\/10 {
+  border-color: rgba(124, 58, 237, 0.12) !important;
+}
+
+.light .border-white\/15,
+.light .border-white\/20,
+.light .border-white\/30 {
+  border-color: rgba(124, 58, 237, 0.2) !important;
+}
+
+/* Semi-transparent dark surfaces switch to clean light surfaces */
+.light .bg-black\/10,
+.light .bg-black\/20,
+.light .bg-black\/25,
+.light .bg-black\/30,
+.light .bg-black\/40,
+.light .bg-black\/50 {
+  background-color: rgba(243, 240, 250, 0.85);
+  color: #130f24;
+}
+
+.light .bg-white\/5 {
+  background-color: rgba(124, 58, 237, 0.05);
+}
+
+.light .bg-white\/10 {
+  background-color: rgba(124, 58, 237, 0.08);
+}
+
+.light .bg-white\/15 {
+  background-color: rgba(124, 58, 237, 0.12);
+}
+
+/* Hardcoded dark panels switch to pure white / light cards */
+.light .bg-\[\#1c162b\],
+.light .bg-\[\#1c162b\]\/80,
+.light .bg-\[\#1c162b\]\/90 {
+  background-color: rgba(255, 255, 255, 0.95);
+  color: #130f24;
+}
+
+.light .bg-\[\#13101d\],
+.light .bg-\[\#12121d\],
+.light .bg-\[\#0a0514\] {
+  background-color: #f5f4fa;
+}
+
+.light .bg-\[\#1e1e2e\],
+.light .bg-\[\#130f1e\]\/95,
+.light .bg-\[\#120f1a\]\/90,
+.light .bg-\[\#120f1a\]\/80,
+.light .bg-\[\#120f1a\]\/60 {
+  background-color: rgba(255, 255, 255, 0.96);
+  border-color: rgba(124, 58, 237, 0.16);
+  color: #130f24;
+  box-shadow: 0 12px 36px -4px rgba(124, 58, 237, 0.12);
+}
+
+/* Tables in light mode */
+.light table th {
+  color: #524c6b;
+  border-color: rgba(124, 58, 237, 0.12);
+  background-color: rgba(124, 58, 237, 0.04);
+}
+
+.light table td {
+  color: #130f24;
+  border-color: rgba(124, 58, 237, 0.08);
+}
+
+.light table tr:hover td {
+  background-color: rgba(124, 58, 237, 0.04);
+}
+
+/* Form inputs in light mode */
+.light input,
+.light select,
+.light textarea {
+  color: #130f24;
+}
+
+.light input::placeholder,
+.light textarea::placeholder {
+  color: #8b85a6;
+}
+
+/* Solid action buttons must always retain white text */
+.light button.bg-purple-600,
+.light button.bg-purple-700,
+.light button.bg-emerald-500,
+.light button.bg-emerald-600,
+.light button.bg-rose-500,
+.light button.bg-rose-600,
+.light button.bg-amber-500,
+.light button.bg-amber-600,
+.light button.bg-primary-container,
+.light button.bg-primary,
+.light .btn-primary,
+.light [class*="bg-gradient-to-r"] {
+  color: #ffffff !important;
+}
+
+.light button.bg-purple-600 *,
+.light button.bg-purple-700 *,
+.light button.bg-emerald-500 *,
+.light button.bg-rose-500 *,
+.light button.bg-amber-500 *,
+.light [class*="bg-gradient-to-r"] * {
+  color: #ffffff !important;
+}
+
+/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
-::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.1); }
+::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.03); }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(124, 58, 237, 0.2);
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.2); }
+::-webkit-scrollbar-thumb:hover { background: rgba(124, 58, 237, 0.35); }
 
 /* ─── Mapbox popup overrides ─── */
 .map-popup-custom .mapboxgl-popup-content {
@@ -74,7 +299,7 @@ body {
   border-radius: 0 !important;
 }
 .map-popup-custom .mapboxgl-popup-tip {
-  border-top-color: #1e1e2e !important;
+  border-top-color: var(--bg-card) !important;
 }
 .map-popup-custom .mapboxgl-popup-close-button {
   display: none;

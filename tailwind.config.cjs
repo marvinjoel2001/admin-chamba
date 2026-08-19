@@ -4,17 +4,17 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: "#12121d",
-        surface: "#12121d",
-        "surface-container-high": "#292935",
-        "surface-container": "#1f1f2a",
-        "surface-variant": "#343440",
-        "on-surface": "#e3e1f1",
-        "on-surface-variant": "#ccc3d8",
-        primary: "#d2bbff",
-        "primary-container": "#7c3aed",
-        secondary: "#ffe083",
-        error: "#ffb4ab"
+        background: "var(--bg-app)",
+        surface: "var(--bg-surface)",
+        "surface-container-high": "var(--bg-card-hover)",
+        "surface-container": "var(--bg-card)",
+        "surface-variant": "var(--bg-panel)",
+        "on-surface": "var(--text-main)",
+        "on-surface-variant": "var(--text-muted)",
+        primary: "var(--primary-color)",
+        "primary-container": "var(--primary-container)",
+        secondary: "var(--secondary-color)",
+        error: "var(--error-color)"
       },
       spacing: {
         "sidebar-width": "280px",

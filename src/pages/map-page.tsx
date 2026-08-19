@@ -9,10 +9,10 @@ import Map, {
 } from "react-map-gl";
 import { io } from "socket.io-client";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { fetchMapSnapshot } from "@/lib/admin-api";
+import { fetchMapSnapshot, fetchWorkerNotificationSettings } from "@/lib/admin-api";
 import type { MapClient, MapRequest, MapWorker } from "@/lib/types";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Users, Radio, MapPin, X, Crosshair, Navigation, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, Users, Radio, MapPin, X, Crosshair, Navigation, Search, Radar, Target, ShieldCheck } from "lucide-react";
 
 type PanelTab = "workers" | "requests";
 type WorkerFilter = "all" | "free" | "busy";
@@ -31,7 +31,107 @@ type GeoJsonPoint = {
   }>;
 };
 
+type GeoJsonPolygonCollection = {
+  type: "FeatureCollection";
+  features: Array<{
+    type: "Feature";
+    geometry: { type: "Polygon"; coordinates: [number, number][][] };
+    properties: Record<string, unknown>;
+  }>;
+};
+
+/**
+ * Generates an accurate geodesic circular polygon for Mapbox GL GeoJSON
+ */
+function createGeoJsonCircle(
+  center: [number, number],
+  radiusKm: number,
+  points: number = 64
+): GeoJsonPolygonCollection {
+  const [lng, lat] = center;
+  const coordinates: [number, number][] = [];
+  const earthRadiusKm = 6371;
+  const radLat = (lat * Math.PI) / 180;
+  const radLng = (lng * Math.PI) / 180;
+  const dByR = radiusKm / earthRadiusKm;
+
+  for (let i = 0; i <= points; i++) {
+    const bearing = (i * 2 * Math.PI) / points;
+    const pLat = Math.asin(
+      Math.sin(radLat) * Math.cos(dByR) +
+        Math.cos(radLat) * Math.sin(dByR) * Math.cos(bearing)
+    );
+    const pLng =
+      radLng +
+      Math.atan2(
+        Math.sin(bearing) * Math.sin(dByR) * Math.cos(radLat),
+        Math.cos(dByR) - Math.sin(radLat) * Math.sin(pLat)
+      );
+    coordinates.push([(pLng * 180) / Math.PI, (pLat * 180) / Math.PI]);
+  }
+
+  return {
+    type: "FeatureCollection",
+    features: [
+      {
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: [coordinates],
+        },
+        properties: {
+          radiusKm,
+        },
+      },
+    ],
+  };
+}
+
+/**
+ * Calculates Haversine distance between two coordinates in km
+ */
+function haversineDistanceKm(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number
+): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 /* ─── Layer definitions (static, never re-created) ─── */
+
+const radiusFillLayer: LayerProps = {
+  id: "selected-request-radius-fill",
+  type: "fill",
+  source: "selected-request-radius",
+  paint: {
+    "fill-color": "#38bdf8",
+    "fill-opacity": 0.16,
+  },
+};
+
+const radiusOutlineLayer: LayerProps = {
+  id: "selected-request-radius-outline",
+  type: "line",
+  source: "selected-request-radius",
+  paint: {
+    "line-color": "#38bdf8",
+    "line-width": 2,
+    "line-dasharray": [3, 2],
+    "line-opacity": 0.85,
+  },
+};
 
 const workerClusterLayer: LayerProps = {
   id: "worker-clusters",
@@ -182,6 +282,8 @@ export default function MapPage() {
   const [workerSearch, setWorkerSearch] = useState("");
   const [requestSearch, setRequestSearch] = useState("");
   const [popup, setPopup] = useState<PopupInfo | null>(null);
+  const [searchRadiusKm, setSearchRadiusKm] = useState<number>(5);
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const lastSyncRef = useRef<string | undefined>(undefined);
 
   const workersMapRef = useRef<globalThis.Map<string, MapWorker>>(new globalThis.Map());
@@ -192,6 +294,26 @@ export default function MapPage() {
   >(new globalThis.Map());
   const flushTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rafRef = useRef<number | null>(null);
+
+  // Load configured worker search notification radius from backend settings
+  useEffect(() => {
+    let mounted = true;
+    const loadRadius = async () => {
+      try {
+        const settings = await fetchWorkerNotificationSettings();
+        if (!mounted) return;
+        if (settings?.radiusKm && Number.isFinite(settings.radiusKm) && settings.radiusKm > 0) {
+          setSearchRadiusKm(Number(settings.radiusKm));
+        }
+      } catch {
+        // Keeps default 5 km if request fails
+      }
+    };
+    void loadRadius();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const applySnapshot = useCallback((snapshot: { workers: MapWorker[]; clients: MapClient[]; requests: MapRequest[]; serverTime: string }) => {
     snapshot.workers.forEach((item) => workersMapRef.current.set(item.id, item));
@@ -413,6 +535,40 @@ export default function MapPage() {
     })),
   }), [todayRequests]);
 
+  // Selected request state & calculations
+  const selectedRequest = useMemo(() => {
+    if (!selectedRequestId) return null;
+    return requests.find((r) => r.id === selectedRequestId) ?? null;
+  }, [selectedRequestId, requests]);
+
+  // GeoJSON circle for the selected request's search radius
+  const radiusGeoJson = useMemo<GeoJsonPolygonCollection>(() => {
+    if (!selectedRequest || !selectedRequest.latitude || !selectedRequest.longitude) {
+      return { type: "FeatureCollection", features: [] };
+    }
+    return createGeoJsonCircle(
+      [selectedRequest.longitude, selectedRequest.latitude],
+      searchRadiusKm
+    );
+  }, [selectedRequest, searchRadiusKm]);
+
+  // Workers that fall within the configured search radius from the selected request
+  const workersInSelectedRadius = useMemo(() => {
+    if (!selectedRequest || !selectedRequest.latitude || !selectedRequest.longitude) return [];
+    return workersWithLocation
+      .map((w) => ({
+        worker: w,
+        distanceKm: haversineDistanceKm(
+          selectedRequest.latitude,
+          selectedRequest.longitude,
+          w.latitude,
+          w.longitude
+        ),
+      }))
+      .filter((item) => item.distanceKm <= searchRadiusKm)
+      .sort((a, b) => a.distanceKm - b.distanceKm);
+  }, [selectedRequest, workersWithLocation, searchRadiusKm]);
+
   const activeWorkers = useMemo(() => workers.filter((w) => w.isAvailable).length, [workers]);
   const busyWorkers = useMemo(() => workers.filter((w) => !!w.activeRequest).length, [workers]);
   const completedToday = useMemo(() => todayRequests.filter((r) => r.status === "completed").length, [todayRequests]);
@@ -463,7 +619,10 @@ export default function MapPage() {
         if (c) setPopup({ kind: "client", data: c, lng, lat });
       } else if (layerId === "requests-points") {
         const r = requestsMapRef.current.get(props.id as string);
-        if (r) setPopup({ kind: "request", data: r, lng, lat });
+        if (r) {
+          setSelectedRequestId(r.id);
+          setPopup({ kind: "request", data: r, lng, lat });
+        }
       } else {
         setPopup(null);
       }
@@ -491,11 +650,14 @@ export default function MapPage() {
   }, []);
 
   /* ─── Fly to coordinates (centra el mapa en una ubicación) ─── */
-  const flyToLocation = useCallback((longitude: number, latitude: number, zoom = 15) => {
+  const flyToLocation = useCallback((longitude: number, latitude: number, zoom = 15, requestId?: string) => {
     const map = mapRef.current?.getMap();
     if (!map) {
       toast.error("Mapa no disponible");
       return;
+    }
+    if (requestId) {
+      setSelectedRequestId(requestId);
     }
     map.flyTo({
       center: [longitude, latitude],
@@ -503,8 +665,6 @@ export default function MapPage() {
       essential: true,
       duration: 1500,
     });
-    // Opcionalmente abrir popup en la ubicación
-    setPopup(null);
   }, []);
 
   return (
@@ -559,6 +719,79 @@ export default function MapPage() {
           </div>
         </div>
       </div>
+
+      {/* ─── Coverage / Search Radius Floating Overlay (when request is selected) ─── */}
+      {selectedRequest && (
+        <div className="absolute left-6 bottom-6 z-20 w-[360px] rounded-2xl border border-sky-500/30 bg-[#120f1a]/90 p-4 backdrop-blur-xl shadow-[0_0_35px_rgba(56,189,248,0.2)] animate-in fade-in slide-in-from-bottom-3 duration-300">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-500/20 border border-sky-500/30 shadow-[0_0_12px_rgba(56,189,248,0.3)]">
+                <Radar size={18} className="text-sky-400 animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-wider text-sky-400">Radio de Búsqueda Activo</p>
+                <h4 className="text-sm font-bold text-white truncate" title={selectedRequest.title}>
+                  {selectedRequest.title}
+                </h4>
+              </div>
+            </div>
+            <button
+              onClick={() => setSelectedRequestId(null)}
+              className="rounded-full p-1 text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+              title="Cerrar círculo de búsqueda"
+            >
+              <X size={15} />
+            </button>
+          </div>
+
+          <div className="mt-3 flex items-center justify-between rounded-xl border border-sky-500/20 bg-sky-950/30 px-3 py-2">
+            <span className="text-xs text-white/70">Radio configurado:</span>
+            <span className="rounded-lg bg-sky-500/20 px-2.5 py-0.5 text-xs font-bold text-sky-300 border border-sky-500/30">
+              {searchRadiusKm.toFixed(1)} km
+            </span>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="rounded-xl border border-white/5 bg-black/30 p-2.5 text-center">
+              <p className="text-lg font-bold text-white">{workersInSelectedRadius.length}</p>
+              <p className="text-[11px] text-white/50">Workers en rango</p>
+            </div>
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-2.5 text-center">
+              <p className="text-lg font-bold text-emerald-400">
+                {workersInSelectedRadius.filter((w) => w.worker.isAvailable && !w.worker.activeRequest).length}
+              </p>
+              <p className="text-[11px] text-emerald-300/60">Disponibles</p>
+            </div>
+          </div>
+
+          {workersInSelectedRadius.length > 0 ? (
+            <div className="mt-3 space-y-1.5 max-h-32 overflow-auto pr-1">
+              <p className="text-[11px] font-medium text-white/60">Trabajadores más cercanos:</p>
+              {workersInSelectedRadius.slice(0, 4).map(({ worker: w, distanceKm }) => {
+                const isFree = w.isAvailable && !w.activeRequest;
+                return (
+                  <div
+                    key={w.id}
+                    onClick={() => flyToLocation(w.longitude, w.latitude, 16)}
+                    className="flex items-center justify-between rounded-lg border border-white/5 bg-black/20 px-2.5 py-1.5 text-xs hover:bg-white/5 cursor-pointer transition-colors"
+                  >
+                    <span className="truncate font-medium text-white/90">
+                      {isFree ? "🟢" : "🟠"} {w.firstName} {w.lastName}
+                    </span>
+                    <span className="shrink-0 font-mono text-[11px] text-sky-300 font-semibold">
+                      {distanceKm < 1 ? `${Math.round(distanceKm * 1000)} m` : `${distanceKm.toFixed(1)} km`}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-2 text-center text-[11px] text-amber-300/80 bg-amber-500/10 py-1.5 rounded-lg border border-amber-500/20">
+              ⚠️ No hay workers con ubicación dentro del radio de {searchRadiusKm.toFixed(1)} km
+            </p>
+          )}
+        </div>
+      )}
 
       {/* ─── Side panel overlay (right) ─── */}
       <div className={`absolute right-6 top-6 z-10 flex w-[350px] flex-col rounded-[24px] border border-white/5 bg-[#120f1a]/80 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] ${panelOpen ? "max-h-[calc(100%-3rem)]" : "max-h-[72px]"}`}>
@@ -615,47 +848,63 @@ export default function MapPage() {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  {filteredRequests.slice(0, 50).map((r) => (
-                    <div
-                      key={r.id}
-                      onClick={() => flyToLocation(r.longitude, r.latitude, 16)}
-                      className="group cursor-pointer rounded-xl border border-white/10 bg-black/20 p-3 transition-all hover:bg-black/30 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <div className="shrink-0 flex h-7 w-7 items-center justify-center rounded-full bg-amber-500/20">
-                            <span className="text-xs">📋</span>
+                  {filteredRequests.slice(0, 50).map((r) => {
+                    const isSelected = r.id === selectedRequestId;
+                    return (
+                      <div
+                        key={r.id}
+                        onClick={() => {
+                          flyToLocation(r.longitude, r.latitude, 15, r.id);
+                          setPopup({ kind: "request", data: r, lng: r.longitude, lat: r.latitude });
+                        }}
+                        className={`group cursor-pointer rounded-xl border p-3 transition-all ${
+                          isSelected
+                            ? "border-sky-400/60 bg-sky-500/15 shadow-[0_0_20px_rgba(56,189,248,0.2)]"
+                            : "border-white/10 bg-black/20 hover:bg-black/30 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <div className={`shrink-0 flex h-7 w-7 items-center justify-center rounded-full ${isSelected ? "bg-sky-500/30 text-sky-300" : "bg-amber-500/20"}`}>
+                              <span className="text-xs">{isSelected ? "🎯" : "📋"}</span>
+                            </div>
+                            <p className="truncate text-sm font-medium" title={r.title}>{r.title}</p>
                           </div>
-                          <p className="truncate text-sm font-medium" title={r.title}>{r.title}</p>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                flyToLocation(r.longitude, r.latitude, 15, r.id);
+                                setPopup({ kind: "request", data: r, lng: r.longitude, lat: r.latitude });
+                              }}
+                              className="rounded-full p-1.5 text-on-surface-variant opacity-0 transition-all hover:bg-primary/20 hover:text-primary group-hover:opacity-100"
+                              title="Centrar en mapa y ver radio"
+                            >
+                              <Navigation size={14} />
+                            </button>
+                            {( () => {
+                              const colors = statusColors[r.status] || statusColors.pending;
+                              return (
+                                <span className={`shrink-0 rounded-full border ${colors.border} ${colors.bg} px-2 py-0.5 text-[10px] uppercase ${colors.text}`}>
+                                  {statusLabel[r.status] ?? r.status}
+                                </span>
+                              );
+                            })()}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              flyToLocation(r.longitude, r.latitude, 16);
-                            }}
-                            className="rounded-full p-1.5 text-on-surface-variant opacity-0 transition-all hover:bg-primary/20 hover:text-primary group-hover:opacity-100"
-                            title="Centrar en mapa"
-                          >
-                            <Navigation size={14} />
-                          </button>
-                          {( () => {
-                            const colors = statusColors[r.status] || statusColors.pending;
-                            return (
-                              <span className={`shrink-0 rounded-full border ${colors.border} ${colors.bg} px-2 py-0.5 text-[10px] uppercase ${colors.text}`}>
-                                {statusLabel[r.status] ?? r.status}
-                              </span>
-                            );
-                          })()}
+                        <p className="mt-1 text-xs text-on-surface-variant">{r.clientName} · Bs {r.budget}</p>
+                        <p className="truncate text-xs text-on-surface-variant">{r.address}</p>
+                        <div className="mt-1.5 flex items-center justify-between text-[10px] text-gray-500">
+                          <span>📍 {r.latitude.toFixed(4)}, {r.longitude.toFixed(4)}</span>
+                          {isSelected && (
+                            <span className="text-sky-300 font-semibold">
+                              🎯 Radio: {searchRadiusKm.toFixed(1)} km
+                            </span>
+                          )}
                         </div>
                       </div>
-                      <p className="mt-1 text-xs text-on-surface-variant">{r.clientName} · Bs {r.budget}</p>
-                      <p className="truncate text-xs text-on-surface-variant">{r.address}</p>
-                      <p className="mt-1 text-[10px] text-gray-500">
-                        📍 {r.latitude.toFixed(4)}, {r.longitude.toFixed(4)}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -779,6 +1028,12 @@ export default function MapPage() {
             reuseMaps
             fadeDuration={0}
           >
+            {/* ─── Selected Request Radius Circle (underneath markers) ─── */}
+            <Source id="selected-request-radius" type="geojson" data={radiusGeoJson}>
+              <Layer {...radiusFillLayer} />
+              <Layer {...radiusOutlineLayer} />
+            </Source>
+
             <Source id="workers" type="geojson" data={workersGeo} cluster clusterRadius={50} clusterMaxZoom={14}>
               <Layer {...workerClusterLayer} />
               <Layer {...workerClusterCountLayer} />
@@ -891,6 +1146,10 @@ export default function MapPage() {
 
                   {popup.kind === "request" && (() => {
                     const r = popup.data;
+                    const freeCount = workersInSelectedRadius.filter(
+                      (w) => w.worker.isAvailable && !w.worker.activeRequest
+                    ).length;
+
                     return (
                       <>
                         <div className="flex items-center gap-3 mb-2">
@@ -908,9 +1167,33 @@ export default function MapPage() {
                           </div>
                         </div>
                         <div className="text-xs text-gray-300 space-y-1">
-                          <p>👤 {r.clientName}</p>
-                          <p>💰 Bs {r.budget}</p>
-                          <p>📍 {r.address}</p>
+                          <p>👤 <span className="text-white font-medium">{r.clientName}</span></p>
+                          <p>💰 <span className="text-emerald-400 font-semibold">Bs {r.budget}</span></p>
+                          <p>📍 <span className="text-gray-400">{r.address}</span></p>
+                        </div>
+
+                        {/* Search Radius & Worker Coverage Box */}
+                        <div className="mt-3 rounded-xl border border-sky-500/30 bg-sky-500/10 p-2.5">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-sky-300">
+                              <Radar size={13} className="text-sky-400 animate-pulse" />
+                              Radio de Notificación
+                            </span>
+                            <span className="text-[11px] font-bold text-sky-200 bg-sky-500/20 px-2 py-0.5 rounded-full border border-sky-500/30">
+                              {searchRadiusKm.toFixed(1)} km
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-gray-300/80">
+                            Rango configurado para buscar y notificar trabajadores.
+                          </p>
+                          <div className="mt-2 flex items-center justify-between text-[11px] border-t border-sky-500/20 pt-1.5">
+                            <span className="text-gray-300">
+                              En rango: <b className="text-white">{workersInSelectedRadius.length}</b>
+                            </span>
+                            <span className="text-emerald-400 font-medium">
+                              {freeCount} disponibles
+                            </span>
+                          </div>
                         </div>
                       </>
                     );

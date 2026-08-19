@@ -72,11 +72,14 @@ const router = createBrowserRouter([
 ]);
 
 
+import { useThemeStore } from "@/store/theme-store";
+
 export default function App() {
+  const { theme } = useThemeStore();
   return (
     <>
       <RouterProvider router={router} />
-      <Toaster theme="dark" />
+      <Toaster theme={theme} />
     </>
   );
 }

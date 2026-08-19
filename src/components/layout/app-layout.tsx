@@ -22,6 +22,7 @@ import {
   Search,
   Command,
   Sun,
+  Moon,
   ChevronDown,
   ChevronsLeft,
   LogOut,
@@ -30,6 +31,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useAdminStore } from "@/store/admin-store";
 import { useAuthStore } from "@/store/auth-store";
+import { useThemeStore } from "@/store/theme-store";
 import { api } from "@/lib/api";
 import { fetchDisputes, fetchWorkerVerificationInbox } from "@/lib/admin-api";
 import { websocketService } from "@/lib/websocket-service";
@@ -58,6 +60,7 @@ const nav = [
 export function AppLayout() {
   const { search, setSearch, pendingDisputes, pendingVerifications, setPendingDisputes, setPendingVerifications } = useAdminStore();
   const { user, logout } = useAuthStore();
+  const { theme, toggleTheme } = useThemeStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -258,8 +261,16 @@ export function AppLayout() {
             <Bell size={18} />
             <span className="absolute 1 top-0 right-0 h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
           </button>
-          <button className="text-white/60 hover:text-white transition-colors">
-            <Sun size={18} />
+          <button
+            onClick={toggleTheme}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all border border-transparent hover:border-white/10"
+            title={theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+          >
+            {theme === "dark" ? (
+              <Sun size={18} className="text-amber-300 transition-transform duration-300 hover:rotate-45" />
+            ) : (
+              <Moon size={18} className="text-purple-600 transition-transform duration-300 hover:-rotate-12" />
+            )}
           </button>
           <div className="relative">
             <div 
