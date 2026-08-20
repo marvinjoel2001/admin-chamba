@@ -127,14 +127,14 @@ export function AppLayout() {
       <div className="bg-glow-2" />
       
       {/* Sidebar - Floating */}
-      <aside className={`fixed left-4 top-4 bottom-4 z-40 hidden flex-col rounded-[24px] border border-white/5 bg-[#1c162b]/80 py-6 backdrop-blur-[20px] md:flex shadow-[0_0_50px_-12px_rgba(124,58,237,0.15)] transition-all duration-300 ${isCollapsed ? 'w-[88px]' : 'w-[260px]'}`}>
+      <aside className={`fixed left-4 top-4 bottom-4 z-40 hidden flex-col rounded-[24px] border border-purple-500/15 dark:border-white/5 bg-white/95 dark:bg-[#1c162b]/80 py-6 backdrop-blur-[20px] md:flex shadow-xl dark:shadow-[0_0_50px_-12px_rgba(124,58,237,0.15)] transition-all duration-300 ${isCollapsed ? 'w-[88px]' : 'w-[260px]'}`}>
         <div className={`mb-8 px-6 flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
-          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-white overflow-hidden whitespace-nowrap">
+          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white overflow-hidden whitespace-nowrap">
             <img src="/favicon.png" alt="Chamba Logo" className="w-5 h-5 object-cover rounded-full flex-shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
             {!isCollapsed && <span>Chamba Admin</span>}
           </Link>
         </div>
-        {!isCollapsed && <p className="mb-4 px-6 text-xs text-white/40 -mt-6">Admin Console</p>}
+        {!isCollapsed && <p className="mb-4 px-6 text-xs text-slate-400 dark:text-white/40 -mt-6">Admin Console</p>}
         
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden px-3 pb-4 custom-scrollbar">
           {nav.map(([to, label, Icon, badgeKey]) => {
@@ -147,27 +147,27 @@ export function AppLayout() {
                 className={({ isActive }) =>
                   `group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 ${
                     isActive
-                      ? "bg-purple-500/10 text-purple-300 shadow-[inset_0_0_12px_rgba(168,85,247,0.1)] border border-purple-500/20"
-                      : "text-white/60 hover:bg-white/5 hover:text-white"
+                      ? "bg-purple-500/15 text-purple-700 dark:text-purple-300 shadow-[inset_0_0_12px_rgba(168,85,247,0.1)] border border-purple-500/20 font-semibold"
+                      : "text-slate-600 dark:text-white/60 hover:bg-purple-50 dark:hover:bg-white/5 hover:text-purple-600 dark:hover:text-white"
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
                     <div className="relative flex items-center justify-center">
-                      <Icon size={18} className={isActive ? "text-purple-400" : "text-white/40 group-hover:text-white/60 transition-colors"} />
+                      <Icon size={18} className={isActive ? "text-purple-600 dark:text-purple-400" : "text-slate-400 dark:text-white/40 group-hover:text-purple-600 dark:group-hover:text-white/60 transition-colors"} />
                       {badgeCount > 0 && isCollapsed && (
                         <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
                       )}
                     </div>
                     {!isCollapsed && <span className="flex-1">{label}</span>}
                     {badgeCount > 0 && !isCollapsed && (
-                      <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500/80 px-1.5 text-[10px] font-bold text-white">
+                      <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500/90 px-1.5 text-[10px] font-bold text-white shadow-sm">
                         {badgeCount > 99 ? "99+" : badgeCount}
                       </span>
                     )}
                     {isActive && (
-                      <div className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.6)]" />
+                      <div className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-r-full bg-purple-600 shadow-[0_0_10px_rgba(168,85,247,0.6)]" />
                     )}
                   </>
                 )}
@@ -179,7 +179,7 @@ export function AppLayout() {
         {/* Collapse Button */}
         <button 
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-4 bottom-8 flex h-8 w-8 items-center justify-center rounded-full border border-white/5 bg-[#1a1528] text-white/50 hover:text-white hover:bg-white/5 shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all z-50 group"
+          className="absolute -right-4 bottom-8 flex h-8 w-8 items-center justify-center rounded-full border border-purple-500/20 dark:border-white/5 bg-white dark:bg-[#1a1528] text-slate-500 dark:text-white/50 hover:text-purple-600 dark:hover:text-white hover:bg-purple-50 dark:hover:bg-white/5 shadow-md dark:shadow-[0_0_15px_rgba(0,0,0,0.5)] transition-all z-50 group"
         >
           <ChevronsLeft size={16} className={`transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`} />
         </button>
@@ -192,14 +192,14 @@ export function AppLayout() {
           onClick={() => setMobileMenuOpen(false)}
         >
           <aside
-            className="absolute left-0 top-0 h-screen w-[280px] flex-col border-r border-white/10 bg-[#1c162b] py-6"
+            className="absolute left-0 top-0 h-screen w-[280px] flex-col border-r border-purple-500/10 dark:border-white/10 bg-white dark:bg-[#1c162b] py-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-8 px-6">
-              <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-white" onClick={() => setMobileMenuOpen(false)}>
+              <Link to="/" className="flex items-center gap-2 text-2xl font-bold text-slate-900 dark:text-white" onClick={() => setMobileMenuOpen(false)}>
                 <img src="/favicon.png" alt="Chamba Logo" className="w-6 h-6 object-cover rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)]" />Chamba Admin
               </Link>
-              <p className="mt-1 text-sm text-white/40">Admin Console</p>
+              <p className="mt-1 text-sm text-slate-400 dark:text-white/40">Admin Console</p>
             </div>
             <nav className="flex flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden px-4 pb-8 custom-scrollbar">
               {nav.map(([to, label, Icon, badgeKey]) => {
@@ -213,8 +213,8 @@ export function AppLayout() {
                     className={({ isActive }) =>
                       `flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-300 ${
                         isActive
-                          ? "bg-purple-500/10 text-purple-300 border border-purple-500/20"
-                          : "text-white/60 hover:bg-white/5 hover:text-white"
+                          ? "bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/20 font-semibold"
+                          : "text-slate-600 dark:text-white/60 hover:bg-purple-50 dark:hover:bg-white/5 hover:text-purple-600 dark:hover:text-white"
                       }`
                     }
                   >
@@ -234,36 +234,36 @@ export function AppLayout() {
       )}
 
       {/* Header - Floating Pill */}
-      <header className={`fixed top-4 right-4 z-30 flex h-16 items-center justify-between rounded-[24px] border border-white/5 bg-[#1c162b]/80 px-6 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_40px_-10px_rgba(124,58,237,0.1)] ${isCollapsed ? 'md:left-[120px]' : 'md:left-[292px]'}`}>
+      <header className={`fixed top-4 right-4 z-30 flex h-16 items-center justify-between rounded-[24px] border border-purple-500/15 dark:border-white/5 bg-white/95 dark:bg-[#1c162b]/80 px-6 backdrop-blur-2xl transition-all duration-300 shadow-lg dark:shadow-[0_0_40px_-10px_rgba(124,58,237,0.1)] ${isCollapsed ? 'md:left-[120px]' : 'md:left-[292px]'}`}>
         <button
-          className="text-white/60 md:hidden"
+          className="text-slate-600 dark:text-white/60 md:hidden"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
         
         {/* Search */}
-        <div className="hidden w-[400px] items-center gap-2 rounded-full px-4 py-2 md:flex bg-black/40 border border-white/5 shadow-inner">
-          <Search size={16} className="text-white/40" />
+        <div className="hidden w-[400px] items-center gap-2 rounded-full px-4 py-2 md:flex bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/5 shadow-inner">
+          <Search size={16} className="text-slate-400 dark:text-white/40" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar en toda la plataforma..."
-            className="w-full border-none bg-transparent p-0 text-sm text-white placeholder:text-white/40 focus-visible:ring-0 focus-visible:outline-none focus:ring-0"
+            className="w-full border-none bg-transparent p-0 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 focus-visible:ring-0 focus-visible:outline-none focus:ring-0"
           />
-          <div className="flex items-center gap-1 rounded bg-white/10 px-2 py-0.5 text-[10px] font-medium text-white/50">
+          <div className="flex items-center gap-1 rounded bg-purple-500/10 dark:bg-white/10 px-2 py-0.5 text-[10px] font-medium text-purple-700 dark:text-white/50">
             <Command size={10} /> K
           </div>
         </div>
 
         <div className="flex items-center gap-6">
-          <button className="relative text-white/60 hover:text-white transition-colors">
+          <button className="relative text-slate-500 dark:text-white/60 hover:text-purple-600 dark:hover:text-white transition-colors">
             <Bell size={18} />
             <span className="absolute 1 top-0 right-0 h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
           </button>
           <button
             onClick={toggleTheme}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-all border border-transparent hover:border-white/10"
+            className="flex h-9 w-9 items-center justify-center rounded-full text-slate-600 dark:text-white/70 hover:text-purple-600 dark:hover:text-white hover:bg-purple-50 dark:hover:bg-white/10 transition-all border border-transparent hover:border-purple-500/20 dark:hover:border-white/10"
             title={theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
           >
             {theme === "dark" ? (
@@ -274,17 +274,17 @@ export function AppLayout() {
           </button>
           <div className="relative">
             <div 
-              className="flex items-center gap-3 border-l border-white/10 pl-6 cursor-pointer hover:bg-white/5 rounded-full p-1 pr-3 -mr-3 transition-colors"
+              className="flex items-center gap-3 border-l border-slate-200 dark:border-white/10 pl-6 cursor-pointer hover:bg-purple-50 dark:hover:bg-white/5 rounded-full p-1 pr-3 -mr-3 transition-colors"
               onClick={() => setProfileMenuOpen(!profileMenuOpen)}
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 font-medium text-white shadow-[0_0_15px_rgba(147,51,234,0.4)] border border-purple-400/30">
                 {user?.username?.charAt(0).toUpperCase() || "A"}
               </div>
               <div className="hidden flex-col md:flex">
-                <span className="text-sm font-semibold text-white leading-tight capitalize">{user?.username || "Admin"}</span>
-                <span className="text-[10px] text-white/50 leading-tight">Super Admin</span>
+                <span className="text-sm font-semibold text-slate-900 dark:text-white leading-tight capitalize">{user?.username || "Admin"}</span>
+                <span className="text-[10px] text-slate-500 dark:text-white/50 leading-tight">Super Admin</span>
               </div>
-              <ChevronDown size={14} className="text-white/40" />
+              <ChevronDown size={14} className="text-slate-400 dark:text-white/40" />
             </div>
 
             {profileMenuOpen && (
@@ -293,20 +293,20 @@ export function AppLayout() {
                   className="fixed inset-0 z-40" 
                   onClick={() => setProfileMenuOpen(false)} 
                 />
-                <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl border border-white/10 bg-[#130f1e]/95 p-1 shadow-xl backdrop-blur-md">
+                <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-xl border border-purple-500/20 dark:border-white/10 bg-white dark:bg-[#130f1e]/95 p-1 shadow-2xl backdrop-blur-md">
                   <button
                     onClick={() => {
                       setProfileMenuOpen(false);
                       setPasswordModalOpen(true);
                     }}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-white/70 hover:bg-white/5 hover:text-white"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-700 dark:text-white/70 hover:bg-purple-50 dark:hover:bg-white/5 hover:text-purple-600 dark:hover:text-white"
                   >
                     <KeyRound size={16} />
                     Cambiar Contraseña
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
                   >
                     <LogOut size={16} />
                     Cerrar Sesión

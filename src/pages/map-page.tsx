@@ -668,117 +668,117 @@ export default function MapPage() {
   }, []);
 
   return (
-    <section className="relative -mx-8 -mt-8 lg:-mx-12 lg:-mt-8 h-[calc(100vh-64px)] overflow-hidden">
+    <section className="relative w-full h-[calc(100vh-8.5rem)] rounded-3xl overflow-hidden border border-purple-500/15 dark:border-white/5 shadow-2xl">
       {/* ─── Stats overlay (top-left) ─── */}
-      <div className="absolute left-6 top-6 z-10 flex flex-wrap items-center gap-4">
+      <div className="absolute left-4 top-4 z-10 flex flex-wrap items-center gap-3">
         {/* Workers Activos */}
-        <div className="flex items-center gap-4 rounded-3xl border border-white/5 bg-[#120f1a]/60 p-4 backdrop-blur-xl hover:bg-[#120f1a]/80 transition-all shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-purple-500/10 shadow-[0_0_20px_rgba(168,85,247,0.15)] relative">
+        <div className="flex items-center gap-3 rounded-2xl border border-purple-500/20 dark:border-white/5 bg-white/90 dark:bg-[#120f1a]/80 p-3 backdrop-blur-xl hover:bg-white dark:hover:bg-[#120f1a] transition-all shadow-lg">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-500/10 shadow-[0_0_20px_rgba(168,85,247,0.15)] relative">
             <div className="absolute inset-0 rounded-full border border-purple-500/30"></div>
-            <Users size={20} className="text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
+            <Users size={18} className="text-purple-600 dark:text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
           </div>
           <div className="pr-2">
-            <p className="text-xl font-bold leading-none text-white">{activeWorkers}</p>
-            <p className="text-[13px] text-white/50 leading-tight mt-1">Activos</p>
+            <p className="text-lg font-bold leading-none text-slate-900 dark:text-white">{activeWorkers}</p>
+            <p className="text-[12px] text-slate-500 dark:text-white/50 leading-tight mt-1">Activos</p>
           </div>
         </div>
         
         {/* Completados Hoy */}
-        <div className="flex items-center gap-4 rounded-3xl border border-white/5 bg-[#120f1a]/60 p-4 backdrop-blur-xl hover:bg-[#120f1a]/80 transition-all shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.15)] relative">
+        <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/20 dark:border-white/5 bg-white/90 dark:bg-[#120f1a]/80 p-3 backdrop-blur-xl hover:bg-white dark:hover:bg-[#120f1a] transition-all shadow-lg">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 shadow-[0_0_20px_rgba(16,185,129,0.15)] relative">
             <div className="absolute inset-0 rounded-full border border-emerald-500/30"></div>
-            <MapPin size={20} className="text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+            <MapPin size={18} className="text-emerald-600 dark:text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
           </div>
           <div className="pr-2">
-            <p className="text-xl font-bold leading-none text-white">{completedToday}</p>
-            <p className="text-[13px] text-white/50 leading-tight mt-1">Completados</p>
+            <p className="text-lg font-bold leading-none text-slate-900 dark:text-white">{completedToday}</p>
+            <p className="text-[12px] text-slate-500 dark:text-white/50 leading-tight mt-1">Completados</p>
           </div>
         </div>
         
         {/* En Proceso Hoy */}
-        <div className="flex items-center gap-4 rounded-3xl border border-white/5 bg-[#120f1a]/60 p-4 backdrop-blur-xl hover:bg-[#120f1a]/80 transition-all shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.15)] relative">
+        <div className="flex items-center gap-3 rounded-2xl border border-amber-500/20 dark:border-white/5 bg-white/90 dark:bg-[#120f1a]/80 p-3 backdrop-blur-xl hover:bg-white dark:hover:bg-[#120f1a] transition-all shadow-lg">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10 shadow-[0_0_20px_rgba(245,158,11,0.15)] relative">
             <div className="absolute inset-0 rounded-full border border-amber-500/30"></div>
-            <Radio size={20} className="text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
+            <Radio size={18} className="text-amber-600 dark:text-amber-400 drop-shadow-[0_0_8px_rgba(245,158,11,0.8)]" />
           </div>
           <div className="pr-2">
-            <p className="text-xl font-bold leading-none text-white">{inProgressToday}</p>
-            <p className="text-[13px] text-white/50 leading-tight mt-1">En Proceso</p>
+            <p className="text-lg font-bold leading-none text-slate-900 dark:text-white">{inProgressToday}</p>
+            <p className="text-[12px] text-slate-500 dark:text-white/50 leading-tight mt-1">En Proceso</p>
           </div>
         </div>
         
         {/* Cancelados Hoy */}
-        <div className="flex items-center gap-4 rounded-3xl border border-white/5 bg-[#120f1a]/60 p-4 backdrop-blur-xl hover:bg-[#120f1a]/80 transition-all shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/10 shadow-[0_0_20px_rgba(244,63,94,0.15)] relative">
+        <div className="flex items-center gap-3 rounded-2xl border border-rose-500/20 dark:border-white/5 bg-white/90 dark:bg-[#120f1a]/80 p-3 backdrop-blur-xl hover:bg-white dark:hover:bg-[#120f1a] transition-all shadow-lg">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-500/10 shadow-[0_0_20px_rgba(244,63,94,0.15)] relative">
             <div className="absolute inset-0 rounded-full border border-rose-500/30"></div>
-            <X size={20} className="text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+            <X size={18} className="text-rose-600 dark:text-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
           </div>
           <div className="pr-2">
-            <p className="text-xl font-bold leading-none text-white">{cancelledToday}</p>
-            <p className="text-[13px] text-white/50 leading-tight mt-1">Cancelados</p>
+            <p className="text-lg font-bold leading-none text-slate-900 dark:text-white">{cancelledToday}</p>
+            <p className="text-[12px] text-slate-500 dark:text-white/50 leading-tight mt-1">Cancelados</p>
           </div>
         </div>
       </div>
 
       {/* ─── Coverage / Search Radius Floating Overlay (when request is selected) ─── */}
       {selectedRequest && (
-        <div className="absolute left-6 bottom-6 z-20 w-[360px] rounded-2xl border border-sky-500/30 bg-[#120f1a]/90 p-4 backdrop-blur-xl shadow-[0_0_35px_rgba(56,189,248,0.2)] animate-in fade-in slide-in-from-bottom-3 duration-300">
+        <div className="absolute left-4 bottom-4 z-20 w-[360px] max-w-[calc(100%-2rem)] rounded-2xl border border-sky-500/40 bg-white/95 dark:bg-[#120f1a]/90 p-4 backdrop-blur-xl shadow-2xl animate-in fade-in slide-in-from-bottom-3 duration-300">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-500/20 border border-sky-500/30 shadow-[0_0_12px_rgba(56,189,248,0.3)]">
-                <Radar size={18} className="text-sky-400 animate-pulse" />
+                <Radar size={18} className="text-sky-500 dark:text-sky-400 animate-pulse" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-wider text-sky-400">Radio de Búsqueda Activo</p>
-                <h4 className="text-sm font-bold text-white truncate" title={selectedRequest.title}>
+                <p className="text-xs font-semibold uppercase tracking-wider text-sky-600 dark:text-sky-400">Radio de Búsqueda Activo</p>
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate" title={selectedRequest.title}>
                   {selectedRequest.title}
                 </h4>
               </div>
             </div>
             <button
               onClick={() => setSelectedRequestId(null)}
-              className="rounded-full p-1 text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+              className="rounded-full p-1 text-slate-400 hover:text-slate-700 dark:text-white/40 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
               title="Cerrar círculo de búsqueda"
             >
               <X size={15} />
             </button>
           </div>
 
-          <div className="mt-3 flex items-center justify-between rounded-xl border border-sky-500/20 bg-sky-950/30 px-3 py-2">
-            <span className="text-xs text-white/70">Radio configurado:</span>
-            <span className="rounded-lg bg-sky-500/20 px-2.5 py-0.5 text-xs font-bold text-sky-300 border border-sky-500/30">
+          <div className="mt-3 flex items-center justify-between rounded-xl border border-sky-500/20 bg-sky-50 dark:bg-sky-950/30 px-3 py-2">
+            <span className="text-xs text-slate-600 dark:text-white/70">Radio configurado:</span>
+            <span className="rounded-lg bg-sky-500/20 px-2.5 py-0.5 text-xs font-bold text-sky-700 dark:text-sky-300 border border-sky-500/30">
               {searchRadiusKm.toFixed(1)} km
             </span>
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <div className="rounded-xl border border-white/5 bg-black/30 p-2.5 text-center">
-              <p className="text-lg font-bold text-white">{workersInSelectedRadius.length}</p>
-              <p className="text-[11px] text-white/50">Workers en rango</p>
+            <div className="rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-black/30 p-2.5 text-center">
+              <p className="text-lg font-bold text-slate-900 dark:text-white">{workersInSelectedRadius.length}</p>
+              <p className="text-[11px] text-slate-500 dark:text-white/50">Workers en rango</p>
             </div>
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-2.5 text-center">
-              <p className="text-lg font-bold text-emerald-400">
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-50 dark:bg-emerald-950/20 p-2.5 text-center">
+              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
                 {workersInSelectedRadius.filter((w) => w.worker.isAvailable && !w.worker.activeRequest).length}
               </p>
-              <p className="text-[11px] text-emerald-300/60">Disponibles</p>
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-300/60">Disponibles</p>
             </div>
           </div>
 
           {workersInSelectedRadius.length > 0 ? (
             <div className="mt-3 space-y-1.5 max-h-32 overflow-auto pr-1">
-              <p className="text-[11px] font-medium text-white/60">Trabajadores más cercanos:</p>
+              <p className="text-[11px] font-medium text-slate-600 dark:text-white/60">Trabajadores más cercanos:</p>
               {workersInSelectedRadius.slice(0, 4).map(({ worker: w, distanceKm }) => {
                 const isFree = w.isAvailable && !w.activeRequest;
                 return (
                   <div
                     key={w.id}
                     onClick={() => flyToLocation(w.longitude, w.latitude, 16)}
-                    className="flex items-center justify-between rounded-lg border border-white/5 bg-black/20 px-2.5 py-1.5 text-xs hover:bg-white/5 cursor-pointer transition-colors"
+                    className="flex items-center justify-between rounded-lg border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-black/20 px-2.5 py-1.5 text-xs hover:bg-purple-50 dark:hover:bg-white/5 cursor-pointer transition-colors"
                   >
-                    <span className="truncate font-medium text-white/90">
+                    <span className="truncate font-medium text-slate-800 dark:text-white/90">
                       {isFree ? "🟢" : "🟠"} {w.firstName} {w.lastName}
                     </span>
-                    <span className="shrink-0 font-mono text-[11px] text-sky-300 font-semibold">
+                    <span className="shrink-0 font-mono text-[11px] text-sky-600 dark:text-sky-300 font-semibold">
                       {distanceKm < 1 ? `${Math.round(distanceKm * 1000)} m` : `${distanceKm.toFixed(1)} km`}
                     </span>
                   </div>
@@ -786,7 +786,7 @@ export default function MapPage() {
               })}
             </div>
           ) : (
-            <p className="mt-2 text-center text-[11px] text-amber-300/80 bg-amber-500/10 py-1.5 rounded-lg border border-amber-500/20">
+            <p className="mt-2 text-center text-[11px] text-amber-700 dark:text-amber-300/80 bg-amber-50 dark:bg-amber-500/10 py-1.5 rounded-lg border border-amber-500/20">
               ⚠️ No hay workers con ubicación dentro del radio de {searchRadiusKm.toFixed(1)} km
             </p>
           )}
@@ -794,14 +794,14 @@ export default function MapPage() {
       )}
 
       {/* ─── Side panel overlay (right) ─── */}
-      <div className={`absolute right-6 top-6 z-10 flex w-[350px] flex-col rounded-[24px] border border-white/5 bg-[#120f1a]/80 backdrop-blur-2xl transition-all duration-300 shadow-[0_0_40px_-10px_rgba(0,0,0,0.5)] ${panelOpen ? "max-h-[calc(100%-3rem)]" : "max-h-[72px]"}`}>
-        <div className="flex items-center justify-between p-5 border-b border-white/5">
+      <div className={`absolute right-4 top-4 z-10 flex w-[350px] max-w-[calc(100%-2rem)] flex-col rounded-[24px] border border-purple-500/15 dark:border-white/5 bg-white/95 dark:bg-[#120f1a]/80 backdrop-blur-2xl transition-all duration-300 shadow-2xl ${panelOpen ? "max-h-[calc(100%-2rem)]" : "max-h-[72px]"}`}>
+        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-white/5">
           <div className="flex items-center gap-1 w-full max-w-[240px]">
             <button 
               className={`flex-1 rounded-xl py-2.5 text-[13px] font-medium transition-all ${
                 tab === "requests" 
-                  ? "bg-purple-500/10 text-purple-300 border border-purple-500/20 shadow-[inset_0_0_12px_rgba(168,85,247,0.15)]" 
-                  : "text-white/50 hover:text-white hover:bg-white/5 border border-transparent"
+                  ? "bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/25 shadow-sm" 
+                  : "text-slate-600 dark:text-white/50 hover:text-purple-600 dark:hover:text-white hover:bg-purple-50 dark:hover:bg-white/5 border border-transparent"
               }`} 
               onClick={() => setTab("requests")}
             >
@@ -810,40 +810,40 @@ export default function MapPage() {
             <button 
               className={`flex-1 rounded-xl py-2.5 text-[13px] font-medium transition-all ${
                 tab === "workers" 
-                  ? "bg-purple-500/10 text-purple-300 border border-purple-500/20 shadow-[inset_0_0_12px_rgba(168,85,247,0.15)]" 
-                  : "text-white/50 hover:text-white hover:bg-white/5 border border-transparent"
+                  ? "bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/25 shadow-sm" 
+                  : "text-slate-600 dark:text-white/50 hover:text-purple-600 dark:hover:text-white hover:bg-purple-50 dark:hover:bg-white/5 border border-transparent"
               }`} 
               onClick={() => setTab("workers")}
             >
               Workers
             </button>
           </div>
-          <button onClick={() => setPanelOpen((v) => !v)} className="p-2 text-white/50 hover:text-white hover:bg-white/5 rounded-full transition-colors">
+          <button onClick={() => setPanelOpen((v) => !v)} className="p-2 text-slate-500 dark:text-white/50 hover:text-purple-600 dark:hover:text-white hover:bg-purple-50 dark:hover:bg-white/5 rounded-full transition-colors">
             {panelOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
         </div>
 
         {panelOpen && (
-          <div className="flex-1 overflow-auto px-4 pb-4">
+          <div className="flex-1 overflow-auto px-4 pb-4 custom-scrollbar">
             {tab === "requests" && (
               <div className="space-y-3">
                 {/* Search input for requests */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-white/40" />
                   <input
                     type="text"
                     value={requestSearch}
                     onChange={(e) => setRequestSearch(e.target.value)}
                     placeholder="Buscar por título, cliente, dirección..."
-                    className="w-full flex items-center gap-2 rounded-xl bg-black/40 border border-white/5 py-2.5 pl-9 pr-3 shadow-inner text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:ring-0"
+                    className="w-full flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/5 py-2.5 pl-9 pr-3 shadow-inner text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-purple-500"
                   />
                 </div>
                 {/* Results count & Date */}
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-on-surface-variant">
+                  <p className="text-xs text-slate-600 dark:text-white/60">
                     {filteredRequests.length} solicitude{filteredRequests.length !== 1 ? 's' : ''} encontrada{filteredRequests.length !== 1 ? 's' : ''}
                   </p>
-                  <p className="text-[11px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  <p className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                     📅 Datos de Hoy ({new Date().toLocaleDateString()})
                   </p>
                 </div>
@@ -859,16 +859,16 @@ export default function MapPage() {
                         }}
                         className={`group cursor-pointer rounded-xl border p-3 transition-all ${
                           isSelected
-                            ? "border-sky-400/60 bg-sky-500/15 shadow-[0_0_20px_rgba(56,189,248,0.2)]"
-                            : "border-white/10 bg-black/20 hover:bg-black/30 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5"
+                            ? "border-sky-500/60 bg-sky-50 dark:bg-sky-500/15 shadow-md"
+                            : "border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 hover:bg-purple-50/50 dark:hover:bg-black/30 hover:border-purple-400/30 hover:shadow-md"
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0 flex-1">
-                            <div className={`shrink-0 flex h-7 w-7 items-center justify-center rounded-full ${isSelected ? "bg-sky-500/30 text-sky-300" : "bg-amber-500/20"}`}>
+                            <div className={`shrink-0 flex h-7 w-7 items-center justify-center rounded-full ${isSelected ? "bg-sky-500/20 text-sky-700 dark:text-sky-300" : "bg-amber-500/20"}`}>
                               <span className="text-xs">{isSelected ? "🎯" : "📋"}</span>
                             </div>
-                            <p className="truncate text-sm font-medium" title={r.title}>{r.title}</p>
+                            <p className="truncate text-sm font-medium text-slate-900 dark:text-white" title={r.title}>{r.title}</p>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <button
@@ -877,7 +877,7 @@ export default function MapPage() {
                                 flyToLocation(r.longitude, r.latitude, 15, r.id);
                                 setPopup({ kind: "request", data: r, lng: r.longitude, lat: r.latitude });
                               }}
-                              className="rounded-full p-1.5 text-on-surface-variant opacity-0 transition-all hover:bg-primary/20 hover:text-primary group-hover:opacity-100"
+                              className="rounded-full p-1.5 text-slate-400 opacity-0 transition-all hover:bg-purple-500/20 hover:text-purple-600 dark:hover:text-primary group-hover:opacity-100"
                               title="Centrar en mapa y ver radio"
                             >
                               <Navigation size={14} />
@@ -892,12 +892,12 @@ export default function MapPage() {
                             })()}
                           </div>
                         </div>
-                        <p className="mt-1 text-xs text-on-surface-variant">{r.clientName} · Bs {r.budget}</p>
-                        <p className="truncate text-xs text-on-surface-variant">{r.address}</p>
-                        <div className="mt-1.5 flex items-center justify-between text-[10px] text-gray-500">
+                        <p className="mt-1 text-xs text-slate-600 dark:text-white/60">{r.clientName} · Bs {r.budget}</p>
+                        <p className="truncate text-xs text-slate-500 dark:text-white/40">{r.address}</p>
+                        <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-400 dark:text-gray-500">
                           <span>📍 {r.latitude.toFixed(4)}, {r.longitude.toFixed(4)}</span>
                           {isSelected && (
-                            <span className="text-sky-300 font-semibold">
+                            <span className="text-sky-600 dark:text-sky-300 font-semibold">
                               🎯 Radio: {searchRadiusKm.toFixed(1)} km
                             </span>
                           )}
@@ -913,20 +913,20 @@ export default function MapPage() {
               <div className="space-y-3">
                 {/* Search input for workers */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-white/40" />
                   <input
                     type="text"
                     value={workerSearch}
                     onChange={(e) => setWorkerSearch(e.target.value)}
                     placeholder="Buscar worker por nombre..."
-                    className="w-full flex items-center gap-2 rounded-xl bg-black/40 border border-white/5 py-2.5 pl-9 pr-3 shadow-inner text-[13px] text-white placeholder:text-white/40 focus:outline-none focus:ring-0"
+                    className="w-full flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/5 py-2.5 pl-9 pr-3 shadow-inner text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-purple-500"
                   />
                 </div>
                 {/* Results count */}
-                <p className="text-xs text-on-surface-variant">
+                <p className="text-xs text-slate-600 dark:text-white/60">
                   {workersWithLocation.length} worker{workersWithLocation.length !== 1 ? 's' : ''} en mapa
                   {filteredWorkers.length !== workersWithLocation.length && (
-                    <span className="text-orange-400"> · {filteredWorkers.length - workersWithLocation.length} sin ubicacion</span>
+                    <span className="text-orange-600 dark:text-orange-400"> · {filteredWorkers.length - workersWithLocation.length} sin ubicacion</span>
                   )}
                 </p>
                 <div className="space-y-2">
@@ -937,14 +937,14 @@ export default function MapPage() {
                       <div
                         key={w.id}
                         onClick={() => hasLocation ? flyToLocation(w.longitude, w.latitude, 16) : null}
-                        className={`group rounded-xl border border-white/10 bg-black/20 p-3 transition-all hover:bg-black/30 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 ${!hasLocation ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                        className={`group rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/20 p-3 transition-all hover:bg-purple-50/50 dark:hover:bg-black/30 hover:border-purple-400/30 hover:shadow-md ${!hasLocation ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0 flex-1">
                             <div className={`shrink-0 flex h-8 w-8 items-center justify-center rounded-full ${isBusy ? "bg-orange-500/20" : w.isAvailable ? "bg-green-500/20" : "bg-gray-500/20"}`}>
                               <span className="text-sm">{isBusy ? "🔨" : "⛑️"}</span>
                             </div>
-                            <p className="truncate text-sm font-medium" title={`${w.firstName} ${w.lastName}`}>{w.firstName} {w.lastName}</p>
+                            <p className="truncate text-sm font-medium text-slate-900 dark:text-white" title={`${w.firstName} ${w.lastName}`}>{w.firstName} {w.lastName}</p>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             {hasLocation ? (
@@ -952,31 +952,37 @@ export default function MapPage() {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   flyToLocation(w.longitude, w.latitude, 16);
+                                  setPopup({ kind: "worker", data: w, lng: w.longitude, lat: w.latitude });
                                 }}
-                                className="rounded-full p-1.5 text-on-surface-variant opacity-0 transition-all hover:bg-primary/20 hover:text-primary group-hover:opacity-100"
-                                title="Centrar en mapa"
+                                className="rounded-full p-1.5 text-slate-400 opacity-0 transition-all hover:bg-purple-500/20 hover:text-purple-600 dark:hover:text-primary group-hover:opacity-100"
+                                title="Centrar worker en mapa"
                               >
                                 <Navigation size={14} />
                               </button>
-                            ) : (
-                              <span className="shrink-0 rounded-full bg-red-500/20 px-2 py-0.5 text-[10px] text-red-300">
-                                Sin ubicacion
-                              </span>
-                            )}
-                            <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${isBusy ? "bg-orange-500/20 text-orange-300" : w.isAvailable ? "bg-green-500/20 text-green-300" : "bg-gray-400/20 text-gray-300"}`}>
+                            ) : null}
+                            <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+                              isBusy 
+                                ? "border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400" 
+                                : w.isAvailable 
+                                ? "border-green-500/30 bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400" 
+                                : "border-slate-300 dark:border-gray-500/30 bg-slate-100 dark:bg-gray-500/10 text-slate-600 dark:text-gray-400"
+                            }`}>
                               {isBusy ? "Ocupado" : w.isAvailable ? "Libre" : "Offline"}
                             </span>
                           </div>
                         </div>
-                        <p className="mt-1 text-xs text-on-surface-variant">Jobs: {w.completedJobs} · Rating: {w.averageRating.toFixed(1)}</p>
-                        {w.activeRequest && (
-                          <div className="mt-2 rounded-lg border border-orange-500/20 bg-orange-500/5 p-2">
-                            <p className="text-[11px] font-medium text-orange-300 truncate" title={w.activeRequest.title}>{w.activeRequest.title}</p>
-                            <p className="text-[10px] text-on-surface-variant truncate">
-                              {w.activeRequest.workerArrived ? "Ya llegó al lugar" : "En camino"} · {statusLabel[w.activeRequest.status] ?? w.activeRequest.status}
-                            </p>
-                            <p className="text-[10px] text-on-surface-variant">Cliente: {w.activeRequest.clientName}</p>
-                          </div>
+                        <div className="mt-1 flex items-center justify-between text-xs text-slate-600 dark:text-white/60">
+                          <span>⭐ {w.averageRating.toFixed(1)} · {w.completedJobs} trabajos</span>
+                          {hasLocation ? (
+                            <span className="font-mono text-[10px] text-slate-400 dark:text-gray-500">📍 {w.latitude.toFixed(3)}, {w.longitude.toFixed(3)}</span>
+                          ) : (
+                            <span className="text-[10px] text-orange-600 dark:text-orange-400">Sin GPS</span>
+                          )}
+                        </div>
+                        {isBusy && w.activeRequest && (
+                          <p className="mt-1.5 truncate rounded-lg bg-orange-50 dark:bg-orange-500/10 border border-orange-500/20 px-2 py-1 text-[11px] text-orange-800 dark:text-orange-300">
+                            🔨 {w.activeRequest.title}
+                          </p>
                         )}
                       </div>
                     );
@@ -989,19 +995,19 @@ export default function MapPage() {
       </div>
 
       {/* ─── Filter toggles (bottom-center) ─── */}
-      <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-white/10 bg-black/40 p-1.5 backdrop-blur-md">
+      <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 rounded-2xl border border-purple-500/20 dark:border-white/10 bg-white/90 dark:bg-black/40 p-1.5 backdrop-blur-md shadow-lg">
         {(["all", "free", "busy"] as const).map((f) => {
           const labels: Record<WorkerFilter, string> = { all: "Todos", free: "Libres", busy: "Ocupados" };
           const colors: Record<WorkerFilter, string> = {
-            all: workerFilter === "all" ? "bg-primary/20 text-primary" : "",
-            free: workerFilter === "free" ? "bg-green-500/20 text-green-300" : "",
-            busy: workerFilter === "busy" ? "bg-orange-500/20 text-orange-300" : "",
+            all: workerFilter === "all" ? "bg-purple-500/20 text-purple-700 dark:text-purple-300" : "",
+            free: workerFilter === "free" ? "bg-green-500/20 text-green-700 dark:text-green-300" : "",
+            busy: workerFilter === "busy" ? "bg-orange-500/20 text-orange-700 dark:text-orange-300" : "",
           };
           return (
             <button
               key={f}
               onClick={() => setWorkerFilter(f)}
-              className={`rounded-xl px-4 py-2 text-xs font-medium transition-colors ${colors[f] || "text-on-surface-variant hover:text-on-surface hover:bg-white/5"}`}
+              className={`rounded-xl px-4 py-2 text-xs font-medium transition-colors ${colors[f] || "text-slate-600 dark:text-white/60 hover:text-purple-600 dark:hover:text-white hover:bg-purple-50 dark:hover:bg-white/5"}`}
             >
               {labels[f]}
             </button>
@@ -1061,8 +1067,8 @@ export default function MapPage() {
                 className="map-popup-custom"
                 maxWidth="320px"
               >
-                <div className="relative rounded-xl bg-[#1e1e2e] p-4 text-white shadow-2xl min-w-[260px]">
-                  <button onClick={() => setPopup(null)} className="absolute right-2 top-2 text-gray-400 hover:text-white"><X size={14} /></button>
+                <div className="relative rounded-xl border border-purple-500/20 dark:border-white/10 bg-white dark:bg-[#1e1e2e] p-4 text-slate-900 dark:text-white shadow-2xl min-w-[260px]">
+                  <button onClick={() => setPopup(null)} className="absolute right-2 top-2 text-slate-400 hover:text-slate-700 dark:text-gray-400 dark:hover:text-white"><X size={14} /></button>
 
                   {popup.kind === "worker" && (() => {
                     const w = popup.data;
@@ -1079,36 +1085,36 @@ export default function MapPage() {
                             </svg>
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-sm truncate" title={`${w.firstName} ${w.lastName}`}>{w.firstName} {w.lastName}</p>
-                            <span className={`text-[10px] font-medium ${isBusy ? "text-orange-400" : w.isAvailable ? "text-green-400" : "text-gray-400"}`}>
+                            <p className="font-semibold text-sm text-slate-900 dark:text-white truncate" title={`${w.firstName} ${w.lastName}`}>{w.firstName} {w.lastName}</p>
+                            <span className={`text-[10px] font-medium ${isBusy ? "text-orange-600 dark:text-orange-400" : w.isAvailable ? "text-green-600 dark:text-green-400" : "text-slate-500 dark:text-gray-400"}`}>
                               {isBusy ? "🛠️ Ocupado" : w.isAvailable ? "✅ Libre" : "⚪ Offline"}
                             </span>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs text-gray-300 mb-2">
-                          <span>Rating: <b className="text-white">{w.averageRating.toFixed(1)} ⭐</b></span>
-                          <span>Jobs: <b className="text-white">{w.completedJobs}</b></span>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-gray-300 mb-2">
+                          <span>Rating: <b className="text-slate-900 dark:text-white">{w.averageRating.toFixed(1)} ⭐</b></span>
+                          <span>Jobs: <b className="text-slate-900 dark:text-white">{w.completedJobs}</b></span>
                         </div>
-                        <div className="mb-2 rounded-lg border border-white/10 bg-black/30 p-2">
-                          <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Ubicación actual</p>
-                          <p className="text-[11px] text-gray-300 font-mono">
+                        <div className="mb-2 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-black/30 p-2">
+                          <p className="text-[10px] text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1">Ubicación actual</p>
+                          <p className="text-[11px] text-slate-800 dark:text-gray-300 font-mono">
                             📍 {w.latitude.toFixed(6)}, {w.longitude.toFixed(6)}
                           </p>
-                          <p className="text-[10px] text-gray-500 mt-1">
+                          <p className="text-[10px] text-slate-400 dark:text-gray-500 mt-1">
                             Actualizado: {new Date(w.updatedAt).toLocaleString()}
                           </p>
                         </div>
                         {w.activeRequest && (
-                          <div className="mt-2 rounded-lg border border-orange-500/30 bg-orange-500/10 p-3">
-                            <p className="text-[11px] font-semibold text-orange-300 mb-1">Solicitud activa</p>
-                            <p className="text-xs text-gray-200 font-medium truncate" title={w.activeRequest.title}>{w.activeRequest.title}</p>
-                            <p className="text-[11px] text-gray-400 mt-1 truncate">
+                          <div className="mt-2 rounded-lg border border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 p-3">
+                            <p className="text-[11px] font-semibold text-orange-700 dark:text-orange-300 mb-1">Solicitud activa</p>
+                            <p className="text-xs text-slate-800 dark:text-gray-200 font-medium truncate" title={w.activeRequest.title}>{w.activeRequest.title}</p>
+                            <p className="text-[11px] text-slate-600 dark:text-gray-400 mt-1 truncate">
                               {w.activeRequest.workerArrived ? "✅ Ya llegó al lugar" : "🚗 En camino al trabajo"}
                             </p>
-                            <p className="text-[11px] text-gray-400">Estado: {statusLabel[w.activeRequest.status] ?? w.activeRequest.status}</p>
-                            <p className="text-[11px] text-gray-400">📍 {w.activeRequest.address}</p>
-                            <div className="mt-2 border-t border-white/10 pt-2">
-                              <p className="text-[11px] text-gray-300">👤 Contratado por: <b className="text-sky-300">{w.activeRequest.clientName}</b></p>
+                            <p className="text-[11px] text-slate-600 dark:text-gray-400">Estado: {statusLabel[w.activeRequest.status] ?? w.activeRequest.status}</p>
+                            <p className="text-[11px] text-slate-600 dark:text-gray-400">📍 {w.activeRequest.address}</p>
+                            <div className="mt-2 border-t border-slate-200 dark:border-white/10 pt-2">
+                              <p className="text-[11px] text-slate-700 dark:text-gray-300">👤 Contratado por: <b className="text-sky-600 dark:text-sky-300">{w.activeRequest.clientName}</b></p>
                             </div>
                           </div>
                         )}
@@ -1129,17 +1135,17 @@ export default function MapPage() {
                             </svg>
                           </div>
                           <div>
-                            <p className="font-semibold text-sm">{c.firstName} {c.lastName}</p>
-                            <span className="text-[10px] text-sky-400">👤 Cliente</span>
+                            <p className="font-semibold text-sm text-slate-900 dark:text-white">{c.firstName} {c.lastName}</p>
+                            <span className="text-[10px] text-sky-600 dark:text-sky-400">👤 Cliente</span>
                           </div>
                         </div>
-                        <div className="mb-2 rounded-lg border border-white/10 bg-black/30 p-2">
-                          <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Ubicación</p>
-                          <p className="text-[11px] text-gray-300 font-mono">
+                        <div className="mb-2 rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-black/30 p-2">
+                          <p className="text-[10px] text-slate-500 dark:text-gray-400 uppercase tracking-wider mb-1">Ubicación</p>
+                          <p className="text-[11px] text-slate-800 dark:text-gray-300 font-mono">
                             📍 {c.latitude.toFixed(6)}, {c.longitude.toFixed(6)}
                           </p>
                         </div>
-                        <p className="text-xs text-gray-400">Última actividad: {new Date(c.updatedAt).toLocaleString()}</p>
+                        <p className="text-xs text-slate-500 dark:text-gray-400">Última actividad: {new Date(c.updatedAt).toLocaleString()}</p>
                       </>
                     );
                   })()}
@@ -1162,35 +1168,35 @@ export default function MapPage() {
                             </svg>
                           </div>
                           <div>
-                            <p className="font-semibold text-sm">{r.title}</p>
-                            <span className="text-[10px] text-amber-400">📋 {statusLabel[r.status] ?? r.status}</span>
+                            <p className="font-semibold text-sm text-slate-900 dark:text-white">{r.title}</p>
+                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">📋 {statusLabel[r.status] ?? r.status}</span>
                           </div>
                         </div>
-                        <div className="text-xs text-gray-300 space-y-1">
-                          <p>👤 <span className="text-white font-medium">{r.clientName}</span></p>
-                          <p>💰 <span className="text-emerald-400 font-semibold">Bs {r.budget}</span></p>
-                          <p>📍 <span className="text-gray-400">{r.address}</span></p>
+                        <div className="text-xs text-slate-600 dark:text-gray-300 space-y-1">
+                          <p>👤 <span className="text-slate-900 dark:text-white font-medium">{r.clientName}</span></p>
+                          <p>💰 <span className="text-emerald-600 dark:text-emerald-400 font-bold">Bs {r.budget}</span></p>
+                          <p>📍 <span className="text-slate-500 dark:text-gray-400">{r.address}</span></p>
                         </div>
 
                         {/* Search Radius & Worker Coverage Box */}
-                        <div className="mt-3 rounded-xl border border-sky-500/30 bg-sky-500/10 p-2.5">
+                        <div className="mt-3 rounded-xl border border-sky-500/30 bg-sky-50 dark:bg-sky-500/10 p-2.5">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-sky-300">
-                              <Radar size={13} className="text-sky-400 animate-pulse" />
+                            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-sky-700 dark:text-sky-300">
+                              <Radar size={13} className="text-sky-500 dark:text-sky-400 animate-pulse" />
                               Radio de Notificación
                             </span>
-                            <span className="text-[11px] font-bold text-sky-200 bg-sky-500/20 px-2 py-0.5 rounded-full border border-sky-500/30">
+                            <span className="text-[11px] font-bold text-sky-700 dark:text-sky-200 bg-sky-500/20 px-2 py-0.5 rounded-full border border-sky-500/30">
                               {searchRadiusKm.toFixed(1)} km
                             </span>
                           </div>
-                          <p className="text-[10px] text-gray-300/80">
+                          <p className="text-[10px] text-slate-600 dark:text-gray-300/80">
                             Rango configurado para buscar y notificar trabajadores.
                           </p>
                           <div className="mt-2 flex items-center justify-between text-[11px] border-t border-sky-500/20 pt-1.5">
-                            <span className="text-gray-300">
-                              En rango: <b className="text-white">{workersInSelectedRadius.length}</b>
+                            <span className="text-slate-600 dark:text-gray-300">
+                              En rango: <b className="text-slate-900 dark:text-white">{workersInSelectedRadius.length}</b>
                             </span>
-                            <span className="text-emerald-400 font-medium">
+                            <span className="text-emerald-700 dark:text-emerald-400 font-medium">
                               {freeCount} disponibles
                             </span>
                           </div>

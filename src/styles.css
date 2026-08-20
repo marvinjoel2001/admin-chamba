@@ -163,6 +163,37 @@ body {
   color: #5e587a;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Hover States Contrast Overrides in Light Mode:
+   Prevents text from turning white on hover in light backgrounds
+   ───────────────────────────────────────────────────────────── */
+.light [class*="hover:text-white"]:hover:not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-red"]):not([class*="bg-amber"]):not([class*="bg-sky"]):not([class*="bg-primary"]):not([class*="bg-gradient"]):not(button.bg-purple-600):not(button.bg-primary) {
+  color: #7c3aed !important;
+}
+
+.light [class*="group-hover:text-white"]:hover,
+.light .group:hover [class*="group-hover:text-white"],
+.light .group:hover [class*="group-hover:text-white/60"] {
+  color: #7c3aed !important;
+}
+
+.light [class*="hover:bg-white/5"]:hover,
+.light [class*="hover:bg-white/10"]:hover {
+  background-color: rgba(124, 58, 237, 0.08) !important;
+}
+
+.light .hover\:text-white:hover {
+  color: #7c3aed !important;
+}
+
+.light .hover\:bg-white\/5:hover {
+  background-color: rgba(124, 58, 237, 0.08) !important;
+}
+
+.light .hover\:bg-white\/10:hover {
+  background-color: rgba(124, 58, 237, 0.12) !important;
+}
+
 /* Subtle borders in light mode */
 .light .border-white\/5,
 .light .border-white\/10 {
