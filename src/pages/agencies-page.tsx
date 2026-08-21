@@ -219,7 +219,7 @@ export default function AgenciesPage() {
                   <p className="text-on-surface-variant">Ofertas</p>
                 </div>
                 <div className="rounded-lg bg-white/5 py-2">
-                  <CheckCircle2 className="mx-auto mb-1 h-3.5 w-3.5 text-green-400" />
+                  <CheckCircle2 className="mx-auto mb-1 h-3.5 w-3.5 text-emerald-600 dark:text-green-400" />
                   <p className="font-semibold">{agency.offersAcceptedCount}</p>
                   <p className="text-on-surface-variant">Ganadas</p>
                 </div>
@@ -231,10 +231,10 @@ export default function AgenciesPage() {
                 </span>
                 <button
                   onClick={() => handleToggleActive(agency)}
-                  className={`rounded-full px-2.5 py-1 font-medium ${
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold border transition-all ${
                     agency.isActive
-                      ? "bg-green-500/20 text-green-300"
-                      : "bg-red-500/20 text-red-300"
+                      ? "border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/20 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-500/30"
+                      : "border-rose-500/30 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/20 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-500/30"
                   }`}
                 >
                   {agency.isActive ? "Activa" : "Inactiva"}

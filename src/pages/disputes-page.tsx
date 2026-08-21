@@ -95,9 +95,9 @@ export default function DisputesPage() {
               <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-start">
                 <div className="flex items-center gap-3">
                   {d.status === "open" ? (
-                    <AlertTriangle className="h-5 w-5 text-amber-400" />
+                    <AlertTriangle className="h-5 w-5 text-amber-500 dark:text-amber-400" />
                   ) : (
-                    <CheckCircle2 className="h-5 w-5 text-green-400" />
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-green-400" />
                   )}
                   <div>
                     <p className="font-semibold">{d.reason}</p>
@@ -123,8 +123,8 @@ export default function DisputesPage() {
                 </p>
               )}
               {d.resolution && (
-                <p className="mt-2 rounded-lg bg-green-500/10 p-2 text-sm text-green-300">
-                  <span className="font-semibold">Resolución:</span>{" "}
+                <p className="mt-2 rounded-lg border border-emerald-500/20 bg-emerald-50 dark:bg-green-500/10 p-2.5 text-sm text-emerald-800 dark:text-green-300">
+                  <span className="font-semibold text-emerald-900 dark:text-green-200">Resolución:</span>{" "}
                   {d.resolution}
                 </p>
               )}
@@ -219,10 +219,10 @@ export function DisputeChat({
               <MessageSquare className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-bold">Chat de Soporte</h2>
               <span
-                className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
                   dispute.status === "open"
-                    ? "bg-amber-500/20 text-amber-300"
-                    : "bg-green-500/20 text-green-300"
+                    ? "border-amber-500/30 bg-amber-50 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300"
+                    : "border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:bg-green-500/20 dark:text-green-300"
                 }`}
               >
                 {dispute.status === "open" ? "Abierto" : "Resuelto"}
@@ -320,7 +320,7 @@ export function DisputeChat({
             ) : (
               <button
                 onClick={() => setShowResolve(true)}
-                className="w-full rounded-lg border border-green-500/30 bg-green-500/10 py-2 text-sm font-medium text-green-400 hover:bg-green-500/20"
+                className="w-full rounded-lg border border-emerald-500/30 bg-emerald-50 dark:bg-green-500/10 py-2.5 text-sm font-semibold text-emerald-700 dark:text-green-400 hover:bg-emerald-100 dark:hover:bg-green-500/20 transition-colors"
               >
                 <CheckCircle2 className="mr-2 inline h-4 w-4" />
                 Marcar como resuelto

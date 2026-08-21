@@ -282,13 +282,177 @@ body {
   color: #8b85a6;
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Status Badges, Pills & Accent Colors in Light Mode:
+   Provides rich, high-contrast dark tones with clear tinted backgrounds
+   ───────────────────────────────────────────────────────────── */
+/* Emerald / Green (Activa, Aprobada, Completados, Ganadas, Online, etc.) */
+.light .text-emerald-200,
+.light .text-emerald-300,
+.light .text-emerald-400,
+.light .text-green-200,
+.light .text-green-300,
+.light .text-green-400 {
+  color: #047857 !important;
+}
+
+.light .bg-emerald-500\/10,
+.light .bg-emerald-500\/15,
+.light .bg-emerald-500\/20,
+.light .bg-emerald-500\/25,
+.light .bg-emerald-500\/30,
+.light .bg-emerald-950\/20,
+.light .bg-emerald-950\/30,
+.light .bg-green-500\/10,
+.light .bg-green-500\/15,
+.light .bg-green-500\/20,
+.light .bg-green-500\/25,
+.light .bg-green-500\/30 {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+.light .border-emerald-500\/20,
+.light .border-emerald-500\/30,
+.light .border-emerald-500\/40,
+.light .border-green-500\/20,
+.light .border-green-500\/30 {
+  border-color: #a7f3d0 !important;
+}
+
+/* Amber / Orange / Yellow (Pendiente, En Proceso, Asignado, Abierto, etc.) */
+.light .text-amber-200,
+.light .text-amber-300,
+.light .text-amber-400,
+.light .text-yellow-300,
+.light .text-yellow-400,
+.light .text-orange-200,
+.light .text-orange-300,
+.light .text-orange-400 {
+  color: #b45309 !important;
+}
+
+.light .bg-amber-500\/10,
+.light .bg-amber-500\/15,
+.light .bg-amber-500\/20,
+.light .bg-amber-500\/25,
+.light .bg-amber-500\/30,
+.light .bg-orange-500\/10,
+.light .bg-orange-500\/15,
+.light .bg-orange-500\/20,
+.light .bg-orange-500\/25,
+.light .bg-orange-500\/30 {
+  background-color: #fffbeb !important;
+  border-color: #fde68a !important;
+  color: #b45309 !important;
+}
+
+.light .border-amber-500\/20,
+.light .border-amber-500\/30,
+.light .border-amber-500\/40,
+.light .border-orange-500\/20,
+.light .border-orange-500\/30 {
+  border-color: #fde68a !important;
+}
+
+/* Red / Rose (Cancelado, Rechazado, Inactiva, Bloqueado, Error, etc.) */
+.light .text-red-200,
+.light .text-red-300,
+.light .text-red-400,
+.light .text-rose-200,
+.light .text-rose-300,
+.light .text-rose-400 {
+  color: #b91c1c !important;
+}
+
+.light .bg-red-500\/10,
+.light .bg-red-500\/15,
+.light .bg-red-500\/20,
+.light .bg-red-500\/25,
+.light .bg-red-500\/30,
+.light .bg-rose-500\/10,
+.light .bg-rose-500\/15,
+.light .bg-rose-500\/20,
+.light .bg-rose-500\/25,
+.light .bg-rose-500\/30,
+.light .bg-rose-950\/20,
+.light .bg-rose-950\/30 {
+  background-color: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #b91c1c !important;
+}
+
+.light .border-red-500\/20,
+.light .border-red-500\/30,
+.light .border-red-500\/40,
+.light .border-rose-500\/20,
+.light .border-rose-500\/30 {
+  border-color: #fecaca !important;
+}
+
+/* Sky / Blue / Cyan (Buscando, Verificado, Cliente, etc.) */
+.light .text-sky-200,
+.light .text-sky-300,
+.light .text-sky-400,
+.light .text-blue-200,
+.light .text-blue-300,
+.light .text-blue-400,
+.light .text-cyan-300,
+.light .text-cyan-400 {
+  color: #0369a1 !important;
+}
+
+.light .bg-sky-500\/10,
+.light .bg-sky-500\/15,
+.light .bg-sky-500\/20,
+.light .bg-sky-500\/25,
+.light .bg-sky-500\/30,
+.light .bg-blue-500\/10,
+.light .bg-blue-500\/15,
+.light .bg-blue-500\/20,
+.light .bg-blue-500\/25,
+.light .bg-blue-500\/30 {
+  background-color: #f0f9ff !important;
+  border-color: #bae6fd !important;
+  color: #0369a1 !important;
+}
+
+.light .border-sky-500\/20,
+.light .border-sky-500\/30,
+.light .border-blue-500\/20,
+.light .border-blue-500\/30 {
+  border-color: #bae6fd !important;
+}
+
+/* Purple (Negociando, Admin, etc.) */
+.light .text-purple-200,
+.light .text-purple-300,
+.light .text-purple-400 {
+  color: #6d28d9 !important;
+}
+
+.light .bg-purple-500\/10,
+.light .bg-purple-500\/15,
+.light .bg-purple-500\/20,
+.light .bg-purple-500\/25,
+.light .bg-purple-500\/30 {
+  background-color: #faf5ff !important;
+  border-color: #e9d5ff !important;
+  color: #6d28d9 !important;
+}
+
 /* Solid action buttons must always retain white text */
 .light button.bg-purple-600,
 .light button.bg-purple-700,
 .light button.bg-emerald-500,
 .light button.bg-emerald-600,
+.light button.bg-green-600,
+.light button.bg-green-700,
 .light button.bg-rose-500,
 .light button.bg-rose-600,
+.light button.bg-red-500,
+.light button.bg-red-600,
 .light button.bg-amber-500,
 .light button.bg-amber-600,
 .light button.bg-primary-container,
@@ -301,8 +465,15 @@ body {
 .light button.bg-purple-600 *,
 .light button.bg-purple-700 *,
 .light button.bg-emerald-500 *,
+.light button.bg-emerald-600 *,
+.light button.bg-green-600 *,
+.light button.bg-green-700 *,
 .light button.bg-rose-500 *,
+.light button.bg-rose-600 *,
+.light button.bg-red-500 *,
+.light button.bg-red-600 *,
 .light button.bg-amber-500 *,
+.light button.bg-amber-600 *,
 .light [class*="bg-gradient-to-r"] * {
   color: #ffffff !important;
 }

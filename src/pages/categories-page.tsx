@@ -247,10 +247,10 @@ export default function CategoriesPage() {
                 <span className="text-on-surface-variant">ID: {cat.id}</span>
                 <button
                   onClick={() => handleToggleActive(cat)}
-                  className={`rounded-full px-2.5 py-1 font-medium ${
+                  className={`rounded-full px-2.5 py-1 text-xs font-semibold border transition-all ${
                     cat.active
-                      ? "bg-green-500/20 text-green-300"
-                      : "bg-red-500/20 text-red-300"
+                      ? "border-emerald-500/30 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/20 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-500/30"
+                      : "border-rose-500/30 bg-rose-50 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/20 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-500/30"
                   }`}
                 >
                   {cat.active ? "Activa" : "Inactiva"}
