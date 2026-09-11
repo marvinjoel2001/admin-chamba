@@ -33,6 +33,7 @@ import {
 } from "@/lib/admin-api";
 import type { AdminUser } from "@/lib/types";
 import { UserReportsModal } from "@/components/user-reports-modal";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 const statusLabel: Record<string, string> = {
   searching: "Buscando",
@@ -334,13 +335,12 @@ export default function WorkersPage() {
       header: "Worker",
       cell: ({ row }) => {
         const w = row.original;
-        const avatar = w.profilePhotoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80&q=80";
         return (
           <div className="flex items-center gap-3">
-            <img
-              src={avatar}
-              alt={w.firstName}
-              className="h-8 w-8 rounded-full object-cover border border-white/10 shrink-0"
+            <UserAvatar
+              name={`${w.firstName} ${w.lastName ?? ""}`}
+              photoUrl={w.profilePhotoUrl}
+              size={32}
             />
             <button
               onClick={() => handleOpenWorkerDetail(w)}
@@ -650,17 +650,25 @@ export default function WorkersPage() {
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-5 bg-gradient-to-r from-purple-950/20 to-black/40">
               <div className="flex items-center gap-4">
-                <img
-                  src={selectedWorker.profilePhotoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80"}
-                  alt={selectedWorker.firstName}
-                  onClick={() => setExpandedImage({
-                    url: selectedWorker.profilePhotoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80",
-                    alt: `Foto de perfil de ${selectedWorker.firstName}`,
-                    key: `${selectedWorker.id}-profile-detail`
-                  })}
-                  className="h-16 w-16 rounded-full object-cover border-2 border-primary/50 shadow-md shadow-primary/10 shrink-0 cursor-zoom-in hover:scale-105 transition-all"
-                  title="Ampliar foto de perfil"
-                />
+                {selectedWorker.profilePhotoUrl ? (
+                  <img
+                    src={selectedWorker.profilePhotoUrl}
+                    alt={selectedWorker.firstName}
+                    onClick={() => setExpandedImage({
+                      url: selectedWorker.profilePhotoUrl!,
+                      alt: `Foto de perfil de ${selectedWorker.firstName}`,
+                      key: `${selectedWorker.id}-profile-detail`
+                    })}
+                    className="h-16 w-16 rounded-full object-cover border-2 border-primary/50 shadow-md shadow-primary/10 shrink-0 cursor-zoom-in hover:scale-105 transition-all"
+                    title="Ampliar foto de perfil"
+                  />
+                ) : (
+                  <UserAvatar
+                    name={`${selectedWorker.firstName} ${selectedWorker.lastName ?? ""}`}
+                    size={64}
+                    className="border-2 border-primary/50 shadow-md shadow-primary/10"
+                  />
+                )}
                 <div>
                   <h3 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
                     {selectedWorker.firstName} {selectedWorker.lastName ?? ""}
@@ -1060,10 +1068,10 @@ export default function WorkersPage() {
                           <tr key={job.requestId || job.offerId} className="hover:bg-white/[0.02] transition-colors">
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
-                                <img
-                                  src={job.client?.profilePhotoUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&h=80&q=80"}
-                                  alt={job.client?.firstName}
-                                  className="h-7 w-7 rounded-full object-cover border border-white/10 shrink-0"
+                                <UserAvatar
+                                  name={`${job.client?.firstName || ""} ${job.client?.lastName || ""}`}
+                                  photoUrl={job.client?.profilePhotoUrl}
+                                  size={28}
                                 />
                                 <div>
                                   <p className="font-semibold text-xs text-white">{job.client?.firstName} {job.client?.lastName ?? ""}</p>

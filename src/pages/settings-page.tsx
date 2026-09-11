@@ -3,9 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { fetchAiConfig, updateAiConfig, fetchStripeConfig, updateStripeConfig } from "@/lib/admin-api";
+import { api } from "@/lib/api";
 import type { AiConfig, StripeConfig } from "@/lib/types";
-
-const API_BASE = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
 const NVIDIA_MODELS = [
   { value: "meta/llama-3.1-8b-instruct", label: "Llama 3.1 8B — Rápido (~1s) ✦ Recomendado" },
@@ -88,28 +87,6 @@ export default function SettingsPage() {
     }
   };
 
-  const safeFetch = async (url: string, options?: RequestInit) => {
-    const res = await fetch(url, options);
-    if (res.status === 404) {
-      return {
-        ok: false as const,
-        error:
-          "Endpoint no encontrado en el servidor. Asegúrate de haber desplegado la versión más reciente del backend (git push origin main).",
-      };
-    }
-    let body: any;
-    try {
-      body = await res.json();
-    } catch {
-      return { ok: false as const, error: `El servidor respondió con estado ${res.status} pero sin JSON válido.` };
-    }
-    if (!res.ok) {
-      const msg = body?.message ?? body?.error ?? `Error ${res.status}`;
-      return { ok: false as const, error: String(msg) };
-    }
-    return body;
-  };
-
   const handleTestAi = async () => {
     if (!testMessage.trim()) {
       toast.error("Ingresa un mensaje para probar");
@@ -118,16 +95,13 @@ export default function SettingsPage() {
     setTesting(true);
     setTestResult(null);
     try {
-      const data = await safeFetch(`${API_BASE}/mobile/admin/ai-config/test`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: testMessage }),
-      });
+      const response = await api.post("/mobile/admin/ai-config/test", { message: testMessage });
+      const data = response.data;
       setTestResult(data);
       if (data.ok) toast.success(`Respuesta recibida en ${data.durationMs}ms`);
       else toast.error(data.error ?? "La IA no respondió correctamente");
-    } catch (e) {
-      const msg = "No se pudo conectar con el servidor. Verifica tu conexión.";
+    } catch (e: any) {
+      const msg = e.response?.data?.message || "No se pudo conectar con el servidor. Verifica tu conexión.";
       toast.error(msg);
       setTestResult({ ok: false, error: msg });
     } finally {
@@ -139,14 +113,11 @@ export default function SettingsPage() {
     setCheckingStatus(true);
     setAiStatus(null);
     try {
-      const data = await safeFetch(`${API_BASE}/mobile/admin/ai-config/status`);
-      if (!data.ok && data.error) {
-        toast.error(data.error);
-      } else {
-        setAiStatus(data as AiStatusResult);
-      }
-    } catch {
-      toast.error("No se pudo conectar con el servidor.");
+      const response = await api.get("/mobile/admin/ai-config/status");
+      setAiStatus(response.data as AiStatusResult);
+    } catch (e: any) {
+      const msg = e.response?.data?.message || "No se pudo conectar con el servidor.";
+      toast.error(msg);
     } finally {
       setCheckingStatus(false);
     }
@@ -182,7 +153,7 @@ export default function SettingsPage() {
       <section className="glass-panel max-w-2xl rounded-2xl p-6">
         <h2 className="mb-4 text-xl font-bold">Variables de Entorno Locales</h2>
         <div className="space-y-4">
-          <Input placeholder="API URL" defaultValue={API_BASE} disabled />
+          <Input placeholder="API URL" defaultValue={api.defaults.baseURL || "http://localhost:3000"} disabled />
           <Input
             placeholder="Mapbox Token"
             defaultValue={import.meta.env.VITE_MAPBOX_TOKEN || ""}

@@ -1,5 +1,5 @@
-import { Link, NavLink, Outlet } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import {
   Bell,
   LayoutDashboard,
@@ -58,6 +58,8 @@ const nav = [
 ] as const;
 
 export function AppLayout() {
+  const navigate = useNavigate();
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const { search, setSearch, pendingDisputes, pendingVerifications, setPendingDisputes, setPendingVerifications } = useAdminStore();
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
@@ -68,6 +70,25 @@ export function AppLayout() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const totalPendingAlerts = pendingDisputes + pendingVerifications;
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && search.trim()) {
+      navigate(`/requests`);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -243,24 +264,37 @@ export function AppLayout() {
         </button>
         
         {/* Search */}
-        <div className="hidden w-[400px] items-center gap-2 rounded-full px-4 py-2 md:flex bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/5 shadow-inner">
-          <Search size={16} className="text-slate-400 dark:text-white/40" />
-          <Input
+        <div
+          onClick={() => searchInputRef.current?.focus()}
+          className="hidden w-[400px] items-center gap-2 rounded-full px-4 py-2 md:flex bg-slate-100 dark:bg-black/40 border border-slate-200 dark:border-white/5 shadow-inner cursor-text"
+        >
+          <Search size={16} className="text-slate-400 dark:text-white/40 shrink-0" />
+          <input
+            ref={searchInputRef}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar en toda la plataforma..."
-            className="w-full border-none bg-transparent p-0 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 focus-visible:ring-0 focus-visible:outline-none focus:ring-0"
+            onKeyDown={handleSearchKeyDown}
+            placeholder="Buscar trabajos, clientes, trabajadores..."
+            className="w-full border-none bg-transparent p-0 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none"
           />
-          <div className="flex items-center gap-1 rounded bg-purple-500/10 dark:bg-white/10 px-2 py-0.5 text-[10px] font-medium text-purple-700 dark:text-white/50">
+          <div className="flex items-center gap-1 rounded bg-purple-500/10 dark:bg-white/10 px-2 py-0.5 text-[10px] font-medium text-purple-700 dark:text-white/50 shrink-0">
             <Command size={10} /> K
           </div>
         </div>
 
         <div className="flex items-center gap-6">
-          <button className="relative text-slate-500 dark:text-white/60 hover:text-purple-600 dark:hover:text-white transition-colors">
+          <Link
+            to="/notifications"
+            className="relative flex items-center justify-center text-slate-500 dark:text-white/60 hover:text-purple-600 dark:hover:text-white transition-colors"
+            title="Notificaciones y Alertas"
+          >
             <Bell size={18} />
-            <span className="absolute 1 top-0 right-0 h-1.5 w-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-          </button>
+            {totalPendingAlerts > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse">
+                {totalPendingAlerts > 99 ? "99+" : totalPendingAlerts}
+              </span>
+            )}
+          </Link>
           <button
             onClick={toggleTheme}
             className="flex h-9 w-9 items-center justify-center rounded-full text-slate-600 dark:text-white/70 hover:text-purple-600 dark:hover:text-white hover:bg-purple-50 dark:hover:bg-white/10 transition-all border border-transparent hover:border-purple-500/20 dark:hover:border-white/10"

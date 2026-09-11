@@ -83,6 +83,16 @@ export async function updateWorkerNotificationSettings(radiusKm: number) {
   return data;
 }
 
+export async function fetchOfferLifetimeSettings() {
+  const { data } = await api.get<{ fixed: number; hour: number; day: number }>("/mobile/admin/offer-lifetime-settings");
+  return data;
+}
+
+export async function updateOfferLifetimeSettings(payload: { fixed: number; hour: number; day: number }) {
+  const { data } = await api.post<{ fixed: number; hour: number; day: number }>("/mobile/admin/offer-lifetime-settings", payload);
+  return data;
+}
+
 export async function fetchApiLogs(params?: {
   limit?: number;
   offset?: number;

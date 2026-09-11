@@ -3,6 +3,7 @@ import { DataTable } from "@/components/ui/data-table";
 import type { ColumnDef } from "@tanstack/react-table";
 import { fetchMapSnapshot, adminCancelRequest, fetchRequestDetail, fetchRequestNotifiedWorkers } from "@/lib/admin-api";
 import type { MapRequest, RequestDetail, NotifiedWorker, RequestOfferItem } from "@/lib/types";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { toast } from "sonner";
 import {
   Search,
@@ -994,10 +995,10 @@ export default function RequestsPage() {
                                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-500/10 text-[10px] font-bold text-purple-400 border border-purple-500/20">
                                     {i + 1}
                                   </span>
-                                  <img
-                                    src={w.profilePhotoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80&q=80"}
-                                    alt={w.firstName}
-                                    className="h-10 w-10 shrink-0 rounded-full border border-white/10 object-cover"
+                                  <UserAvatar
+                                    name={`${w.firstName} ${w.lastName}`}
+                                    photoUrl={w.profilePhotoUrl}
+                                    size={40}
                                   />
                                   <div className="min-w-0">
                                     <p className="truncate text-sm font-semibold text-white">{w.firstName} {w.lastName}</p>
@@ -1079,10 +1080,10 @@ export default function RequestsPage() {
                               >
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="flex items-center gap-3">
-                                    <img
-                                      src={offer.workerPhoto || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80&q=80"}
-                                      alt={offer.workerName}
-                                      className="h-11 w-11 rounded-full border border-white/10 object-cover"
+                                    <UserAvatar
+                                      name={offer.workerName}
+                                      photoUrl={offer.workerPhoto}
+                                      size={44}
                                     />
                                     <div>
                                       <div className="flex items-center gap-2">

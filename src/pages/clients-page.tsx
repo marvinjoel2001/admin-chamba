@@ -5,6 +5,7 @@ import { fetchUsers, updateUser, deleteUser } from "@/lib/admin-api";
 import type { AdminUser } from "@/lib/types";
 import { toast } from "sonner";
 import { UserReportsModal } from "@/components/user-reports-modal";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Flag, X, Calendar } from "lucide-react";
 
 export default function ClientsPage() {
@@ -13,6 +14,18 @@ export default function ClientsPage() {
   const [editForm, setEditForm] = useState({ firstName: "", lastName: "", phone: "", email: "", password: "" });
   const [selectedClient, setSelectedClient] = useState<AdminUser | null>(null);
   const [reportsModalClient, setReportsModalClient] = useState<AdminUser | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return items;
+    const q = searchQuery.toLowerCase().trim();
+    return items.filter((u) => {
+      const fullName = `${u.firstName || ""} ${u.lastName || ""}`.toLowerCase();
+      const email = (u.email || "").toLowerCase();
+      const phone = (u.phone || "").toLowerCase();
+      return fullName.includes(q) || email.includes(q) || phone.includes(q);
+    });
+  }, [items, searchQuery]);
 
   useEffect(() => {
     let mounted = true;
@@ -96,13 +109,12 @@ export default function ClientsPage() {
       header: "Cliente", 
       cell: ({ row }) => {
         const w = row.original;
-        const avatar = w.profilePhotoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80&q=80";
         return (
           <div className="flex items-center gap-3">
-            <img
-              src={avatar}
-              alt={w.firstName}
-              className="h-8 w-8 rounded-full object-cover border border-white/10 shrink-0"
+            <UserAvatar
+              name={`${w.firstName} ${w.lastName ?? ""}`}
+              photoUrl={w.profilePhotoUrl}
+              size={32}
             />
             <button
               onClick={() => setSelectedClient(w)}
@@ -142,9 +154,14 @@ export default function ClientsPage() {
       </div>
       <div className="glass-panel overflow-hidden rounded-xl">
         <div className="border-b border-white/5 p-4">
-          <input className="glass-input w-full rounded-lg px-4 py-2" placeholder="Buscar clientes..." />
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="glass-input w-full rounded-lg px-4 py-2"
+            placeholder="Buscar clientes por nombre, email o teléfono..."
+          />
         </div>
-        <DataTable data={items} columns={columns} />
+        <DataTable data={filteredItems} columns={columns} />
       </div>
 
       {editClient && (
@@ -189,10 +206,11 @@ export default function ClientsPage() {
           <div className="w-full max-w-xl rounded-2xl border border-white/10 bg-[#0d1117]/95 shadow-2xl backdrop-blur-md overflow-hidden flex flex-col">
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-5 bg-gradient-to-r from-blue-950/20 to-black/40">
               <div className="flex items-center gap-4">
-                <img
-                  src={selectedClient.profilePhotoUrl || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80"}
-                  alt={selectedClient.firstName}
-                  className="h-16 w-16 rounded-full object-cover border-2 border-primary/50 shadow-md shadow-primary/10 shrink-0"
+                <UserAvatar
+                  name={`${selectedClient.firstName} ${selectedClient.lastName ?? ""}`}
+                  photoUrl={selectedClient.profilePhotoUrl}
+                  size={64}
+                  className="border-2 border-primary/50 shadow-md shadow-primary/10"
                 />
                 <div>
                   <h3 className="text-xl font-bold tracking-tight text-white">

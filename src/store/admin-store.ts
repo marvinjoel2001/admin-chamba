@@ -1,4 +1,4 @@
-﻿import { create } from "zustand";
+import { create } from "zustand";
 
 export type EntityStatus = "active" | "working" | "inactive" | "suspended";
 
@@ -10,8 +10,6 @@ interface BadgeCounts {
 interface AdminStore extends BadgeCounts {
   search: string;
   setSearch: (v: string) => void;
-  selectedWorkerId: string | null;
-  setSelectedWorkerId: (v: string | null) => void;
   // Badge counts
   setPendingDisputes: (count: number) => void;
   setPendingVerifications: (count: number) => void;
@@ -24,8 +22,6 @@ interface AdminStore extends BadgeCounts {
 export const useAdminStore = create<AdminStore>((set) => ({
   search: "",
   setSearch: (search) => set({ search }),
-  selectedWorkerId: null,
-  setSelectedWorkerId: (selectedWorkerId) => set({ selectedWorkerId }),
   // Badge counts initial state
   pendingDisputes: 0,
   pendingVerifications: 0,
