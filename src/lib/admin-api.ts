@@ -40,8 +40,14 @@ export async function updateUser(
   id: string,
   payload: Partial<AdminUser> & { password?: string },
 ) {
-  const { data } = await api.patch<AdminUser>(`/users/${id}`, payload);
-  return data;
+  try {
+    const { data } = await api.patch<AdminUser>(`/users/${id}`, payload);
+    return data;
+  } catch (patchError) {
+    console.warn("PATCH updateUser falló, reintentando con POST...", patchError);
+    const { data } = await api.post<AdminUser>(`/users/${id}`, payload);
+    return data;
+  }
 }
 
 export async function fetchWorkerVerificationInbox(): Promise<AdminUser[]> {
@@ -53,8 +59,14 @@ export async function reviewWorkerVerification(
   id: string,
   payload: WorkerVerificationReviewPayload,
 ) {
-  const { data } = await api.patch<AdminUser>(`/users/${id}/verification/review`, payload);
-  return data;
+  try {
+    const { data } = await api.patch<AdminUser>(`/users/${id}/verification/review`, payload);
+    return data;
+  } catch (patchError) {
+    console.warn("PATCH reviewWorkerVerification falló, reintentando con POST...", patchError);
+    const { data } = await api.post<AdminUser>(`/users/${id}/verification/review`, payload);
+    return data;
+  }
 }
 
 export async function fetchMapSnapshot(since?: string) {

@@ -1,7 +1,15 @@
 import { io, Socket } from "socket.io-client";
 import { useAdminStore } from "@/store/admin-store";
+import { getApiBaseUrl } from "@/lib/api";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? "http://localhost:3000";
+function getSocketUrl(): string {
+  const envSocket = import.meta.env.VITE_SOCKET_URL;
+  if (envSocket && typeof envSocket === "string" && envSocket.trim() !== "") {
+    return envSocket.trim().replace(/\/+$/, "");
+  }
+  const apiBase = getApiBaseUrl();
+  return apiBase.replace(/\/api$/, "");
+}
 
 class WebSocketService {
   private socket: Socket | null = null;
@@ -17,9 +25,12 @@ class WebSocketService {
   connect() {
     if (this.socket?.connected) return;
 
-    this.socket = io(SOCKET_URL, {
-      transports: ["websocket"],
+    const socketUrl = getSocketUrl();
+    this.socket = io(`${socketUrl}/realtime`, {
+      transports: ["websocket", "polling"],
       autoConnect: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 3000,
     });
 
     this.socket.on("connect", () => {

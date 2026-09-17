@@ -229,29 +229,67 @@ body {
   background-color: rgba(124, 58, 237, 0.12);
 }
 
-/* Hardcoded dark panels switch to pure white / light cards */
+/* Hardcoded dark panels and modals switch to pure white / light cards */
 .light .bg-\[\#1c162b\],
 .light .bg-\[\#1c162b\]\/80,
-.light .bg-\[\#1c162b\]\/90 {
-  background-color: rgba(255, 255, 255, 0.95);
-  color: #130f24;
+.light .bg-\[\#1c162b\]\/90,
+.light .bg-\[\#0d1117\],
+.light .bg-\[\#0d1117\]\/95,
+.light .bg-\[\#0d1117\]\/90,
+.light .bg-\[\#0d1117\]\/80,
+.light .bg-\[\#0a0c10\],
+.light .bg-\[\#120f1a\],
+.light .bg-\[\#120f1a\]\/95,
+.light .bg-\[\#120f1a\]\/90,
+.light .bg-\[\#120f1a\]\/80,
+.light .bg-\[\#120f1a\]\/60,
+.light .bg-\[\#1e1e2e\],
+.light .bg-\[\#130f1e\]\/95 {
+  background-color: #ffffff !important;
+  border-color: rgba(124, 58, 237, 0.14) !important;
+  color: #130f24 !important;
+  box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.12), 0 4px 16px rgba(0, 0, 0, 0.04) !important;
 }
 
 .light .bg-\[\#13101d\],
 .light .bg-\[\#12121d\],
 .light .bg-\[\#0a0514\] {
-  background-color: #f5f4fa;
+  background-color: #f5f4fa !important;
 }
 
-.light .bg-\[\#1e1e2e\],
-.light .bg-\[\#130f1e\]\/95,
-.light .bg-\[\#120f1a\]\/90,
-.light .bg-\[\#120f1a\]\/80,
-.light .bg-\[\#120f1a\]\/60 {
-  background-color: rgba(255, 255, 255, 0.96);
-  border-color: rgba(124, 58, 237, 0.16);
-  color: #130f24;
-  box-shadow: 0 12px 36px -4px rgba(124, 58, 237, 0.12);
+/* Modal overlays and backdrops in light mode */
+.light .bg-black\/60,
+.light .bg-black\/70,
+.light .bg-black\/75,
+.light .bg-black\/80,
+.light .bg-black\/85,
+.light .bg-black\/95 {
+  background-color: rgba(19, 16, 29, 0.45) !important;
+}
+
+/* Modal header gradients in light mode */
+.light [class*="bg-gradient-to-r"][class*="from-purple-950"],
+.light [class*="bg-gradient-to-r"][class*="from-rose-950"],
+.light [class*="bg-gradient-to-r"][class*="from-amber-950"] {
+  background: #faf8ff !important;
+  border-bottom-color: rgba(124, 58, 237, 0.12) !important;
+}
+
+.light [class*="bg-gradient-to-r"][class*="from-purple-950"] *,
+.light [class*="bg-gradient-to-r"][class*="from-rose-950"] *,
+.light [class*="bg-gradient-to-r"][class*="from-amber-950"] * {
+  color: #130f24 !important;
+}
+
+/* Modal footers and dark inner sections in light mode */
+.light .bg-black\/20,
+.light .bg-black\/25,
+.light .bg-black\/30,
+.light .bg-black\/40,
+.light .bg-black\/50 {
+  background-color: rgba(243, 240, 250, 0.85) !important;
+  border-color: rgba(124, 58, 237, 0.12) !important;
+  color: #130f24 !important;
 }
 
 /* Tables in light mode */
@@ -270,16 +308,42 @@ body {
   background-color: rgba(124, 58, 237, 0.04);
 }
 
-/* Form inputs in light mode */
-.light input,
+/* Form inputs, textareas, and selects in light mode */
+.light input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([class*="bg-purple"]):not([class*="bg-primary"]),
 .light select,
 .light textarea {
-  color: #130f24;
+  background-color: #f8f7fd !important;
+  border: 1px solid rgba(124, 58, 237, 0.2) !important;
+  color: #130f24 !important;
+}
+
+.light input:not([type="checkbox"]):not([type="radio"]):focus,
+.light select:focus,
+.light textarea:focus {
+  background-color: #ffffff !important;
+  border-color: #7c3aed !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12) !important;
+  outline: none !important;
 }
 
 .light input::placeholder,
 .light textarea::placeholder {
-  color: #8b85a6;
+  color: #8b85a6 !important;
+}
+
+.light option {
+  background-color: #ffffff !important;
+  color: #130f24 !important;
+}
+
+.light input[type="checkbox"],
+.light input[type="radio"] {
+  background-color: #f8f7fd !important;
+  border-color: rgba(124, 58, 237, 0.3) !important;
+}
+
+.light label {
+  color: #524c6b;
 }
 
 /* ─────────────────────────────────────────────────────────────
