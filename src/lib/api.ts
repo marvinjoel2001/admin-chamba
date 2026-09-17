@@ -1,8 +1,20 @@
 import axios from "axios";
 import { useAuthStore, isTokenExpired } from "@/store/auth-store";
 
+export function getApiBaseUrl(): string {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl || typeof envUrl !== "string" || envUrl.trim() === "") {
+    return "http://localhost:3000/api";
+  }
+  let clean = envUrl.trim().replace(/\/+$/, "");
+  if (!clean.startsWith("http://") && !clean.startsWith("https://")) {
+    clean = `https://${clean}`;
+  }
+  return clean.endsWith("/api") ? clean : `${clean}/api`;
+}
+
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:3000",
+  baseURL: getApiBaseUrl(),
 });
 
 api.interceptors.request.use((config) => {
