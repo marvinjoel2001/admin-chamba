@@ -1,3 +1,4 @@
+import { useAuthStore } from "../store/auth-store";
 import { io, Socket } from "socket.io-client";
 import { useAdminStore } from "@/store/admin-store";
 import { getApiBaseUrl } from "@/lib/api";
@@ -28,6 +29,7 @@ class WebSocketService {
     const socketUrl = getSocketUrl();
     this.socket = io(`${socketUrl}/realtime`, {
       transports: ["websocket", "polling"],
+      auth: { token: useAuthStore.getState().token },
       autoConnect: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 3000,

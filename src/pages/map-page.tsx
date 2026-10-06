@@ -7,6 +7,7 @@ import Map, {
   Source,
   type MapLayerMouseEvent,
 } from "react-map-gl";
+import { useAuthStore } from "@/store/auth-store";
 import { io } from "socket.io-client";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchMapSnapshot, fetchWorkerNotificationSettings } from "@/lib/admin-api";
@@ -379,7 +380,7 @@ export default function MapPage() {
 
   useEffect(() => {
     const base = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "").replace(/\/api$/, "");
-    const socket = io(`${base}/realtime`, { transports: ["websocket"] });
+    const socket = io(`${base}/realtime`, { transports: ["websocket"], auth: { token: useAuthStore.getState().token } });
 
     socket.on("connect_error", () => {
       toast.warning("Realtime socket no disponible, usando sync incremental");
