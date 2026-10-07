@@ -284,11 +284,21 @@ export default function WorkersPage() {
     setMapModalWorker(worker);
     try {
       const jobs = await fetchWorkerHistory(worker.id);
-      // Filter only completed jobs with location
-      const jobsWithLocation = jobs.filter(
-        (job: any) =>
-          job.status === 'completed' && job.latitude && job.longitude
-      );
+      // Filter only completed jobs with valid coordinates
+      const jobsWithLocation = (jobs || [])
+        .filter((job: any) => {
+          const isCompleted = job.status === "completed" || job.requestStatus === "completed";
+          const isAccepted = job.offerStatus === "accepted" || (!job.offerStatus && isCompleted);
+          const lat = Number(job.latitude ?? job.lat);
+          const lng = Number(job.longitude ?? job.lng);
+          return isCompleted && isAccepted && Number.isFinite(lat) && Number.isFinite(lng);
+        })
+        .map((job: any) => ({
+          ...job,
+          latitude: Number(job.latitude ?? job.lat),
+          longitude: Number(job.longitude ?? job.lng),
+          amount: Number(job.amount ?? job.budget ?? 0),
+        }));
       setMapJobs(jobsWithLocation);
 
       // Center map on first job if available
@@ -716,7 +726,7 @@ export default function WorkersPage() {
                   </div>
                   <div>
                     <p className="text-xl font-bold tracking-tight text-white mt-1">
-                      Bs {loadingJobs ? "..." : (workerJobs.filter(j => j.requestStatus === 'completed').reduce((sum, j) => sum + j.amount, 0)).toFixed(2)}
+                      Bs {loadingJobs ? "..." : (workerJobs.filter(j => j.requestStatus === 'completed' && j.offerStatus === 'accepted').reduce((sum, j) => sum + (Number(j.amount) || 0), 0)).toFixed(2)}
                     </p>
                     <p className="text-xs text-on-surface-variant">Dinero Ganado</p>
                   </div>
@@ -1094,9 +1104,16 @@ export default function WorkersPage() {
                                 const isCompleted = job.requestStatus === "completed";
                                 const isCancelled = job.requestStatus === "cancelled";
                                 return (
-                                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider ${isCompleted ? 'bg-green-500/10 text-green-300 border border-green-500/20' : isCancelled ? 'bg-red-500/10 text-red-300 border border-red-500/20' : 'bg-amber-500/10 text-amber-300 border border-amber-500/20'}`}>
-                                    {statusLabel[job.requestStatus] ?? job.requestStatus}
-                                  </span>
+                                  <div className="flex flex-col items-center gap-1">
+                                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-medium uppercase tracking-wider ${isCompleted ? 'bg-green-500/10 text-green-300 border border-green-500/20' : isCancelled ? 'bg-red-500/10 text-red-300 border border-red-500/20' : 'bg-amber-500/10 text-amber-300 border border-amber-500/20'}`}>
+                                      {statusLabel[job.requestStatus] ?? job.requestStatus}
+                                    </span>
+                                    {job.offerStatus && (
+                                      <span className={`text-[8px] font-semibold uppercase tracking-wider ${job.offerStatus === 'accepted' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                        {job.offerStatus === 'accepted' ? 'Oferta Aceptada' : 'Oferta Rechazada'}
+                                      </span>
+                                    )}
+                                  </div>
                                 );
                               })()}
                             </td>

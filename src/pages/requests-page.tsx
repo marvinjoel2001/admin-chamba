@@ -156,57 +156,84 @@ export default function RequestsPage() {
 
   // Load request detail when modal opens
   useEffect(() => {
+    let cancelled = false;
     if (selectedRequest) {
+      const currentReq = selectedRequest;
+      const currentId = currentReq.id;
       setLoadingDetail(true);
+      setRequestDetail(null);
       setModalTab("overview");
-      fetchRequestDetail(selectedRequest.id)
+      fetchRequestDetail(currentId)
         .then((detail) => {
-          setRequestDetail(detail);
+          if (!cancelled) {
+            setRequestDetail(detail);
+          }
         })
         .catch(() => {
-          setRequestDetail({
-            id: selectedRequest.id,
-            title: selectedRequest.title,
-            status: selectedRequest.status,
-            budget: selectedRequest.budget,
-            address: selectedRequest.address,
-            latitude: selectedRequest.latitude,
-            longitude: selectedRequest.longitude,
-            createdAt: selectedRequest.createdAt || selectedRequest.updatedAt,
-            updatedAt: selectedRequest.updatedAt,
-            client: {
-              id: selectedRequest.clientId || "",
-              firstName: selectedRequest.clientName?.split(" ")[0] || "Cliente",
-              lastName: selectedRequest.clientName?.split(" ").slice(1).join(" ") || "",
-              averageRating: 5.0,
-            },
-            worker: selectedRequest.workerName
-              ? {
-                  id: selectedRequest.workerId || "",
-                  firstName: selectedRequest.workerName?.split(" ")[0] || "Worker",
-                  lastName: selectedRequest.workerName?.split(" ").slice(1).join(" ") || "",
-                  averageRating: 5.0,
-                  completedJobs: 0,
-                }
-              : null,
-            timeline: generateTimeline(selectedRequest),
-          } as RequestDetail);
+          if (!cancelled) {
+            setRequestDetail({
+              id: currentReq.id,
+              title: currentReq.title,
+              status: currentReq.status,
+              budget: currentReq.budget,
+              address: currentReq.address,
+              latitude: currentReq.latitude,
+              longitude: currentReq.longitude,
+              createdAt: currentReq.createdAt || currentReq.updatedAt,
+              updatedAt: currentReq.updatedAt,
+              client: {
+                id: currentReq.clientId || "",
+                firstName: currentReq.clientName?.split(" ")[0] || "Cliente",
+                lastName: currentReq.clientName?.split(" ").slice(1).join(" ") || "",
+                averageRating: 5.0,
+              },
+              worker: currentReq.workerName
+                ? {
+                    id: currentReq.workerId || "",
+                    firstName: currentReq.workerName?.split(" ")[0] || "Worker",
+                    lastName: currentReq.workerName?.split(" ").slice(1).join(" ") || "",
+                    averageRating: 5.0,
+                    completedJobs: 0,
+                  }
+                : null,
+              timeline: generateTimeline(currentReq),
+            } as RequestDetail);
+          }
         })
         .finally(() => {
-          setLoadingDetail(false);
+          if (!cancelled) {
+            setLoadingDetail(false);
+          }
         });
 
       // Cargar workers notificados
       setLoadingNotified(true);
+      setNotifiedWorkers([]);
       setNotifiedSearch("");
-      fetchRequestNotifiedWorkers(selectedRequest.id)
-        .then((res) => setNotifiedWorkers(res.workers))
-        .catch(() => setNotifiedWorkers([]))
-        .finally(() => setLoadingNotified(false));
+      fetchRequestNotifiedWorkers(currentId)
+        .then((res) => {
+          if (!cancelled) {
+            setNotifiedWorkers(res.workers);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setNotifiedWorkers([]);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoadingNotified(false);
+          }
+        });
     } else {
       setRequestDetail(null);
       setNotifiedWorkers([]);
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedRequest]);
 
   // Generate timeline fallback from request data

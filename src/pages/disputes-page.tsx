@@ -14,6 +14,7 @@ import {
   Send,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 
 type StatusFilter = "all" | "open" | "resolved";
 
@@ -187,14 +188,16 @@ export function DisputeChat({
     if (!text.trim() || sending) return;
     setSending(true);
     const msg = text.trim();
-    setText("");
     try {
       await sendDisputeMessage(dispute.id, msg);
+      setText("");
       await loadMessages();
-    } catch {
-      /* ignore */
+    } catch (err) {
+      console.error("Error al enviar mensaje de soporte:", err);
+      toast.error("No se pudo enviar el mensaje. Intente de nuevo.");
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   };
 
   const handleResolve = async () => {
@@ -202,11 +205,14 @@ export function DisputeChat({
     setResolving(true);
     try {
       await resolveDispute(dispute.id, resolveText.trim());
+      toast.success("Disputa resuelta correctamente");
       onClose();
-    } catch {
-      /* ignore */
+    } catch (err) {
+      console.error("Error al resolver disputa:", err);
+      toast.error("No se pudo resolver la disputa");
+    } finally {
+      setResolving(false);
     }
-    setResolving(false);
   };
 
   return (
