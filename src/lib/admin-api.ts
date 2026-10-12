@@ -271,14 +271,18 @@ export async function seedPaymentMethods() {
 
 export async function broadcastNotification(payload: {
   target: 'all' | 'workers' | 'clients' | 'custom';
-  type: 'push' | 'toast';
+  /** `announcement`: aviso que queda en la bandeja de la app y llega por push. */
+  type: 'push' | 'toast' | 'announcement';
   title: string;
   body: string;
   toastType?: 'info' | 'success' | 'error';
   userIds?: string[];
   isCallAlert?: boolean;
 }) {
-  const { data } = await api.post("/mobile/admin/notifications/broadcast", payload);
+  const { data } = await api.post<{ success: boolean; method: string; count?: number; saved?: number }>(
+    "/mobile/admin/notifications/broadcast",
+    payload,
+  );
   return data;
 }
 
