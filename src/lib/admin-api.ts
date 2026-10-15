@@ -393,3 +393,37 @@ export async function updateAgency(
 export async function deleteAgency(id: string) {
   await api.delete(`/admin/agencies/${id}`);
 }
+
+// Cuenta de una agencia con Chamba (pagos digitales, comisiones, liquidaciones)
+export type AgencyAccount = {
+  summary: {
+    balance: number;
+    digitalJobs: number;
+    digitalCollected: number;
+    digitalFees: number;
+    cashJobs: number;
+    cashFees: number;
+    paidToAgency: number;
+    paidToChamba: number;
+  };
+  settlements: Array<{
+    id: string;
+    direction: "to_agency" | "to_chamba";
+    amount: number;
+    note: string | null;
+    createdAt: string;
+  }>;
+};
+
+export async function fetchAgencyAccount(agencyId: string) {
+  const { data } = await api.get<AgencyAccount>(`/admin/agencies/${agencyId}/account`);
+  return data;
+}
+
+export async function createAgencySettlement(
+  agencyId: string,
+  payload: { direction: "to_agency" | "to_chamba"; amount: number; note?: string },
+) {
+  const { data } = await api.post<AgencyAccount>(`/admin/agencies/${agencyId}/settlements`, payload);
+  return data;
+}

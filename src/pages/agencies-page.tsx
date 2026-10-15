@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchAgencies, createAgency, updateAgency, deleteAgency } from "@/lib/admin-api";
 import type { AdminAgency } from "@/lib/types";
+import { AgencyAccountModal } from "@/components/agency-account-modal";
 import { toast } from "sonner";
 import {
   Building2,
@@ -41,6 +42,7 @@ export default function AgenciesPage() {
   const [editAgency, setEditAgency] = useState<AdminAgency | null>(null);
   const [form, setForm] = useState<AgencyForm>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [accountOf, setAccountOf] = useState<AdminAgency | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -227,8 +229,14 @@ export default function AgenciesPage() {
 
               <div className="mt-3 flex items-center justify-between text-xs">
                 <span className="text-on-surface-variant">
-                  Comisión: <strong>{agency.commissionRate}%</strong>
+                  Comisión de Chamba: <strong>{agency.commissionRate}%</strong>
                 </span>
+                <button
+                  onClick={() => setAccountOf(agency)}
+                  className="rounded-full border border-white/10 px-2.5 py-1 text-xs font-semibold hover:bg-white/10"
+                >
+                  Cuenta
+                </button>
                 <button
                   onClick={() => handleToggleActive(agency)}
                   className={`rounded-full px-2.5 py-1 text-xs font-semibold border transition-all ${
@@ -243,6 +251,14 @@ export default function AgenciesPage() {
             </div>
           ))}
         </div>
+      )}
+
+      {accountOf && (
+        <AgencyAccountModal
+          agencyId={accountOf.id}
+          agencyName={accountOf.name}
+          onClose={() => setAccountOf(null)}
+        />
       )}
 
       {/* Create / Edit Modal */}
@@ -306,7 +322,7 @@ export default function AgenciesPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-sm text-on-surface-variant">
-                    Comisión (%)
+                    Comisión de Chamba (%)
                   </label>
                   <input
                     type="number"
