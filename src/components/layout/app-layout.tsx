@@ -34,7 +34,7 @@ import { useAdminStore } from "@/store/admin-store";
 import { useAuthStore } from "@/store/auth-store";
 import { useThemeStore } from "@/store/theme-store";
 import { api } from "@/lib/api";
-import { fetchDisputes, fetchWorkerVerificationInbox } from "@/lib/admin-api";
+import { fetchDisputes, fetchWorkerVerificationInbox, fetchWorkerLeads } from "@/lib/admin-api";
 import { websocketService } from "@/lib/websocket-service";
 import { Modal, ModalContent } from "@/components/ui/modal";
 import { toast } from "sonner";
@@ -53,7 +53,7 @@ const nav = [
   ["/payment-methods", "Métodos de Pago", CreditCard, null],
   ["/payments", "Pagos", Receipt, null],
   ["/notifications", "Notificaciones", Bell, null],
-  ["/leads", "Postulantes", UserSquare2, null],
+  ["/leads", "Postulantes", UserSquare2, "pendingLeads"],
   ["/agencies", "Agencias", Building2, null],
   ["/logs", "API Logs", Activity, null],
   ["/settings", "Configuración", Settings, null],
@@ -62,7 +62,7 @@ const nav = [
 export function AppLayout() {
   const navigate = useNavigate();
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const { search, setSearch, pendingDisputes, pendingVerifications, setPendingDisputes, setPendingVerifications } = useAdminStore();
+  const { search, setSearch, pendingDisputes, pendingVerifications, pendingLeads, setPendingDisputes, setPendingVerifications, setPendingLeads } = useAdminStore();
   const { user, logout } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -73,7 +73,7 @@ export function AppLayout() {
   const [newPassword, setNewPassword] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  const totalPendingAlerts = pendingDisputes + pendingVerifications;
+  const totalPendingAlerts = pendingDisputes + pendingVerifications + pendingLeads;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -124,25 +124,31 @@ export function AppLayout() {
   useEffect(() => {
     const loadBadgeCounts = async () => {
       try {
-        const [disputes, verifications] = await Promise.all([
+        const [disputes, verifications, leads] = await Promise.all([
           fetchDisputes("open"),
           fetchWorkerVerificationInbox(),
+          fetchWorkerLeads(),
         ]);
         setPendingDisputes(disputes.length);
         setPendingVerifications(verifications.length);
+        setPendingLeads(leads.filter((l) => !l.isContacted).length);
       } catch {
         // Silently fail - badges will just show 0
       }
     };
     void loadBadgeCounts();
 
+    // Refrescar contadores cada 15 segundos para mantener sincronización
+    const intervalId = setInterval(loadBadgeCounts, 15000);
+
     // Connect WebSocket for real-time updates
     websocketService.connect();
 
     return () => {
+      clearInterval(intervalId);
       websocketService.disconnect();
     };
-  }, [setPendingDisputes, setPendingVerifications]);
+  }, [setPendingDisputes, setPendingVerifications, setPendingLeads]);
 
   return (
     <div className="min-h-screen text-on-surface bg-[#13101d]">
@@ -162,7 +168,8 @@ export function AppLayout() {
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden px-3 pb-4 custom-scrollbar">
           {nav.map(([to, label, Icon, badgeKey]) => {
             const badgeCount = badgeKey === "pendingDisputes" ? pendingDisputes : 
-                              badgeKey === "pendingVerifications" ? pendingVerifications : 0;
+                              badgeKey === "pendingVerifications" ? pendingVerifications :
+                              badgeKey === "pendingLeads" ? pendingLeads : 0;
             return (
               <NavLink
                 key={to}
@@ -227,7 +234,8 @@ export function AppLayout() {
             <nav className="flex flex-1 flex-col gap-1 overflow-y-auto overflow-x-hidden px-4 pb-8 custom-scrollbar">
               {nav.map(([to, label, Icon, badgeKey]) => {
                 const badgeCount = badgeKey === "pendingDisputes" ? pendingDisputes : 
-                                  badgeKey === "pendingVerifications" ? pendingVerifications : 0;
+                                  badgeKey === "pendingVerifications" ? pendingVerifications :
+                                  badgeKey === "pendingLeads" ? pendingLeads : 0;
                 return (
                   <NavLink
                     key={to}

@@ -62,6 +62,16 @@ class WebSocketService {
     this.socket.on("verification.reviewed", () => {
       useAdminStore.getState().decrementPendingVerifications();
     });
+
+    // Escuchar nuevo postulante / lead
+    this.socket.on("lead.new", () => {
+      useAdminStore.getState().incrementPendingLeads();
+    });
+
+    // Escuchar postulante contactado
+    this.socket.on("lead.contacted", () => {
+      useAdminStore.getState().decrementPendingLeads();
+    });
   }
 
   disconnect() {
@@ -71,6 +81,10 @@ class WebSocketService {
 
   isConnected(): boolean {
     return this.socket?.connected ?? false;
+  }
+
+  getSocket(): Socket | null {
+    return this.socket;
   }
 }
 

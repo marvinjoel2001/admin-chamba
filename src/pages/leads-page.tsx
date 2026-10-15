@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Check, Clock, Phone, MapPin } from "lucide-react";
 import { fetchWorkerLeads, markWorkerLeadContacted } from "@/lib/admin-api";
 import type { WorkerLead } from "@/lib/types";
+import { useAdminStore } from "@/store/admin-store";
+import { websocketService } from "@/lib/websocket-service";
 
 export default function LeadsPage() {
   const [items, setItems] = useState<WorkerLead[]>([]);
@@ -18,6 +20,7 @@ export default function LeadsPage() {
         const leads = await fetchWorkerLeads();
         if (mounted) {
           setItems(leads);
+          useAdminStore.getState().setPendingLeads(leads.filter((l) => !l.isContacted).length);
         }
       } catch (error) {
         if (mounted) toast.error("Error al obtener los postulantes");
@@ -30,10 +33,34 @@ export default function LeadsPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const socket = websocketService.getSocket();
+    if (!socket) return;
+    const onNewLead = (newLead: WorkerLead) => {
+      setItems((prev) => {
+        if (prev.some((item) => item.id === newLead?.id)) return prev;
+        const next = newLead?.id ? [newLead, ...prev] : prev;
+        useAdminStore.getState().setPendingLeads(next.filter((l) => !l.isContacted).length);
+        return next;
+      });
+      if (newLead?.fullName) {
+        toast.info(`Nuevo postulante: ${newLead.fullName}`);
+      }
+    };
+    socket.on("lead.new", onNewLead);
+    return () => {
+      socket.off("lead.new", onNewLead);
+    };
+  }, []);
+
   const handleMarkContacted = async (id: string) => {
     try {
       const updated = await markWorkerLeadContacted(id);
-      setItems((prev) => prev.map((item) => (item.id === id ? updated : item)));
+      setItems((prev) => {
+        const next = prev.map((item) => (item.id === id ? updated : item));
+        useAdminStore.getState().setPendingLeads(next.filter((l) => !l.isContacted).length);
+        return next;
+      });
       toast.success("Marcado como contactado");
     } catch (error) {
       toast.error("Error al actualizar el estado");
