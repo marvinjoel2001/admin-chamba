@@ -15,6 +15,7 @@ import LogsPage from "@/pages/logs-page";
 import DisputesPage from "@/pages/disputes-page";
 import CategoriesPage from "@/pages/categories-page";
 import PaymentMethodsPage from "@/pages/payment-methods-page";
+import PaymentsPage from "@/pages/payments-page";
 import NotificationsPage from "@/pages/notifications-page";
 import LoginPage from "@/pages/login-page";
 import LeadsPage from "@/pages/leads-page";
@@ -112,6 +113,7 @@ const router = createBrowserRouter([
       { path: "disputes", element: <DisputesPage /> },
       { path: "categories", element: <CategoriesPage /> },
       { path: "payment-methods", element: <PaymentMethodsPage /> },
+      { path: "payments", element: <PaymentsPage /> },
       { path: "notifications", element: <NotificationsPage /> },
       { path: "leads", element: <LeadsPage /> },
       { path: "agencies", element: <AgenciesPage /> },

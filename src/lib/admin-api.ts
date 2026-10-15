@@ -12,6 +12,9 @@ import type {
   ApiLogsResponse,
   RequestDetail,
   PaymentMethod,
+  PaymentMethodConfig,
+  PaymentProviderOption,
+  PaymentRecord,
   AiConfig,
   WorkerLead,
   StripeConfig,
@@ -238,6 +241,7 @@ export async function createPaymentMethod(payload: {
   color?: string;
   isActive?: boolean;
   sortOrder?: number;
+  config?: PaymentMethodConfig;
 }) {
   const { data } = await api.post<PaymentMethod>("/payment-methods", payload);
   return data;
@@ -252,6 +256,7 @@ export async function updatePaymentMethod(
     color: string;
     isActive: boolean;
     sortOrder: number;
+    config: PaymentMethodConfig;
   }>
 ) {
   const { data } = await api.put<PaymentMethod>(`/payment-methods/${id}`, payload);
@@ -265,6 +270,33 @@ export async function deletePaymentMethod(id: string) {
 export async function seedPaymentMethods() {
   const { data } = await api.post<{ message: string }>("/payment-methods/seed");
   return data;
+}
+
+// --- Pagos dentro de la app ---
+
+export async function fetchPaymentProviders() {
+  const { data } = await api.get<PaymentProviderOption[]>("/mobile/admin/payments/providers");
+  return data;
+}
+
+export async function uploadPaymentQr(imageBase64: string) {
+  const { data } = await api.post<{ url: string }>("/mobile/admin/payments/qr-image", { imageBase64 });
+  return data.url;
+}
+
+export async function fetchPayments(status?: string) {
+  const { data } = await api.get<PaymentRecord[]>("/mobile/admin/payments", {
+    params: status ? { status } : undefined,
+  });
+  return data;
+}
+
+export async function confirmPayment(id: string) {
+  await api.post(`/mobile/admin/payments/${id}/confirm`);
+}
+
+export async function rejectPayment(id: string, reason?: string) {
+  await api.post(`/mobile/admin/payments/${id}/reject`, { reason });
 }
 
 // --- Notifications ---

@@ -5,8 +5,10 @@ import {
   updatePaymentMethod,
   deletePaymentMethod,
   seedPaymentMethods,
+  fetchPaymentProviders,
+  uploadPaymentQr,
 } from "@/lib/admin-api";
-import type { PaymentMethod } from "@/lib/types";
+import type { PaymentMethod, PaymentProviderOption } from "@/lib/types";
 import {
   CreditCard,
   Pencil,
@@ -16,7 +18,20 @@ import {
   DollarSign,
   RefreshCw,
   Check,
+  QrCode,
+  Upload,
 } from "lucide-react";
+
+const readAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
+/** Tarjeta de Stripe: método virtual (se configura en Configuración → Stripe). */
+const isVirtual = (method: PaymentMethod) => method.id === "stripe-card";
 
 export default function PaymentMethodsPage() {
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
@@ -34,8 +49,39 @@ export default function PaymentMethodsPage() {
     color: "#4CAF50",
     isActive: true,
     sortOrder: 0,
+    provider: "none",
+    qrImageUrl: "",
+    instructions: "",
+    expiresMinutes: 30,
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [providers, setProviders] = useState<PaymentProviderOption[]>([
+    { key: "none", label: "Sin cobro en la app (efectivo / al terminar)" },
+  ]);
+
+  useEffect(() => {
+    fetchPaymentProviders().then(setProviders).catch(() => undefined);
+  }, []);
+
+  const providerLabel = (method: PaymentMethod) => {
+    if (isVirtual(method)) return "Tarjeta (Stripe)";
+    const key = String(method.config?.provider || "none");
+    return providers.find((p) => p.key === key)?.label ?? key;
+  };
+
+  const handleQrFile = async (file?: File) => {
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadPaymentQr(await readAsDataUrl(file));
+      setForm((f) => ({ ...f, qrImageUrl: url }));
+    } catch (e) {
+      alert("No se pudo subir el QR: " + (e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -63,6 +109,10 @@ export default function PaymentMethodsPage() {
       color: "#4CAF50",
       isActive: true,
       sortOrder: methods.length,
+      provider: "none",
+      qrImageUrl: "",
+      instructions: "",
+      expiresMinutes: 30,
     });
     setShowModal(true);
   };
@@ -77,12 +127,28 @@ export default function PaymentMethodsPage() {
       color: method.color,
       isActive: method.isActive,
       sortOrder: method.sortOrder,
+      provider: String(method.config?.provider || "none"),
+      qrImageUrl: String(method.config?.qrImageUrl || ""),
+      instructions: String(method.config?.instructions || ""),
+      expiresMinutes: Number(method.config?.expiresMinutes) || 30,
     });
     setShowModal(true);
   };
 
   const handleSave = async () => {
     if (!form.name.trim() || !form.code.trim() || saving) return;
+    if (form.provider === "manual_qr" && !form.qrImageUrl) {
+      alert("Sube la imagen del QR antes de guardar.");
+      return;
+    }
+    // Se conservan otros datos del proveedor que ya tuviera el método.
+    const config = {
+      ...(editMethod?.config ?? {}),
+      provider: form.provider,
+      qrImageUrl: form.qrImageUrl || undefined,
+      instructions: form.instructions.trim() || undefined,
+      expiresMinutes: form.expiresMinutes,
+    };
     setSaving(true);
     try {
       if (editMethod) {
@@ -93,6 +159,7 @@ export default function PaymentMethodsPage() {
           color: form.color,
           isActive: form.isActive,
           sortOrder: form.sortOrder,
+          config,
         });
       } else {
         await createPaymentMethod({
@@ -103,6 +170,7 @@ export default function PaymentMethodsPage() {
           color: form.color,
           isActive: form.isActive,
           sortOrder: form.sortOrder,
+          config,
         });
       }
       setShowModal(false);
@@ -140,6 +208,8 @@ export default function PaymentMethodsPage() {
         return <DollarSign className="w-5 h-5" />;
       case "credit-card":
         return <CreditCard className="w-5 h-5" />;
+      case "qr-code":
+        return <QrCode className="w-5 h-5" />;
       default:
         return <DollarSign className="w-5 h-5" />;
     }
@@ -203,7 +273,7 @@ export default function PaymentMethodsPage() {
                 Código
               </th>
               <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant">
-                Descripción
+                Cobro en la app
               </th>
               <th className="px-4 py-3 text-sm font-semibold text-on-surface-variant">
                 Estado
@@ -252,8 +322,11 @@ export default function PaymentMethodsPage() {
                       {method.code}
                     </code>
                   </td>
-                  <td className="px-4 py-3 text-sm text-on-surface-variant max-w-xs truncate">
-                    {method.description || "—"}
+                  <td className="px-4 py-3 text-sm text-on-surface-variant">
+                    <span className="inline-flex items-center gap-1.5">
+                      {method.config?.provider === "manual_qr" && <QrCode className="w-4 h-4" />}
+                      {providerLabel(method)}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <span
@@ -275,20 +348,28 @@ export default function PaymentMethodsPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => openEdit(method)}
-                        className="p-2 text-on-surface-variant hover:text-primary hover:bg-white/10 rounded-lg transition-colors"
-                        title="Editar"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(method)}
-                        className="p-2 text-on-surface-variant hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {isVirtual(method) ? (
+                        <span className="text-xs text-on-surface-variant">
+                          Se configura en Configuración → Stripe
+                        </span>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => openEdit(method)}
+                            className="p-2 text-on-surface-variant hover:text-primary hover:bg-white/10 rounded-lg transition-colors"
+                            title="Editar"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(method)}
+                            className="p-2 text-on-surface-variant hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -362,6 +443,93 @@ export default function PaymentMethodsPage() {
                 />
               </div>
 
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3 space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-on-surface-variant mb-1">
+                    Cobro en la app
+                  </label>
+                  <select
+                    value={form.provider}
+                    onChange={(e) => setForm({ ...form, provider: e.target.value })}
+                    className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-primary"
+                  >
+                    {providers
+                      .filter((p) => p.key !== "stripe")
+                      .map((p) => (
+                        <option key={p.key} value={p.key} className="bg-[#0d1117]">
+                          {p.label}
+                        </option>
+                      ))}
+                  </select>
+                  <p className="text-xs text-on-surface-variant/70 mt-1">
+                    Puedes cambiarlo cuando quieras: la app muestra lo que elijas aquí sin actualizarse.
+                  </p>
+                </div>
+
+                {form.provider === "manual_qr" && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-on-surface-variant mb-1">
+                        Imagen del QR <span className="text-red-400">*</span>
+                      </label>
+                      <div className="flex items-center gap-3">
+                        {form.qrImageUrl ? (
+                          <img
+                            src={form.qrImageUrl}
+                            alt="QR de cobro"
+                            className="w-24 h-24 rounded-lg bg-white object-contain p-1"
+                          />
+                        ) : (
+                          <div className="w-24 h-24 rounded-lg border border-dashed border-white/20 flex items-center justify-center text-on-surface-variant">
+                            <QrCode className="w-8 h-8" />
+                          </div>
+                        )}
+                        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-on-surface-variant hover:bg-white/10">
+                          <Upload className="w-4 h-4" />
+                          {uploading ? "Subiendo..." : form.qrImageUrl ? "Cambiar QR" : "Subir QR"}
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg"
+                            className="hidden"
+                            disabled={uploading}
+                            onChange={(e) => handleQrFile(e.target.files?.[0])}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-on-surface-variant mb-1">
+                        Instrucciones para el cliente
+                      </label>
+                      <textarea
+                        value={form.instructions}
+                        onChange={(e) => setForm({ ...form, instructions: e.target.value })}
+                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white placeholder:text-on-surface-variant/50 outline-none focus:border-primary"
+                        rows={2}
+                        placeholder="Ej: Paga el monto exacto a Chamba SRL y toca Ya pagué."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-on-surface-variant mb-1">
+                        Minutos para pagar
+                      </label>
+                      <input
+                        type="number"
+                        min={5}
+                        value={form.expiresMinutes}
+                        onChange={(e) =>
+                          setForm({ ...form, expiresMinutes: parseInt(e.target.value) || 30 })
+                        }
+                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-primary"
+                      />
+                      <p className="text-xs text-on-surface-variant/70 mt-1">
+                        Confirma o rechaza los pagos en el menú Pagos.
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-on-surface-variant mb-1">
                   Icono
@@ -374,6 +542,7 @@ export default function PaymentMethodsPage() {
                   <option value="" className="bg-[#0d1117]">— Seleccionar —</option>
                   <option value="money-bill" className="bg-[#0d1117]">💵 Dinero (Efectivo)</option>
                   <option value="credit-card" className="bg-[#0d1117]">💳 Tarjeta</option>
+                  <option value="qr-code" className="bg-[#0d1117]">🔳 QR</option>
                 </select>
               </div>
 

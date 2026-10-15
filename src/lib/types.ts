@@ -297,6 +297,36 @@ export type PaymentMethod = {
   updatedAt: string;
 };
 
+// ─── Pagos dentro de la app ───
+
+/** Config de un método de pago: qué proveedor cobra y sus datos. */
+export type PaymentMethodConfig = {
+  provider?: string;
+  qrImageUrl?: string;
+  instructions?: string;
+  expiresMinutes?: number;
+  currency?: string;
+  [key: string]: unknown;
+};
+
+export type PaymentProviderOption = { key: string; label: string };
+
+export type PaymentRecord = {
+  id: string;
+  requestId: string;
+  requestTitle: string | null;
+  clientName: string | null;
+  clientEmail: string | null;
+  methodName: string | null;
+  provider: string;
+  amount: number;
+  currency: string;
+  status: "pending" | "reported" | "paid" | "failed" | "expired" | "cancelled";
+  createdAt: string;
+  reportedAt: string | null;
+  confirmedAt: string | null;
+};
+
 // ─── AI Config ───
 
 export type AiConfig = {
