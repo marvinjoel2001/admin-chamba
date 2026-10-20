@@ -1431,15 +1431,18 @@ const createInputClass =
   "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary";
 
 /** Alta de un trabajador: queda sin verificar y entra a la app con su correo y esta contraseña. */
-function CreateWorkerForm({ onCreated }: { onCreated: (worker: AdminUser) => void }) {
+export function CreateWorkerForm({ onCreated }: { onCreated: (worker: AdminUser) => void }) {
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
   const [saving, setSaving] = useState(false);
-  const valid =
-    form.firstName.trim() && /S+@S+.S+/.test(form.email) && form.password.trim().length >= 6;
+  const valid = Boolean(
+    form.firstName.trim() &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) &&
+    form.password.trim().length >= 6,
+  );
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!valid) return;
+    if (!valid || saving) return;
     setSaving(true);
     try {
       const worker = await createWorker({
