@@ -20,6 +20,7 @@ import NotificationsPage from "@/pages/notifications-page";
 import LoginPage from "@/pages/login-page";
 import LeadsPage from "@/pages/leads-page";
 import AgenciesPage from "@/pages/agencies-page";
+import WebContactPage from "@/pages/web-contact-page";
 import { useAuthStore } from "@/store/auth-store";
 import { useThemeStore } from "@/store/theme-store";
 import { api } from "@/lib/api";
@@ -116,6 +117,7 @@ const router = createBrowserRouter([
       { path: "payments", element: <PaymentsPage /> },
       { path: "notifications", element: <NotificationsPage /> },
       { path: "leads", element: <LeadsPage /> },
+      { path: "web-contact", element: <WebContactPage /> },
       { path: "agencies", element: <AgenciesPage /> },
       { path: "settings", element: <SettingsPage /> },
     ],

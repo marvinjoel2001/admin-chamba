@@ -7,8 +7,7 @@ import Map, {
   Source,
   type MapLayerMouseEvent,
 } from "react-map-gl";
-import { useAuthStore } from "@/store/auth-store";
-import { io } from "socket.io-client";
+import { websocketService } from "@/lib/websocket-service";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { fetchMapSnapshot, fetchWorkerNotificationSettings } from "@/lib/admin-api";
 import type { MapClient, MapRequest, MapWorker } from "@/lib/types";
@@ -379,14 +378,21 @@ export default function MapPage() {
   }, [applySnapshot]);
 
   useEffect(() => {
-    const base = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "").replace(/\/api$/, "");
-    const socket = io(`${base}/realtime`, { transports: ["websocket"], auth: { token: useAuthStore.getState().token } });
+    // Mismo socket que el resto del admin (respeta VITE_SOCKET_URL); antes se
+    // abría una segunda conexión solo para el mapa.
+    const socket = websocketService.getSocket();
+    if (!socket) return;
+    const handlers: Array<[string, (...args: any[]) => void]> = [];
+    const listen = (event: string, handler: (...args: any[]) => void) => {
+      handlers.push([event, handler]);
+      listen(event, handler);
+    };
 
-    socket.on("connect_error", () => {
+    listen("connect_error", () => {
       toast.warning("Realtime socket no disponible, usando sync incremental");
     });
 
-    socket.on("worker.location.updated", (payload: { workerId: string; latitude: number; longitude: number; timestamp: string }) => {
+    listen("worker.location.updated", (payload: { workerId: string; latitude: number; longitude: number; timestamp: string }) => {
       if (!workersMapRef.current.has(payload.workerId)) return;
       workerRealtimeQueueRef.current.set(payload.workerId, {
         latitude: payload.latitude,
@@ -396,7 +402,7 @@ export default function MapPage() {
       scheduleWorkerFlush();
     });
 
-    socket.on("request.published", (payload: { requestId: string; title: string; status: string; budget: number; address: string; latitude: number; longitude: number; timestamp: string }) => {
+    listen("request.published", (payload: { requestId: string; title: string; status: string; budget: number; address: string; latitude: number; longitude: number; timestamp: string }) => {
       const next: MapRequest = {
         id: payload.requestId,
         title: payload.title,
@@ -412,7 +418,7 @@ export default function MapPage() {
       setRequests(Array.from(requestsMapRef.current.values()).sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt)));
     });
 
-    socket.on("request.status.updated", (payload: { requestId: string; status: string; timestamp: string }) => {
+    listen("request.status.updated", (payload: { requestId: string; status: string; timestamp: string }) => {
       const current = requestsMapRef.current.get(payload.requestId);
       if (!current) return;
       requestsMapRef.current.set(payload.requestId, {
@@ -424,7 +430,7 @@ export default function MapPage() {
     });
 
     // Listener para actualizaciones de ubicación de clientes en tiempo real
-    socket.on("client.location.updated", (payload: { clientId: string; latitude: number; longitude: number; timestamp: string }) => {
+    listen("client.location.updated", (payload: { clientId: string; latitude: number; longitude: number; timestamp: string }) => {
       const current = clientsMapRef.current.get(payload.clientId);
       if (!current) return;
       clientsMapRef.current.set(payload.clientId, {
@@ -437,7 +443,7 @@ export default function MapPage() {
     });
 
     return () => {
-      socket.disconnect();
+      for (const [event, handler] of handlers) socket.off(event, handler);
       if (flushTimerRef.current) {
         clearTimeout(flushTimerRef.current);
         flushTimerRef.current = null;

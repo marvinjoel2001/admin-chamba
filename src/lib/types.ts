@@ -92,16 +92,34 @@ export type MapSnapshotResponse = {
   requests: MapRequest[];
 };
 
+/** Reporte o suscripción enviado desde la landing. */
+export type WebContactMessage = {
+  id: string;
+  kind: "report" | "subscribe";
+  category: string | null;
+  email: string;
+  message: string | null;
+  handledAt: string | null;
+  createdAt: string;
+};
+
 export type WalletWorker = {
   id: string;
   name: string;
   jobsCompleted: number;
   earnings: number;
+  /** Comisión de Chamba congelada en sus trabajos independientes. */
+  platformFees?: number;
+  /** Cobrado por Chamba (QR/tarjeta) en sus trabajos independientes. */
+  digitalCollected?: number;
+  /** > 0 Chamba le debe; < 0 él le debe la comisión a Chamba. */
+  balance?: number;
 };
 
 export type WalletResponse = {
   period: "day" | "week" | "month";
-  totals: { totalEarnings: number; totalJobs: number };
+  commissionPercent?: number;
+  totals: { totalEarnings: number; totalJobs: number; totalCommission?: number };
   workers: WalletWorker[];
 };
 

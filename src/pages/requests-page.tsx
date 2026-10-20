@@ -5,6 +5,7 @@ import { fetchMapSnapshot, adminCancelRequest, fetchRequestDetail, fetchRequestN
 import type { MapRequest, RequestDetail, NotifiedWorker, RequestOfferItem } from "@/lib/types";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { toast } from "sonner";
+import { useAdminStore } from "@/store/admin-store";
 import {
   Search,
   Calendar,
@@ -94,7 +95,12 @@ export default function RequestsPage() {
   const [loading, setLoading] = useState(true);
 
   // --- Filtros ---
-  const [searchQuery, setSearchQuery] = useState("");
+  // El buscador del header (Enter → /requests) escribe en el store global.
+  const globalSearch = useAdminStore((state) => state.search);
+  const [searchQuery, setSearchQuery] = useState(globalSearch);
+  useEffect(() => {
+    setSearchQuery(globalSearch);
+  }, [globalSearch]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");

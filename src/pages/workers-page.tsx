@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
-import { Modal, ModalContent, ModalTrigger } from "@/components/ui/modal";
+import { Modal, ModalClose, ModalContent, ModalTrigger } from "@/components/ui/modal";
 import { toast } from "sonner";
 import {
   RotateCw,
@@ -23,6 +23,7 @@ import {
 import Map, { Marker, Popup } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import {
+  createWorker,
   fetchUsers,
   fetchWorkerVerificationInbox,
   reviewWorkerVerification,
@@ -97,6 +98,7 @@ export default function WorkersPage() {
 
   // --- Estado de búsqueda general ---
   const [workerSearch, setWorkerSearch] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -429,14 +431,19 @@ export default function WorkersPage() {
             Vista separada de trabajadores. Clientes se administran en su seccion propia.
           </p>
         </div>
-        <Modal>
+        <Modal open={createOpen} onOpenChange={setCreateOpen}>
           <ModalTrigger asChild>
             <Button className="border border-white/10 bg-gradient-to-r from-primary-container to-purple-700 text-white">
               Add Worker
             </Button>
           </ModalTrigger>
           <ModalContent>
-            <h3 className="text-lg font-semibold">Create Worker</h3>
+            <CreateWorkerForm
+              onCreated={(worker) => {
+                setItems((prev) => [worker, ...prev]);
+                setCreateOpen(false);
+              }}
+            />
           </ModalContent>
         </Modal>
       </div>
@@ -1357,7 +1364,7 @@ export default function WorkersPage() {
                       <div className="cursor-pointer hover:scale-110 transition-transform">
                         <div className="flex flex-col items-center">
                           <div className="bg-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-lg shadow-lg whitespace-nowrap">
-                            Bs {job.budget || 0}
+                            Bs {job.amount || 0}
                           </div>
                           <div className="w-0.5 h-3 bg-emerald-500"></div>
                           <div className="w-3 h-3 bg-emerald-500 rounded-full border-2 border-white shadow-lg"></div>
@@ -1381,7 +1388,7 @@ export default function WorkersPage() {
                         <p className="text-xs text-gray-600 mb-2">{selectedJob.category}</p>
                         <div className="flex items-center gap-2 text-xs">
                           <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded">Completado</span>
-                          <span className="font-medium">Bs {selectedJob.budget}</span>
+                          <span className="font-medium">Bs {selectedJob.amount ?? 0}</span>
                         </div>
                         <p className="text-xs text-gray-500 mt-2 line-clamp-2">{selectedJob.address}</p>
                         <p className="text-xs text-gray-400 mt-1">
@@ -1417,5 +1424,72 @@ export default function WorkersPage() {
         />
       )}
     </section>
+  );
+}
+
+const createInputClass =
+  "w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-primary";
+
+/** Alta de un trabajador: queda sin verificar y entra a la app con su correo y esta contraseña. */
+function CreateWorkerForm({ onCreated }: { onCreated: (worker: AdminUser) => void }) {
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "" });
+  const [saving, setSaving] = useState(false);
+  const valid =
+    form.firstName.trim() && /S+@S+.S+/.test(form.email) && form.password.trim().length >= 6;
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!valid) return;
+    setSaving(true);
+    try {
+      const worker = await createWorker({
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim() || undefined,
+        email: form.email.trim(),
+        phone: form.phone.trim() || undefined,
+        password: form.password.trim(),
+      });
+      toast.success("Trabajador creado. Debe verificar su identidad desde la app.");
+      onCreated(worker);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message ?? "No se pudo crear el trabajador");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const field = (key: keyof typeof form, label: string, type = "text") => (
+    <label className="block space-y-1">
+      <span className="text-xs text-on-surface-variant">{label}</span>
+      <input
+        type={type}
+        value={form[key]}
+        onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+        className={createInputClass}
+      />
+    </label>
+  );
+
+  return (
+    <form onSubmit={submit} className="space-y-3">
+      <h3 className="text-lg font-semibold">Crear trabajador</h3>
+      <div className="grid grid-cols-2 gap-3">
+        {field("firstName", "Nombre")}
+        {field("lastName", "Apellido")}
+      </div>
+      {field("email", "Correo", "email")}
+      {field("phone", "Teléfono")}
+      {field("password", "Contraseña (mín. 6)", "password")}
+      <div className="flex justify-end gap-2 pt-2">
+        <ModalClose asChild>
+          <Button type="button" className="border border-white/10 bg-transparent text-white">
+            Cancelar
+          </Button>
+        </ModalClose>
+        <Button type="submit" disabled={!valid || saving} className="bg-primary text-white">
+          {saving ? "Creando…" : "Crear"}
+        </Button>
+      </div>
+    </form>
   );
 }

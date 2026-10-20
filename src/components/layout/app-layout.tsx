@@ -28,6 +28,7 @@ import {
   ChevronsLeft,
   LogOut,
   KeyRound,
+  Inbox,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAdminStore } from "@/store/admin-store";
@@ -54,6 +55,7 @@ const nav = [
   ["/payments", "Pagos", Receipt, null],
   ["/notifications", "Notificaciones", Bell, null],
   ["/leads", "Postulantes", UserSquare2, "pendingLeads"],
+  ["/web-contact", "Reportes web", Inbox, null],
   ["/agencies", "Agencias", Building2, null],
   ["/logs", "API Logs", Activity, null],
   ["/settings", "Configuración", Settings, null],
