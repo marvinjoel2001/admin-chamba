@@ -385,7 +385,7 @@ export default function MapPage() {
     const handlers: Array<[string, (...args: any[]) => void]> = [];
     const listen = (event: string, handler: (...args: any[]) => void) => {
       handlers.push([event, handler]);
-      listen(event, handler);
+      socket.on(event, handler);
     };
 
     listen("connect_error", () => {
