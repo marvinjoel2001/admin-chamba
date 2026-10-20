@@ -18,6 +18,7 @@ import type {
   AiConfig,
   WorkerLead,
   StripeConfig,
+  WebContactMessage,
 } from "@/lib/types";
 
 export async function fetchWorkerLeads(): Promise<WorkerLead[]> {
@@ -27,6 +28,34 @@ export async function fetchWorkerLeads(): Promise<WorkerLead[]> {
 
 export async function markWorkerLeadContacted(id: string): Promise<WorkerLead> {
   const { data } = await api.patch<WorkerLead>(`/worker-leads/${id}/contacted`);
+  return data;
+}
+
+/**
+ * Alta de un trabajador desde el admin: crea la cuenta y le pone contraseña
+ * (se guarda hasheada) para que entre a la app con su correo.
+ */
+export async function createWorker(payload: {
+  firstName: string;
+  lastName?: string;
+  email: string;
+  phone?: string;
+  password: string;
+}): Promise<AdminUser> {
+  const { password, ...fields } = payload;
+  const { data } = await api.post<AdminUser>("/users", { ...fields, type: "worker" });
+  return updateUser(data.id, { password });
+}
+
+// --- Bandeja web (landing) ---
+
+export async function fetchWebContact(kind: "report" | "subscribe") {
+  const { data } = await api.get<WebContactMessage[]>("/mobile/admin/web-contact", { params: { kind } });
+  return data;
+}
+
+export async function markWebContactHandled(id: string) {
+  const { data } = await api.post<{ id: string; handledAt: string }>(`/mobile/admin/web-contact/${id}/handled`);
   return data;
 }
 

@@ -24,7 +24,9 @@ class WebSocketService {
   }
 
   connect() {
-    if (this.socket?.connected) return;
+    // Un socket ya creado (aunque aún esté conectando) se reutiliza: socket.io
+    // reconecta solo, y crear otro duplicaba eventos.
+    if (this.socket) return;
 
     const socketUrl = getSocketUrl();
     this.socket = io(`${socketUrl}/realtime`, {
@@ -83,7 +85,12 @@ class WebSocketService {
     return this.socket?.connected ?? false;
   }
 
+  /**
+   * Las páginas hijas montan su efecto antes que AppLayout (recargar en
+   * /leads daba null): si hay sesión, el socket se crea aquí mismo.
+   */
   getSocket(): Socket | null {
+    if (!this.socket && useAuthStore.getState().token) this.connect();
     return this.socket;
   }
 }
