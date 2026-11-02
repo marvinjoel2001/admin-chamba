@@ -29,6 +29,7 @@ import {
   LogOut,
   KeyRound,
   Inbox,
+  Bot,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useAdminStore } from "@/store/admin-store";
@@ -43,6 +44,7 @@ import { toast } from "sonner";
 const nav = [
   ["/", "Dashboard", LayoutDashboard, null],
   ["/map", "Mapa en Tiempo Real", Map, null],
+  ["/bots", "Bots y simulación", Bot, null],
   ["/workers", "Trabajadores", Users, "pendingVerifications"],
   ["/clients", "Clientes", UserSquare2, null],
   ["/requests", "Trabajos", ClipboardList, null],

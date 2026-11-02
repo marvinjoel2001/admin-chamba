@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { AppLayout } from "@/components/layout/app-layout";
 import DashboardPage from "@/pages/dashboard-page";
 import MapPage from "@/pages/map-page";
+import BotsPage from "@/pages/bots-page";
 import WorkersPage from "@/pages/workers-page";
 import ClientsPage from "@/pages/clients-page";
 import RequestsPage from "@/pages/requests-page";
@@ -104,6 +105,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardPage /> },
       { path: "map", element: <MapPage /> },
+      { path: "bots", element: <BotsPage /> },
       { path: "workers", element: <WorkersPage /> },
       { path: "clients", element: <ClientsPage /> },
       { path: "requests", element: <RequestsPage /> },

@@ -12,7 +12,7 @@ const { create, act } = require("react-test-renderer");
 // WebGL renderer and visual wrappers are replaced; tests never contact production.
 const passThrough = ({ children }) => React.createElement(React.Fragment, null, children);
 const MockMap = React.forwardRef(({ children, ...props }, ref) => {
-  React.useImperativeHandle(ref, () => ({ getMap: () => ({ flyTo() {} }) }));
+  React.useImperativeHandle(ref, () => ({ flyTo() {}, getMap: () => ({ flyTo() {} }) }));
   return React.createElement("map-view", props, children);
 });
 const mapModule = {
@@ -22,6 +22,7 @@ const mapModule = {
   Layer: () => null,
   Popup: passThrough,
   Marker: passThrough,
+  NavigationControl: passThrough,
 };
 const tableModule = {
   DataTable: (props) => React.createElement("data-table", props),
@@ -63,6 +64,7 @@ function loadPage(file, mocks = {}) {
     },
     __testEnv: { VITE_MAPBOX_TOKEN: "test-no-network" },
     console, setTimeout, clearTimeout, setInterval, clearInterval,
+    document: { hidden: false }, crypto: require('node:crypto').webcrypto,
     requestAnimationFrame: (callback) => setTimeout(callback, 0),
     cancelAnimationFrame: clearTimeout,
   }, { filename });
@@ -245,4 +247,59 @@ test("requests apply the header search and react to later search changes", async
   await act(async () => tree.update(React.createElement(Page)));
   assert.equal(tableData(tree).length, 1);
   assert.equal(tableData(tree)[0].id, "clean");
+});
+
+function botsFixture(configured = true) {
+  const snapshot = {
+    simulation: true, serverTime: now(), latestClient: null,
+    settings: { state: 'off', zone_configured: configured, center_mode: 'manual', latitude: -17.8,
+      longitude: -63.2, radius_km: 2, interval_seconds: 600, step_seconds: 20, max_concurrent: 3,
+      daily_limit: 30, last_error: null },
+    zone: configured ? { latitude: -17.8, longitude: -63.2, radiusKm: 2 } : null,
+    profiles: Array.from({length: 20}, (_, i) => ({id: `BOT-${i}`, role: i < 10 ? 'client' : 'worker',
+      name: `Bot ${i}`, specialty: 'Limpieza', avatar_color: '#7c3aed', enabled: true,
+      latitude: null, longitude: null, completed_count: 0})),
+    stats: { active: 0, completed: 0, cancelled: 0, today: 0 }, scenarios: [], actions: [],
+  };
+  const commands = [], saves = [];
+  const draft = (s) => ({centerMode: s.settings.center_mode, latitude: s.settings.latitude, longitude: s.settings.longitude,
+    radiusKm: s.settings.radius_km, intervalSeconds: 600, stepSeconds: 20, maxConcurrent: 3, dailyLimit: 30});
+  const api = { fetchBots: async () => snapshot, botDraft: draft,
+    circlePolygon: () => ({ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [] } }),
+    configureBots: async (value) => { saves.push(value); return {...snapshot,serverTime:now()}; },
+    controlBots: async (cmd) => { commands.push(cmd); return {...snapshot,serverTime:now(),settings:{...snapshot.settings,state:'running'}}; },
+  };
+  const {default: Page} = loadPage('bots-page.tsx', {'@/lib/bots-api':api});
+  return {Page, snapshot, commands, saves};
+}
+const botButton = (tree, text) => tree.root.findAllByType('button').find(b => b.children.includes(text));
+
+test('bots require a saved zone and preserve an edited circle across server refreshes', async t => {
+  const f = botsFixture(false);
+  const tree = await render(t, f.Page);
+  assert.equal(botButton(tree,'Encender').props.disabled, true);
+  const radius = () => tree.root.findByProps({'aria-label':'Radio de la zona'});
+  act(() => radius().props.onChange({target:{value:'4'}}));
+  await act(async () => botButton(tree,'Actualizar').props.onClick());
+  assert.equal(radius().props.value,4);
+  const mapView = tree.root.findByType('map-view');
+  act(() => mapView.props.onClick({lngLat:{lat:-16.5,lng:-68.15}}));
+  await act(async () => botButton(tree,'Guardar zona y reglas').props.onClick());
+  assert.equal(f.saves.length,1);
+  assert.equal(f.saves[0].radiusKm,4);
+  assert.equal(f.saves[0].latitude,-16.5);
+});
+
+test('bots use server control, lock editing while running, and cannot save an automatic zone without a client', async t => {
+  const f = botsFixture();
+  const tree = await render(t, f.Page);
+  assert.equal(botButton(tree,'Encender').props.disabled,false);
+  await act(async () => botButton(tree,'Encender').props.onClick());
+  assert.deepEqual(f.commands,['start']);
+  assert.equal(tree.root.findByProps({'aria-label':'Radio de la zona'}).props.disabled,true);
+  const g = botsFixture();
+  const other = await render(t,g.Page);
+  const select = other.root.findAllByType('select').find(s => s.props.value === 'manual');
+  act(() => select.props.onChange({target:{value:'latest_client'}}));
+  assert.equal(botButton(other,'Guardar zona y reglas').props.disabled,true);
 });
