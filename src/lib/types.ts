@@ -320,29 +320,42 @@ export type PaymentMethod = {
 /** Config de un método de pago: qué proveedor cobra y sus datos. */
 export type PaymentMethodConfig = {
   provider?: string;
-  qrImageUrl?: string;
-  instructions?: string;
-  expiresMinutes?: number;
   currency?: string;
   [key: string]: unknown;
 };
 
 export type PaymentProviderOption = { key: string; label: string };
 
+export type PaymentStatus =
+  | "pending"
+  | "reported"
+  | "paid"
+  | "failed"
+  | "expired"
+  | "cancelled"
+  | "refund_pending"
+  | "refunded"
+  | "refund_declined";
+
 export type PaymentRecord = {
   id: string;
   requestId: string;
   requestTitle: string | null;
+  requestStatus: string | null;
   clientName: string | null;
   clientEmail: string | null;
+  clientPhone: string | null;
   methodName: string | null;
   provider: string;
   amount: number;
   currency: string;
-  status: "pending" | "reported" | "paid" | "failed" | "expired" | "cancelled";
+  status: PaymentStatus;
   createdAt: string;
-  reportedAt: string | null;
   confirmedAt: string | null;
+  refundReason: string | null;
+  refundRequestedAt: string | null;
+  refundedAt: string | null;
+  refundNote: string | null;
 };
 
 // ─── AI Config ───
