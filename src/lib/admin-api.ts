@@ -19,6 +19,7 @@ import type {
   WorkerLead,
   StripeConfig,
   WebContactMessage,
+  WorkModalitySettings,
 } from "@/lib/types";
 
 export async function fetchWorkerLeads(): Promise<WorkerLead[]> {
@@ -124,6 +125,16 @@ export async function updateWorkerNotificationSettings(radiusKm: number) {
   const { data } = await api.post<WorkerNotificationSettings>("/mobile/admin/worker-notification-settings", {
     radiusKm,
   });
+  return data;
+}
+
+export async function fetchWorkModalities() {
+  const { data } = await api.get<WorkModalitySettings>("/mobile/admin/work-modalities");
+  return data;
+}
+
+export async function updateWorkModalities(payload: WorkModalitySettings) {
+  const { data } = await api.post<WorkModalitySettings>("/mobile/admin/work-modalities", payload);
   return data;
 }
 
@@ -308,11 +319,6 @@ export async function fetchPaymentProviders() {
   return data;
 }
 
-export async function uploadPaymentQr(imageBase64: string) {
-  const { data } = await api.post<{ url: string }>("/mobile/admin/payments/qr-image", { imageBase64 });
-  return data.url;
-}
-
 export async function fetchPayments(status?: string) {
   const { data } = await api.get<PaymentRecord[]>("/mobile/admin/payments", {
     params: status ? { status } : undefined,
@@ -320,12 +326,17 @@ export async function fetchPayments(status?: string) {
   return data;
 }
 
-export async function confirmPayment(id: string) {
-  await api.post(`/mobile/admin/payments/${id}/confirm`);
+/** Reembolsos: los pagos solo los confirma la API del proveedor; aquí se devuelven. */
+export async function startRefund(id: string, reason: string) {
+  await api.post(`/mobile/admin/payments/${id}/refund`, { reason });
 }
 
-export async function rejectPayment(id: string, reason?: string) {
-  await api.post(`/mobile/admin/payments/${id}/reject`, { reason });
+export async function markRefunded(id: string, note?: string) {
+  await api.post(`/mobile/admin/payments/${id}/refund/done`, { note });
+}
+
+export async function declineRefund(id: string, note: string) {
+  await api.post(`/mobile/admin/payments/${id}/refund/decline`, { note });
 }
 
 // --- Notifications ---

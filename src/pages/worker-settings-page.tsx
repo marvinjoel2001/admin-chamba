@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { WorkModalitiesPanel } from "@/components/work-modalities-panel";
 import {
   fetchWorkerNotificationSettings,
   updateWorkerNotificationSettings,
@@ -119,12 +120,15 @@ export default function WorkerSettingsPage() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight">Configuración de Trabajadores</h2>
         <p className="mt-2 text-on-surface-variant">
-          Define el radio de notificación geográfico y los tiempos de expiración de ofertas en la app.
+          Define las modalidades de contratación, el radio de notificación geográfico y los tiempos de
+          expiración de ofertas en la app.
         </p>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
         <div className="flex flex-col gap-6">
+          <WorkModalitiesPanel />
+
           {/* Panel de Radio */}
           <div className="glass-panel rounded-2xl p-5">
             <div className="flex items-center gap-2 text-sm text-on-surface-variant font-medium">

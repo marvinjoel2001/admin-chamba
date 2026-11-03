@@ -6,7 +6,6 @@ import {
   deletePaymentMethod,
   seedPaymentMethods,
   fetchPaymentProviders,
-  uploadPaymentQr,
 } from "@/lib/admin-api";
 import type { PaymentMethod, PaymentProviderOption } from "@/lib/types";
 import {
@@ -19,16 +18,7 @@ import {
   RefreshCw,
   Check,
   QrCode,
-  Upload,
 } from "lucide-react";
-
-const readAsDataUrl = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
 
 /** Tarjeta de Stripe: método virtual (se configura en Configuración → Stripe). */
 const isVirtual = (method: PaymentMethod) => method.id === "stripe-card";
@@ -50,12 +40,8 @@ export default function PaymentMethodsPage() {
     isActive: true,
     sortOrder: 0,
     provider: "none",
-    qrImageUrl: "",
-    instructions: "",
-    expiresMinutes: 30,
   });
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [providers, setProviders] = useState<PaymentProviderOption[]>([
     { key: "none", label: "Sin cobro en la app (efectivo / al terminar)" },
   ]);
@@ -67,20 +53,8 @@ export default function PaymentMethodsPage() {
   const providerLabel = (method: PaymentMethod) => {
     if (isVirtual(method)) return "Tarjeta (Stripe)";
     const key = String(method.config?.provider || "none");
+    if (key === "manual_qr") return "QR fijo (ya no disponible)";
     return providers.find((p) => p.key === key)?.label ?? key;
-  };
-
-  const handleQrFile = async (file?: File) => {
-    if (!file) return;
-    setUploading(true);
-    try {
-      const url = await uploadPaymentQr(await readAsDataUrl(file));
-      setForm((f) => ({ ...f, qrImageUrl: url }));
-    } catch (e) {
-      alert("No se pudo subir el QR: " + (e as Error).message);
-    } finally {
-      setUploading(false);
-    }
   };
 
   const load = useCallback(async () => {
@@ -110,9 +84,6 @@ export default function PaymentMethodsPage() {
       isActive: true,
       sortOrder: methods.length,
       provider: "none",
-      qrImageUrl: "",
-      instructions: "",
-      expiresMinutes: 30,
     });
     setShowModal(true);
   };
@@ -127,27 +98,21 @@ export default function PaymentMethodsPage() {
       color: method.color,
       isActive: method.isActive,
       sortOrder: method.sortOrder,
-      provider: String(method.config?.provider || "none"),
-      qrImageUrl: String(method.config?.qrImageUrl || ""),
-      instructions: String(method.config?.instructions || ""),
-      expiresMinutes: Number(method.config?.expiresMinutes) || 30,
+      // Un proveedor que ya no existe (p. ej. el QR fijo) se muestra como
+      // "sin cobro en la app" para no volver a guardarlo.
+      provider: providers.some((p) => p.key === method.config?.provider)
+        ? String(method.config?.provider)
+        : "none",
     });
     setShowModal(true);
   };
 
   const handleSave = async () => {
     if (!form.name.trim() || !form.code.trim() || saving) return;
-    if (form.provider === "manual_qr" && !form.qrImageUrl) {
-      alert("Sube la imagen del QR antes de guardar.");
-      return;
-    }
     // Se conservan otros datos del proveedor que ya tuviera el método.
     const config = {
       ...(editMethod?.config ?? {}),
       provider: form.provider,
-      qrImageUrl: form.qrImageUrl || undefined,
-      instructions: form.instructions.trim() || undefined,
-      expiresMinutes: form.expiresMinutes,
     };
     setSaving(true);
     try {
@@ -324,7 +289,6 @@ export default function PaymentMethodsPage() {
                   </td>
                   <td className="px-4 py-3 text-sm text-on-surface-variant">
                     <span className="inline-flex items-center gap-1.5">
-                      {method.config?.provider === "manual_qr" && <QrCode className="w-4 h-4" />}
                       {providerLabel(method)}
                     </span>
                   </td>
@@ -466,68 +430,11 @@ export default function PaymentMethodsPage() {
                   </p>
                 </div>
 
-                {form.provider === "manual_qr" && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium text-on-surface-variant mb-1">
-                        Imagen del QR <span className="text-red-400">*</span>
-                      </label>
-                      <div className="flex items-center gap-3">
-                        {form.qrImageUrl ? (
-                          <img
-                            src={form.qrImageUrl}
-                            alt="QR de cobro"
-                            className="w-24 h-24 rounded-lg bg-white object-contain p-1"
-                          />
-                        ) : (
-                          <div className="w-24 h-24 rounded-lg border border-dashed border-white/20 flex items-center justify-center text-on-surface-variant">
-                            <QrCode className="w-8 h-8" />
-                          </div>
-                        )}
-                        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-on-surface-variant hover:bg-white/10">
-                          <Upload className="w-4 h-4" />
-                          {uploading ? "Subiendo..." : form.qrImageUrl ? "Cambiar QR" : "Subir QR"}
-                          <input
-                            type="file"
-                            accept="image/png,image/jpeg"
-                            className="hidden"
-                            disabled={uploading}
-                            onChange={(e) => handleQrFile(e.target.files?.[0])}
-                          />
-                        </label>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-on-surface-variant mb-1">
-                        Instrucciones para el cliente
-                      </label>
-                      <textarea
-                        value={form.instructions}
-                        onChange={(e) => setForm({ ...form, instructions: e.target.value })}
-                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white placeholder:text-on-surface-variant/50 outline-none focus:border-primary"
-                        rows={2}
-                        placeholder="Ej: Paga el monto exacto a Chamba SRL y toca Ya pagué."
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-on-surface-variant mb-1">
-                        Minutos para pagar
-                      </label>
-                      <input
-                        type="number"
-                        min={5}
-                        value={form.expiresMinutes}
-                        onChange={(e) =>
-                          setForm({ ...form, expiresMinutes: parseInt(e.target.value) || 30 })
-                        }
-                        className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white outline-none focus:border-primary"
-                      />
-                      <p className="text-xs text-on-surface-variant/70 mt-1">
-                        Confirma o rechaza los pagos en el menú Pagos.
-                      </p>
-                    </div>
-                  </>
-                )}
+                <p className="text-xs text-on-surface-variant/70">
+                  Los pagos por QR se activan cuando se conecte la API del banco: el pago se
+                  confirma solo, sin "Ya pagué" ni confirmación manual. Si después hay que
+                  devolverlo, aparece en Pagos → Reembolsos.
+                </p>
               </div>
 
               <div>
