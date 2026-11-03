@@ -127,6 +127,13 @@ export type WorkerNotificationSettings = {
   radiusKm: number;
 };
 
+/** Modalidades de contratación activas (por trabajo, por hora, por día). */
+export type WorkModalitySettings = {
+  fixed: boolean;
+  hourly: boolean;
+  daily: boolean;
+};
+
 export type NotifiedWorker = {
   id: string;
   firstName: string;

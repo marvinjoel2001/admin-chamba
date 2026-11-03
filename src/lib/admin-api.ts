@@ -19,6 +19,7 @@ import type {
   WorkerLead,
   StripeConfig,
   WebContactMessage,
+  WorkModalitySettings,
 } from "@/lib/types";
 
 export async function fetchWorkerLeads(): Promise<WorkerLead[]> {
@@ -124,6 +125,16 @@ export async function updateWorkerNotificationSettings(radiusKm: number) {
   const { data } = await api.post<WorkerNotificationSettings>("/mobile/admin/worker-notification-settings", {
     radiusKm,
   });
+  return data;
+}
+
+export async function fetchWorkModalities() {
+  const { data } = await api.get<WorkModalitySettings>("/mobile/admin/work-modalities");
+  return data;
+}
+
+export async function updateWorkModalities(payload: WorkModalitySettings) {
+  const { data } = await api.post<WorkModalitySettings>("/mobile/admin/work-modalities", payload);
   return data;
 }
 
