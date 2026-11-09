@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom"
 import { useEffect, useState } from "react";
 import { Toaster } from "sonner";
 import { AppLayout } from "@/components/layout/app-layout";
+import { ForcePasswordChange } from "@/components/force-password-change";
 import DashboardPage from "@/pages/dashboard-page";
 import MapPage from "@/pages/map-page";
 import BotsPage from "@/pages/bots-page";
@@ -32,6 +33,8 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   const logout = useAuthStore((state) => state.logout);
   const [checking, setChecking] = useState(true);
   const [isValid, setIsValid] = useState<boolean>(() => isAuthenticated());
+  // Contraseña inicial (admin/admin): hay que cambiarla antes de entrar.
+  const [mustChangePassword, setMustChangePassword] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -45,8 +48,9 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 
     // Verificación de sesión contra el servidor /auth/admin/me
     api.get("/auth/admin/me")
-      .then(() => {
+      .then((response) => {
         if (active) {
+          setMustChangePassword(response.data?.mustChangePassword === true);
           setIsValid(true);
           setChecking(false);
         }
@@ -76,6 +80,9 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   }
 
   if (!isValid) return <Navigate to="/login" replace />;
+  if (mustChangePassword) {
+    return <ForcePasswordChange onDone={() => setMustChangePassword(false)} />;
+  }
   return <>{children}</>;
 }
 
