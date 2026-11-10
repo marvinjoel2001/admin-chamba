@@ -161,6 +161,7 @@ export function DisputeChat({
   const [resolveText, setResolveText] = useState("");
   const [resolving, setResolving] = useState(false);
   const [showResolve, setShowResolve] = useState(false);
+  const [cancelAndRefund, setCancelAndRefund] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval>>();
 
@@ -204,8 +205,15 @@ export function DisputeChat({
     if (!resolveText.trim() || resolving) return;
     setResolving(true);
     try {
-      await resolveDispute(dispute.id, resolveText.trim());
-      toast.success("Disputa resuelta correctamente");
+      await resolveDispute(dispute.id, resolveText.trim(), {
+        cancelJob: cancelAndRefund,
+        refundClient: cancelAndRefund,
+      });
+      toast.success(
+        cancelAndRefund
+          ? "Disputa resuelta, trabajo cancelado y pago marcado para reembolso"
+          : "Disputa resuelta correctamente"
+      );
       onClose();
     } catch (err) {
       console.error("Error al resolver disputa:", err);
@@ -300,28 +308,45 @@ export function DisputeChat({
 
         {/* Resolve bar */}
         {dispute.status === "open" && (
-          <div className="border-t border-white/10 px-6 py-2">
+          <div className="border-t border-white/10 px-6 py-3 space-y-3">
             {showResolve ? (
-              <div className="flex gap-2">
-                <input
-                  value={resolveText}
-                  onChange={(e) => setResolveText(e.target.value)}
-                  placeholder="Escribe la resolución..."
-                  className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-green-400"
-                />
-                <button
-                  onClick={handleResolve}
-                  disabled={resolving || !resolveText.trim()}
-                  className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
-                >
-                  {resolving ? "..." : "Resolver"}
-                </button>
-                <button
-                  onClick={() => setShowResolve(false)}
-                  className="rounded-lg px-3 py-2 text-sm text-on-surface-variant hover:bg-white/10"
-                >
-                  Cancelar
-                </button>
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <input
+                    value={resolveText}
+                    onChange={(e) => setResolveText(e.target.value)}
+                    placeholder="Escribe la resolución..."
+                    className="flex-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-green-400"
+                  />
+                  <button
+                    onClick={handleResolve}
+                    disabled={resolving || !resolveText.trim()}
+                    className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
+                  >
+                    {resolving ? "..." : "Resolver"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowResolve(false);
+                      setCancelAndRefund(false);
+                    }}
+                    className="rounded-lg px-3 py-2 text-sm text-on-surface-variant hover:bg-white/10"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-xl p-2.5 hover:bg-amber-500/15 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={cancelAndRefund}
+                    onChange={(e) => setCancelAndRefund(e.target.checked)}
+                    className="h-4 w-4 rounded border-amber-500/40 text-primary focus:ring-0"
+                  />
+                  <span className="font-medium">
+                    Cancelar el trabajo asociado y marcar pago para reembolso al cliente
+                  </span>
+                </label>
               </div>
             ) : (
               <button

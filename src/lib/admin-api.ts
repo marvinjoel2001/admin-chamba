@@ -20,6 +20,7 @@ import type {
   StripeConfig,
   WebContactMessage,
   WorkModalitySettings,
+  CancellationStatsResponse,
 } from "@/lib/types";
 
 export async function fetchWorkerLeads(): Promise<WorkerLead[]> {
@@ -180,8 +181,17 @@ export async function fetchDisputes(status?: string) {
   return data.disputes;
 }
 
-export async function resolveDispute(disputeId: string, resolution: string) {
-  const { data } = await api.post(`/mobile/admin/disputes/${disputeId}/resolve`, { resolution, resolvedBy: "admin" });
+export async function resolveDispute(
+  disputeId: string,
+  resolution: string,
+  options?: { cancelJob?: boolean; refundClient?: boolean }
+) {
+  const { data } = await api.post(`/mobile/admin/disputes/${disputeId}/resolve`, {
+    resolution,
+    resolvedBy: "admin",
+    cancelJob: options?.cancelJob,
+    refundClient: options?.refundClient,
+  });
   return data;
 }
 
@@ -233,8 +243,13 @@ export async function updateCommission(commissionPercent: number) {
 
 // --- Admin Cancel ---
 
-export async function adminCancelRequest(requestId: string) {
-  const { data } = await api.post(`/mobile/admin/requests/${requestId}/cancel`);
+export async function adminCancelRequest(requestId: string, reason?: string) {
+  const { data } = await api.post(`/mobile/admin/requests/${requestId}/cancel`, { reason });
+  return data;
+}
+
+export async function fetchCancellationStats(): Promise<CancellationStatsResponse> {
+  const { data } = await api.get<CancellationStatsResponse>("/mobile/admin/cancellation-stats");
   return data;
 }
 
@@ -337,6 +352,16 @@ export async function markRefunded(id: string, note?: string) {
 
 export async function declineRefund(id: string, note: string) {
   await api.post(`/mobile/admin/payments/${id}/refund/decline`, { note });
+}
+
+export async function confirmPaymentForRefund(id: string, reason: string) {
+  const { data } = await api.post(`/mobile/admin/payments/${id}/confirm-refund`, { reason });
+  return data;
+}
+
+export async function discardUnpaidPayment(id: string, note?: string) {
+  const { data } = await api.post(`/mobile/admin/payments/${id}/discard`, { note });
+  return data;
 }
 
 // --- Notifications ---

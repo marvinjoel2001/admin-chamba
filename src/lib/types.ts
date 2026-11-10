@@ -206,8 +206,26 @@ export type RequestDetail = {
   completedAt?: string | null;
   cancelledAt?: string | null;
   cancelledBy?: string | null;
+  cancelledByRole?: string | null;
   cancelReason?: string | null;
   notifiedCount?: number;
+  statusHistory?: Array<{
+    id: string;
+    fromStatus: string | null;
+    toStatus: string;
+    changedByRole: string;
+    changedByName?: string | null;
+    reason?: string | null;
+    createdAt: string;
+  }>;
+  payment?: {
+    id: string;
+    status: string;
+    amount: number;
+    methodName?: string;
+    refundReason?: string | null;
+    refundNote?: string | null;
+  } | null;
   client?: {
     id: string;
     firstName: string;
@@ -363,6 +381,23 @@ export type PaymentRecord = {
   refundRequestedAt: string | null;
   refundedAt: string | null;
   refundNote: string | null;
+  externalId?: string | null;
+  cancelReason?: string | null;
+  cancelledByRole?: string | null;
+  cancelledByName?: string | null;
+};
+
+export type CancellationStatsUser = {
+  id: string;
+  name: string;
+  type: string;
+  cancelCount: number;
+  workerAssignedCancelCount?: number;
+  recentReasons?: string[];
+};
+
+export type CancellationStatsResponse = {
+  users: CancellationStatsUser[];
 };
 
 // ─── AI Config ───

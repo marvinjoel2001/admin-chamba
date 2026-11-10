@@ -1,18 +1,28 @@
 import { useEffect, useState, useMemo } from "react";
 import { DataTable } from "@/components/ui/data-table";
 import type { ColumnDef } from "@tanstack/react-table";
-import { fetchMapSnapshot, adminCancelRequest, fetchRequestDetail, fetchRequestNotifiedWorkers } from "@/lib/admin-api";
-import type { MapRequest, RequestDetail, NotifiedWorker, RequestOfferItem } from "@/lib/types";
+import {
+  fetchMapSnapshot,
+  adminCancelRequest,
+  fetchRequestDetail,
+  fetchRequestNotifiedWorkers,
+  fetchCancellationStats,
+} from "@/lib/admin-api";
+import type {
+  MapRequest,
+  RequestDetail,
+  NotifiedWorker,
+  RequestOfferItem,
+  CancellationStatsUser,
+} from "@/lib/types";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { toast } from "sonner";
 import { useAdminStore } from "@/store/admin-store";
 import {
   Search,
-  Calendar,
   X,
   Eye,
   MapPin,
-  DollarSign,
   User,
   Users,
   CheckCircle,
@@ -28,14 +38,15 @@ import {
   Bell,
   Star,
   ImageOff,
-  Send,
   AlertTriangle,
   Layers,
   MessageSquare,
   Building2,
   Phone,
-  Timer,
   ChevronRight,
+  ArrowRight,
+  History,
+  Shield,
 } from "lucide-react";
 
 type StatusFilter = "all" | "stagnant" | "searching" | "negotiating" | "assigned" | "in_progress" | "completed" | "cancelled";
@@ -45,7 +56,8 @@ const statusLabel: Record<string, string> = {
   searching: "Buscando",
   negotiating: "Negociando",
   assigned: "Asignado",
-  in_progress: "En progreso",
+  worker_arrived: "Llegada marcada",
+  in_progress: "En curso",
   completed: "Completado",
   cancelled: "Cancelado",
   pending: "Pendiente",
@@ -55,6 +67,7 @@ const statusColors: Record<string, { bg: string; text: string; border: string }>
   searching: { bg: "bg-blue-500/20", text: "text-blue-400", border: "border-blue-500/30" },
   negotiating: { bg: "bg-purple-500/20", text: "text-purple-400", border: "border-purple-500/30" },
   assigned: { bg: "bg-amber-500/20", text: "text-amber-400", border: "border-amber-500/30" },
+  worker_arrived: { bg: "bg-indigo-500/20", text: "text-indigo-400", border: "border-indigo-500/30" },
   in_progress: { bg: "bg-orange-500/20", text: "text-orange-400", border: "border-orange-500/30" },
   completed: { bg: "bg-emerald-500/20", text: "text-emerald-400", border: "border-emerald-500/30" },
   cancelled: { bg: "bg-rose-500/20", text: "text-rose-400", border: "border-rose-500/30" },
@@ -95,7 +108,6 @@ export default function RequestsPage() {
   const [loading, setLoading] = useState(true);
 
   // --- Filtros ---
-  // El buscador del header (Enter → /requests) escribe en el store global.
   const globalSearch = useAdminStore((state) => state.search);
   const [searchQuery, setSearchQuery] = useState(globalSearch);
   useEffect(() => {
@@ -115,7 +127,19 @@ export default function RequestsPage() {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  // --- Workers notificados (a quién le llegó la solicitud) ---
+  // Modal para pedir motivo al cancelar como Admin
+  const [cancelModalRequestId, setCancelModalRequestId] = useState<string | null>(null);
+  const [cancelReasonInput, setCancelReasonInput] = useState("");
+  const [submittingCancel, setSubmittingCancel] = useState(false);
+
+  // --- Modal de Estadísticas de Cancelación ---
+  const [showCancellationStats, setShowCancellationStats] = useState(false);
+  const [cancellationStats, setCancellationStats] = useState<CancellationStatsUser[]>([]);
+  const [loadingCancellationStats, setLoadingCancellationStats] = useState(false);
+  const [statsRoleFilter, setStatsRoleFilter] = useState<"all" | "worker" | "client">("all");
+  const [statsSearch, setStatsSearch] = useState("");
+
+  // --- Workers notificados ---
   const [notifiedWorkers, setNotifiedWorkers] = useState<NotifiedWorker[]>([]);
   const [loadingNotified, setLoadingNotified] = useState(false);
   const [notifiedSearch, setNotifiedSearch] = useState("");
@@ -139,23 +163,67 @@ export default function RequestsPage() {
     void loadData();
   }, []);
 
-  const handleCancelRequest = async (requestId: string) => {
-    if (!confirm("¿Está seguro que desea cancelar este trabajo de forma administrativa? Esta acción es irreversible.")) return;
-    setCancellingId(requestId);
+  const loadStats = async () => {
+    setLoadingCancellationStats(true);
     try {
-      await adminCancelRequest(requestId);
-      toast.success("Trabajo cancelado exitosamente");
+      const res = await fetchCancellationStats();
+      setCancellationStats(res.users || []);
+    } catch (err) {
+      console.error("Error al cargar estadísticas de cancelación:", err);
+      toast.error("No se pudieron cargar las estadísticas de cancelación");
+    } finally {
+      setLoadingCancellationStats(false);
+    }
+  };
+
+  const handleOpenCancelModal = (requestId: string) => {
+    setCancelModalRequestId(requestId);
+    setCancelReasonInput("");
+  };
+
+  const handleConfirmAdminCancel = async () => {
+    if (!cancelModalRequestId) return;
+    const reason = cancelReasonInput.trim();
+    if (reason.length < 3) {
+      toast.error("Por favor escribe el motivo de la cancelación administrativa (mínimo 3 caracteres).");
+      return;
+    }
+
+    setSubmittingCancel(true);
+    setCancellingId(cancelModalRequestId);
+    try {
+      await adminCancelRequest(cancelModalRequestId, reason);
+      toast.success("Trabajo cancelado exitosamente por administración");
       setItems((prev) =>
-        prev.map((r) => (r.id === requestId ? { ...r, status: "cancelled", updatedAt: new Date().toISOString() } : r))
+        prev.map((r) =>
+          r.id === cancelModalRequestId
+            ? { ...r, status: "cancelled", updatedAt: new Date().toISOString() }
+            : r
+        )
       );
-      if (selectedRequest && selectedRequest.id === requestId) {
-        setSelectedRequest((prev) => prev ? { ...prev, status: "cancelled", updatedAt: new Date().toISOString() } : null);
-        setRequestDetail((prev) => prev ? { ...prev, status: "cancelled", cancelledAt: new Date().toISOString() } : null);
+      if (selectedRequest && selectedRequest.id === cancelModalRequestId) {
+        setSelectedRequest((prev) =>
+          prev ? { ...prev, status: "cancelled", updatedAt: new Date().toISOString() } : null
+        );
+        setRequestDetail((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: "cancelled",
+                cancelledAt: new Date().toISOString(),
+                cancelledBy: "Administrador",
+                cancelledByRole: "admin",
+                cancelReason: reason,
+              }
+            : null
+        );
       }
+      setCancelModalRequestId(null);
     } catch (err) {
       console.error("Error al cancelar solicitud", err);
       toast.error("No se pudo cancelar el trabajo en el backend");
     } finally {
+      setSubmittingCancel(false);
       setCancellingId(null);
     }
   };
@@ -299,14 +367,6 @@ export default function RequestsPage() {
     return timeline;
   }
 
-  function formatDuration(minutes?: number): string {
-    if (!minutes) return "-";
-    if (minutes < 60) return `${minutes} min`;
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-  }
-
   function TimelineIcon({ icon, completed }: { icon: string; completed: boolean }) {
     const className = `h-5 w-5 ${completed ? "text-primary" : "text-on-surface-variant/40"}`;
     switch (icon) {
@@ -354,11 +414,9 @@ export default function RequestsPage() {
 
   const filteredItems = useMemo(() => {
     return items.filter((r) => {
-      // Filtro por Estado / Estancados
       if (statusFilter === "stagnant" && !isStagnant(r)) return false;
       if (statusFilter !== "all" && statusFilter !== "stagnant" && r.status !== statusFilter) return false;
 
-      // Búsqueda por texto
       const clientName = r.clientName ? r.clientName.toLowerCase() : "";
       const matchesSearch = searchQuery.trim() === "" ||
         r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -368,7 +426,6 @@ export default function RequestsPage() {
         
       if (!matchesSearch) return false;
       
-      // Rango de fechas
       if (startDate) {
         const start = new Date(startDate);
         const itemDate = new Date(r.updatedAt);
@@ -466,7 +523,7 @@ export default function RequestsPage() {
             {isCancelable && (
               <button
                 disabled={cancellingId === r.id}
-                onClick={() => handleCancelRequest(r.id)}
+                onClick={() => handleOpenCancelModal(r.id)}
                 className="rounded-lg bg-rose-500/15 px-2.5 py-1.5 text-xs text-rose-400 hover:bg-rose-500/25 border border-rose-500/25 disabled:opacity-50 transition-all font-medium"
               >
                 {cancellingId === r.id ? "Cancelando..." : "Cancelar"}
@@ -485,28 +542,42 @@ export default function RequestsPage() {
         <div>
           <h2 className="text-2xl font-bold sm:text-3xl text-on-surface">Administración de Trabajos</h2>
           <p className="mt-1 text-sm text-on-surface-variant">
-            Supervisa el estado de difusión, negociaciones por hora/día/precio fijo y trabajos estancados.
+            Supervisa el estado de difusión, historial completo de cambios, modalidades de cobro y cancelaciones.
           </p>
         </div>
 
-        {/* Switch de tipo de vista */}
-        <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-black/30 p-1 shrink-0">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Botón Ranking de Cancelaciones */}
           <button
-            onClick={() => setViewMode("table")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-              viewMode === "table" ? "bg-primary text-white shadow" : "text-on-surface-variant hover:text-on-surface hover:bg-white/5"
-            }`}
+            onClick={() => {
+              setShowCancellationStats(true);
+              void loadStats();
+            }}
+            className="flex items-center gap-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-2 text-xs font-bold text-rose-300 hover:bg-rose-500/20 transition-all shadow-sm"
           >
-            <TableIcon className="h-4 w-4" /> Tabla
+            <Ban className="h-4 w-4 text-rose-400" />
+            Ranking de Cancelaciones
           </button>
-          <button
-            onClick={() => setViewMode("gallery")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-              viewMode === "gallery" ? "bg-primary text-white shadow" : "text-on-surface-variant hover:text-on-surface hover:bg-white/5"
-            }`}
-          >
-            <LayoutGrid className="h-4 w-4" /> Galería
-          </button>
+
+          {/* Switch de tipo de vista */}
+          <div className="flex items-center gap-1 rounded-xl border border-white/10 bg-black/30 p-1 shrink-0">
+            <button
+              onClick={() => setViewMode("table")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                viewMode === "table" ? "bg-primary text-white shadow" : "text-on-surface-variant hover:text-on-surface hover:bg-white/5"
+              }`}
+            >
+              <TableIcon className="h-4 w-4" /> Tabla
+            </button>
+            <button
+              onClick={() => setViewMode("gallery")}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                viewMode === "gallery" ? "bg-primary text-white shadow" : "text-on-surface-variant hover:text-on-surface hover:bg-white/5"
+              }`}
+            >
+              <LayoutGrid className="h-4 w-4" /> Galería
+            </button>
+          </div>
         </div>
       </div>
 
@@ -523,7 +594,6 @@ export default function RequestsPage() {
           Todos ({counts.all})
         </button>
 
-        {/* Botón especial para trabajos sin aceptar / estancados */}
         <button
           onClick={() => setStatusFilter("stagnant")}
           className={`relative rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all border flex items-center gap-1.5 ${
@@ -680,7 +750,6 @@ export default function RequestsPage() {
                     : "border-white/10 bg-white/[0.02] hover:border-primary/40 hover:bg-white/[0.05]"
                 }`}
               >
-                {/* Foto o Header */}
                 <div className="relative h-36 w-full overflow-hidden bg-black/40">
                   {r.photoUrl ? (
                     <img
@@ -707,7 +776,6 @@ export default function RequestsPage() {
                   </div>
                 </div>
 
-                {/* Cuerpo */}
                 <div className="flex flex-1 flex-col gap-2 p-3.5">
                   <h3 className="line-clamp-2 text-sm font-bold text-on-surface group-hover:text-primary transition-colors">{r.title}</h3>
                   <p className="line-clamp-1 text-xs text-on-surface-variant">{r.address}</p>
@@ -755,10 +823,10 @@ export default function RequestsPage() {
             </div>
 
             {/* Sub-tabs del Modal */}
-            <div className="flex items-center gap-1 border-b border-white/10 bg-black/40 px-6 py-2">
+            <div className="flex items-center gap-1 border-b border-white/10 bg-black/40 px-6 py-2 overflow-x-auto">
               <button
                 onClick={() => setModalTab("overview")}
-                className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all shrink-0 ${
                   modalTab === "overview"
                     ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
                     : "text-white/60 hover:text-white hover:bg-white/5"
@@ -768,7 +836,7 @@ export default function RequestsPage() {
               </button>
               <button
                 onClick={() => setModalTab("notified")}
-                className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all shrink-0 ${
                   modalTab === "notified"
                     ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
                     : "text-white/60 hover:text-white hover:bg-white/5"
@@ -778,7 +846,7 @@ export default function RequestsPage() {
               </button>
               <button
                 onClick={() => setModalTab("offers")}
-                className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all shrink-0 ${
                   modalTab === "offers"
                     ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
                     : "text-white/60 hover:text-white hover:bg-white/5"
@@ -788,13 +856,13 @@ export default function RequestsPage() {
               </button>
               <button
                 onClick={() => setModalTab("timeline")}
-                className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all ${
+                className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all shrink-0 ${
                   modalTab === "timeline"
                     ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
                     : "text-white/60 hover:text-white hover:bg-white/5"
                 }`}
               >
-                <Clock size={14} /> Línea de Tiempo
+                <History size={14} /> Historial de Estados {requestDetail?.statusHistory ? `(${requestDetail.statusHistory.length})` : ""}
               </button>
             </div>
 
@@ -810,6 +878,51 @@ export default function RequestsPage() {
                   {/* TAB: RESUMEN Y MODALIDAD */}
                   {modalTab === "overview" && (
                     <div className="space-y-4">
+                      {/* CAJA ROJA DESTACADA: DETALLES DE CANCELACIÓN (si aplica) */}
+                      {(requestDetail?.cancelReason || requestDetail?.cancelledBy || selectedRequest.status === "cancelled") && (
+                        <div className="rounded-2xl border border-rose-500/40 bg-rose-500/10 p-4 space-y-2">
+                          <div className="flex items-center gap-2 text-rose-300">
+                            <Ban className="h-5 w-5 text-rose-400 shrink-0" />
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-rose-200">
+                              Detalles de Cancelación del Trabajo
+                            </h4>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+                            <div>
+                              <span className="text-white/50 block text-[10px] uppercase font-semibold">Cancelado por:</span>
+                              <p className="font-bold text-white mt-0.5">
+                                {requestDetail?.cancelledBy || "No especificado"}{" "}
+                                {requestDetail?.cancelledByRole && (
+                                  <span className="rounded-md bg-rose-500/20 px-1.5 py-0.5 text-[10px] font-mono text-rose-300 border border-rose-500/30 ml-1">
+                                    {requestDetail.cancelledByRole === "worker"
+                                      ? "Trabajador"
+                                      : requestDetail.cancelledByRole === "client"
+                                      ? "Cliente"
+                                      : requestDetail.cancelledByRole === "admin"
+                                      ? "Administrador"
+                                      : requestDetail.cancelledByRole}
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                            <div>
+                              <span className="text-white/50 block text-[10px] uppercase font-semibold">Fecha de cancelación:</span>
+                              <p className="font-mono text-white/80 mt-0.5">
+                                {requestDetail?.cancelledAt ? new Date(requestDetail.cancelledAt).toLocaleString() : "—"}
+                              </p>
+                            </div>
+                          </div>
+                          {requestDetail?.cancelReason && (
+                            <div className="rounded-xl bg-black/40 border border-rose-500/20 p-2.5 mt-2">
+                              <span className="text-rose-300/80 block text-[10px] uppercase font-semibold">Motivo registrado:</span>
+                              <p className="text-xs text-rose-200 italic mt-0.5">
+                                "{requestDetail.cancelReason}"
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {/* Alerta si está estancado */}
                       {isStagnant(selectedRequest) && (
                         <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 flex items-start gap-3">
@@ -824,10 +937,10 @@ export default function RequestsPage() {
                         </div>
                       )}
 
-                      {/* Modalidad de Trabajo & Presupuesto */}
+                      {/* Modalidad de Trabajo & Presupuesto (Método de Pago SIEMPRE visible) */}
                       <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
                         <div className="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
-                          <span className="text-xs font-bold uppercase tracking-wider text-white/60">Modalidad de Cobro</span>
+                          <span className="text-xs font-bold uppercase tracking-wider text-white/60">Modalidad de Cobro & Pago</span>
                           <span className="rounded-lg bg-purple-500/20 px-3 py-1 text-xs font-bold text-purple-300 border border-purple-500/30">
                             {requestDetail?.modality === "hourly"
                               ? "⏱️ Por Hora"
@@ -837,12 +950,29 @@ export default function RequestsPage() {
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
                           <div className="rounded-xl bg-white/5 p-3">
                             <span className="text-white/50 block text-[10px] uppercase font-semibold">Presupuesto Total Acordado</span>
                             <p className="text-lg font-black text-emerald-400 mt-0.5">
                               Bs {Number(selectedRequest.budget).toFixed(2)}
                             </p>
+                          </div>
+
+                          {/* Método de Pago SIEMPRE visible para fixed, hourly y daily */}
+                          <div className="rounded-xl bg-white/5 p-3 flex flex-col justify-between">
+                            <span className="text-white/50 block text-[10px] uppercase font-semibold">Método de Pago</span>
+                            <p className="text-sm font-bold text-white mt-0.5">
+                              {requestDetail?.paymentMethod || "Efectivo"}
+                            </p>
+                            {requestDetail?.payment && (
+                              <span className={`inline-block mt-1 text-[10px] font-semibold ${
+                                requestDetail.payment.status === "paid" ? "text-emerald-400" :
+                                requestDetail.payment.status === "refunded" ? "text-sky-400" :
+                                requestDetail.payment.status === "refund_pending" ? "text-amber-400" : "text-white/60"
+                              }`}>
+                                Estado pago: {requestDetail.payment.status} (Bs {requestDetail.payment.amount})
+                              </span>
+                            )}
                           </div>
 
                           {requestDetail?.modality === "hourly" && (
@@ -877,13 +1007,6 @@ export default function RequestsPage() {
                                 </p>
                               </div>
                             </>
-                          )}
-
-                          {(!requestDetail?.modality || requestDetail?.modality === "fixed") && (
-                            <div className="col-span-2 rounded-xl bg-white/5 p-3 flex items-center justify-between">
-                              <span className="text-white/50 text-xs">Método de Pago:</span>
-                              <span className="font-semibold text-white">{requestDetail?.paymentMethod || "Efectivo"}</span>
-                            </div>
                           )}
                         </div>
                       </div>
@@ -1099,7 +1222,7 @@ export default function RequestsPage() {
                         </div>
                       ) : (
                         <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-                          {requestDetail.offers.map((offer: RequestOfferItem, idx: number) => {
+                          {requestDetail.offers.map((offer: RequestOfferItem) => {
                             const isAccepted = offer.status === "accepted";
                             const isPending = offer.status === "pending";
                             return (
@@ -1180,13 +1303,99 @@ export default function RequestsPage() {
                     </div>
                   )}
 
-                  {/* TAB: LÍNEA DE TIEMPO */}
+                  {/* TAB: LÍNEA DE TIEMPO & HISTORIAL DE ESTADOS */}
                   {modalTab === "timeline" && (
-                    <div className="space-y-4">
+                    <div className="space-y-5">
+                      {/* Historial Real de Estados (statusHistory) si existe en backend */}
+                      {requestDetail?.statusHistory && requestDetail.statusHistory.length > 0 ? (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                                <History className="h-4 w-4 text-purple-400" />
+                                Historial de Estados de la Solicitud
+                              </h4>
+                              <p className="text-xs text-white/50">
+                                Registro de auditoría de cada transición de estado, actor ejecutor y motivo.
+                              </p>
+                            </div>
+                            <span className="rounded-xl bg-purple-500/20 px-3 py-1 text-xs font-bold text-purple-300 border border-purple-500/30">
+                              {requestDetail.statusHistory.length} transiciones
+                            </span>
+                          </div>
+
+                          <div className="space-y-3 rounded-2xl border border-white/10 bg-black/30 p-4">
+                            {requestDetail.statusHistory.map((step, index) => {
+                              const roleBadgeColor =
+                                step.changedByRole === "worker"
+                                  ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                                  : step.changedByRole === "client"
+                                  ? "bg-sky-500/20 text-sky-300 border-sky-500/30"
+                                  : step.changedByRole === "admin"
+                                  ? "bg-rose-500/20 text-rose-300 border-rose-500/30"
+                                  : "bg-white/10 text-white/70 border-white/20";
+
+                              const roleLabel =
+                                step.changedByRole === "worker"
+                                  ? "Trabajador"
+                                  : step.changedByRole === "client"
+                                  ? "Cliente"
+                                  : step.changedByRole === "admin"
+                                  ? "Administrador"
+                                  : "Sistema";
+
+                              return (
+                                <div
+                                  key={step.id || index}
+                                  className="rounded-xl border border-white/5 bg-white/[0.02] p-3 space-y-1.5"
+                                >
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-mono text-xs text-white/60">
+                                        {statusLabel[step.fromStatus || ""] || step.fromStatus || "Publicado"}
+                                      </span>
+                                      <ArrowRight size={13} className="text-white/40" />
+                                      <span className="font-bold text-xs text-white">
+                                        {statusLabel[step.toStatus] || step.toStatus}
+                                      </span>
+                                      {statusBadge(step.toStatus)}
+                                    </div>
+
+                                    <div className="flex items-center gap-2 text-xs font-mono text-white/40">
+                                      <span>{new Date(step.createdAt).toLocaleString()}</span>
+                                      <span>({timeSince(step.createdAt)})</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 text-xs pt-1">
+                                    <span className="text-white/50">Ejecutado por:</span>
+                                    <span className={`rounded-md border px-2 py-0.5 text-[10px] font-bold ${roleBadgeColor}`}>
+                                      {roleLabel}
+                                    </span>
+                                    {step.changedByName && (
+                                      <span className="font-medium text-white/90">
+                                        {step.changedByName}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {step.reason && (
+                                    <div className="rounded-lg bg-black/30 border border-white/5 p-2 text-xs text-white/80 italic mt-1">
+                                      Motivo: "{step.reason}"
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {/* Línea de tiempo visual por etapas */}
                       <div>
-                        <h4 className="text-sm font-bold text-white">Línea de Tiempo del Trabajo</h4>
+                        <h4 className="text-sm font-bold text-white">Línea de Tiempo por Etapas</h4>
                         <p className="text-xs text-white/50">
-                          Registro cronológico de los eventos del trabajo desde su publicación.
+                          Hitos alcanzados por el trabajo en su ciclo de vida.
                         </p>
                       </div>
 
@@ -1239,7 +1448,7 @@ export default function RequestsPage() {
                 {!["completed", "cancelled"].includes(selectedRequest.status) ? (
                   <button
                     disabled={cancellingId === selectedRequest.id}
-                    onClick={() => handleCancelRequest(selectedRequest.id)}
+                    onClick={() => handleOpenCancelModal(selectedRequest.id)}
                     className="rounded-xl bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/30 px-4 py-2 text-xs font-bold text-rose-300 disabled:opacity-50 transition-all hover:scale-[1.02]"
                   >
                     {cancellingId === selectedRequest.id ? "Cancelando..." : "Cancelar Trabajo (Admin)"}
@@ -1253,6 +1462,247 @@ export default function RequestsPage() {
                 className="rounded-xl bg-white/10 px-5 py-2 text-xs font-bold text-white hover:bg-white/15 transition-all"
               >
                 Cerrar Detalle
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Modal de Cancelación Administrativa con Motivo ─── */}
+      {cancelModalRequestId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in duration-150">
+          <div className="w-full max-w-md rounded-2xl border border-rose-500/30 bg-[#140e1a] p-6 shadow-2xl space-y-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/20 border border-rose-500/30 text-rose-300">
+                  <Ban className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Cancelar Trabajo como Admin</h3>
+                  <p className="text-xs text-white/50 mt-0.5">Esta acción es irreversible y notificará a las partes.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setCancelModalRequestId(null)}
+                disabled={submittingCancel}
+                className="rounded-lg p-1.5 text-white/40 hover:bg-white/10 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-rose-200">
+                Motivo de la cancelación <span className="text-rose-400">*</span>
+              </label>
+              <textarea
+                rows={3}
+                value={cancelReasonInput}
+                onChange={(e) => setCancelReasonInput(e.target.value)}
+                placeholder="Ej: Cliente llamó para cancelar por cambio de horario, trabajador inasistente, acuerdo entre partes..."
+                className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-xs text-white placeholder:text-white/30 focus:border-rose-400 focus:outline-none"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+              <button
+                type="button"
+                onClick={() => setCancelModalRequestId(null)}
+                disabled={submittingCancel}
+                className="rounded-xl px-4 py-2 text-xs font-semibold text-white/70 hover:bg-white/5 hover:text-white"
+              >
+                Volver
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmAdminCancel}
+                disabled={submittingCancel || cancelReasonInput.trim().length < 3}
+                className="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-500 transition-all disabled:opacity-50"
+              >
+                {submittingCancel ? "Cancelando..." : "Confirmar Cancelación"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Modal de Estadísticas de Cancelación (Ranking & Motivos) ─── */}
+      {showCancellationStats && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-3xl rounded-3xl border border-white/15 bg-[#120f1a] shadow-2xl backdrop-blur-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[85vh]">
+            
+            {/* Header Modal */}
+            <div className="flex items-center justify-between border-b border-white/10 px-6 py-4 bg-gradient-to-r from-rose-950/40 to-black/60">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-500/20 border border-rose-500/30 text-rose-300 shadow-[0_0_15px_rgba(244,63,94,0.25)]">
+                  <Ban className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold tracking-tight text-white">Ranking de Cancelaciones</h3>
+                  <p className="text-xs text-white/50 mt-0.5">
+                    Identifica qué trabajadores y clientes cancelan más y cuáles son sus motivos recientes.
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowCancellationStats(false)} 
+                className="rounded-full bg-white/5 p-2 text-white/60 hover:bg-white/10 hover:text-white transition-all"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Barra de Filtros del Ranking */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-white/10 bg-black/40 px-6 py-3">
+              <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                <button
+                  onClick={() => setStatsRoleFilter("all")}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all border ${
+                    statsRoleFilter === "all"
+                      ? "bg-rose-500/20 text-rose-300 border-rose-500/30"
+                      : "border-white/5 text-white/60 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  Todos
+                </button>
+                <button
+                  onClick={() => setStatsRoleFilter("worker")}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all border ${
+                    statsRoleFilter === "worker"
+                      ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                      : "border-white/5 text-white/60 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  Solo Trabajadores
+                </button>
+                <button
+                  onClick={() => setStatsRoleFilter("client")}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-semibold transition-all border ${
+                    statsRoleFilter === "client"
+                      ? "bg-sky-500/20 text-sky-300 border-sky-500/30"
+                      : "border-white/5 text-white/60 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  Solo Clientes
+                </button>
+              </div>
+
+              <div className="relative w-full sm:w-64">
+                <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/40" />
+                <input
+                  type="text"
+                  value={statsSearch}
+                  onChange={(e) => setStatsSearch(e.target.value)}
+                  placeholder="Buscar usuario en ranking..."
+                  className="w-full rounded-xl border border-white/10 bg-black/40 py-1.5 pl-8 pr-3 text-xs text-white placeholder:text-white/40 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Contenido del Ranking */}
+            <div className="p-6 overflow-y-auto flex-1 space-y-3">
+              {loadingCancellationStats ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3 text-white/50 text-xs">
+                  <div className="h-7 w-7 animate-spin rounded-full border-2 border-rose-500 border-t-transparent" />
+                  Cargando estadísticas de cancelación...
+                </div>
+              ) : (() => {
+                const searchLower = statsSearch.trim().toLowerCase();
+                const filteredStats = cancellationStats.filter((u) => {
+                  if (statsRoleFilter !== "all" && u.type !== statsRoleFilter) return false;
+                  if (searchLower && !u.name.toLowerCase().includes(searchLower) && !u.id.toLowerCase().includes(searchLower)) {
+                    return false;
+                  }
+                  return true;
+                });
+
+                if (filteredStats.length === 0) {
+                  return (
+                    <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-8 text-center text-xs text-white/50">
+                      No se encontraron usuarios con cancelaciones para este filtro.
+                    </div>
+                  );
+                }
+
+                return filteredStats.map((u, index) => {
+                  const isWorker = u.type === "worker";
+                  return (
+                    <div
+                      key={u.id}
+                      className="rounded-2xl border border-white/10 bg-black/30 p-4 space-y-2.5 hover:border-white/20 transition-all"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl font-bold text-xs ${
+                            index === 0
+                              ? "bg-rose-500/30 text-rose-200 border border-rose-500/50 shadow-[0_0_10px_rgba(244,63,94,0.3)]"
+                              : index === 1
+                              ? "bg-amber-500/20 text-amber-200 border border-amber-500/40"
+                              : index === 2
+                              ? "bg-purple-500/20 text-purple-200 border border-purple-500/40"
+                              : "bg-white/5 text-white/50 border border-white/10"
+                          }`}>
+                            #{index + 1}
+                          </span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-bold text-white">{u.name}</h4>
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${
+                                isWorker
+                                  ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
+                                  : "bg-sky-500/20 text-sky-300 border-sky-500/30"
+                              }`}>
+                                {isWorker ? "🛠️ Trabajador" : "👤 Cliente"}
+                              </span>
+                            </div>
+                            <p className="font-mono text-[10px] text-white/40 mt-0.5">ID: {u.id}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="text-base font-black text-rose-400">
+                            {u.cancelCount} {u.cancelCount === 1 ? "cancelación" : "cancelaciones"}
+                          </span>
+                          {u.workerAssignedCancelCount != null && u.workerAssignedCancelCount > 0 && (
+                            <span className="rounded-full bg-rose-500/20 border border-rose-500/30 px-2 py-0.5 text-[10px] font-bold text-rose-300">
+                              ⚠️ {u.workerAssignedCancelCount} con trabajo asignado
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Motivos recientes de cancelación */}
+                      {u.recentReasons && u.recentReasons.length > 0 && (
+                        <div className="rounded-xl bg-black/40 border border-white/5 p-2.5 space-y-1">
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-white/50 block">
+                            Motivos recientes de cancelación:
+                          </span>
+                          <div className="space-y-1">
+                            {u.recentReasons.map((reason, rIdx) => (
+                              <div
+                                key={rIdx}
+                                className="text-xs text-rose-200/90 italic bg-rose-500/5 rounded-lg px-2 py-1 border border-rose-500/15"
+                              >
+                                "{reason}"
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+
+            {/* Footer Modal */}
+            <div className="border-t border-white/10 px-6 py-4 flex justify-end items-center bg-black/40">
+              <button
+                onClick={() => setShowCancellationStats(false)}
+                className="rounded-xl bg-white/10 px-5 py-2 text-xs font-bold text-white hover:bg-white/15 transition-all"
+              >
+                Cerrar
               </button>
             </div>
           </div>
