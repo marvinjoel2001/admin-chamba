@@ -13,6 +13,7 @@ export type BotProfile = {
   role: "client" | "worker";
   name: string;
   avatar_color: string;
+  avatar_url?: string | null;
   specialty: string;
   enabled: boolean;
   latitude: number | null;

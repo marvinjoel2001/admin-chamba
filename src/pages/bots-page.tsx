@@ -71,7 +71,19 @@ function Avatar({
   profile: BotProfile;
   small?: boolean;
 }) {
-  // Illustrated, fictional profile image; never a photograph of a real person.
+  if (profile.avatar_url) {
+    return (
+      <img
+        src={profile.avatar_url}
+        alt={profile.name}
+        className={
+          small
+            ? "h-8 w-8 rounded-full object-cover ring-2 ring-purple-500/30"
+            : "h-12 w-12 shrink-0 rounded-full object-cover ring-2 ring-purple-500/30 shadow-sm"
+        }
+      />
+    );
+  }
   return (
     <svg
       role="img"
@@ -230,7 +242,7 @@ export default function BotsPage() {
     !dirty &&
     data.settings.zone_configured &&
     !!data.zone &&
-    data.profiles.length === 20;
+    data.profiles.length >= 2;
   const shownJobs = profile
     ? data.scenarios.filter(
         (s) => s.client_id === profile.id || s.worker_id === profile.id,
@@ -246,7 +258,7 @@ export default function BotsPage() {
           </div>
           <h1 className="text-2xl font-semibold">Bots de Chamba</h1>
           <p className="mt-1 text-sm text-on-surface-variant">
-            20 perfiles en la nube. Los clientes publican y los trabajadores bot
+            {data.profiles.length} perfiles en la nube con fotos reales de Santa Cruz. Los clientes publican y los trabajadores bot
             completan sus trabajos.
           </p>
         </div>
@@ -316,11 +328,11 @@ export default function BotsPage() {
               onClick={() =>
                 perform(
                   () => controlBots("provision"),
-                  "20 perfiles disponibles, sin duplicados",
+                  "60 perfiles disponibles (30 clientes y 30 trabajadores)",
                 )
               }
             >
-              Crear / restaurar 20 perfiles
+              Crear / restaurar 60 perfiles
             </Button>
             <Button
               className={secondary}
@@ -643,7 +655,7 @@ export default function BotsPage() {
         </div>
         {!data.profiles.length && (
           <p className="text-sm text-on-surface-variant">
-            Usa “Crear / restaurar 20 perfiles” para crearlos en el backend.
+            Usa “Crear / restaurar 60 perfiles” para crearlos en el backend.
           </p>
         )}
         <div className="grid gap-3 md:grid-cols-2 2xl:grid-cols-4">
